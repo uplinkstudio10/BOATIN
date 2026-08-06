@@ -1,0 +1,3330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Uplink Studio // NVIDIA UP-76</title>
+<meta name="theme-color" content="#080a09" />
+<meta name="description" content="Uplink Studio — NVIDIA NIM powered chat, vision, coding & live search" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Uplink" />
+<link rel="manifest" id="pwaManifestLink" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+  :root {
+    --color-bg-base: #080a09;
+    --color-bg-surface: #0e1310;
+    --color-bg-card: #141b16;
+    --color-border-subtle: #1c271e;
+    --color-border-strong: #2d3e30;
+    --color-accent-primary: #76b900;
+    --color-accent-secondary: #06b6d4;
+    --color-accent-danger: #ef4444;
+    --color-text-primary: #ecfdf5;
+    --color-text-secondary: #8b9b90;
+    --color-text-muted: #526357;
+    --color-text-inverse: #04130a;
+    --border-radius-sm: 8px;
+    --border-radius-md: 14px;
+    --border-radius-lg: 20px;
+    --font-family-mono: 'JetBrains Mono', Consolas, monospace;
+    --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --shadow-glow: 0 0 20px rgba(118, 185, 0, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-sans);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection { background: rgba(118, 185, 0, 0.35); color: #fff; }
+  #app-root {
+    display: flex; flex-direction: column;
+    position: fixed; inset: 0;
+    height: 100dvh; height: 100svh;
+    overflow: hidden;
+  }
+
+  /* Scrollbar */
+  .messages-scroll-area::-webkit-scrollbar { width: 6px; }
+  .messages-scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .messages-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 99px;
+  }
+  .messages-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--color-accent-primary); }
+
+  .app-header {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #10160f 0%, #0e1310 100%);
+    border-bottom: 1px solid var(--color-border-subtle);
+    z-index: 10;
+  }
+  .header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-family-mono); font-size: 11px; font-weight: 700;
+    color: var(--color-accent-primary); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .header-top-left { display: flex; align-items: center; gap: 8px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--color-accent-primary);
+    box-shadow: 0 0 8px var(--color-accent-primary);
+    animation: pulse-dot 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--color-accent-primary); }
+    50% { opacity: 0.55; box-shadow: 0 0 14px var(--color-accent-primary); }
+  }
+  .header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .header-action-btn {
+    background: rgba(118, 185, 0, 0.08);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-secondary);
+    padding: 4px 9px; font-size: 10px; border-radius: 10px;
+    cursor: pointer; font-family: var(--font-family-mono);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .header-action-btn:hover {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    background: rgba(118, 185, 0, 0.14);
+  }
+  .header-action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .clear-memory-btn {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid var(--color-accent-danger);
+    color: var(--color-accent-danger);
+    padding: 4px 10px; font-size: 10px; border-radius: 10px;
+    cursor: pointer; text-transform: none; font-family: var(--font-family-mono);
+    transition: background 0.15s, color 0.15s;
+  }
+  .clear-memory-btn:hover { background: var(--color-accent-danger); color: #ffffff; }
+  .msg-footer {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+  .msg-model-badge {
+    font-family: var(--font-family-mono); font-size: 9px;
+    color: var(--color-accent-primary);
+    background: rgba(118, 185, 0, 0.1);
+    border: 1px solid rgba(118, 185, 0, 0.25);
+    border-radius: 999px; padding: 2px 8px;
+    max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .msg-footer .code-action-btn { margin-left: 0; }
+  .msg-footer-spacer { flex: 1; }
+  .stop-message-btn {
+    background: rgba(239, 68, 68, 0.9) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35) !important;
+    font-size: 12px !important;
+  }
+  .stop-message-btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .input-container { position: relative; }
+  .msg-edit-box {
+    width: 100%; min-height: 60px; resize: vertical;
+    background: var(--color-bg-base); border: 1px solid var(--color-accent-primary);
+    color: var(--color-text-primary); border-radius: 12px; padding: 10px;
+    font-family: inherit; font-size: 13px; margin-top: 6px;
+  }
+  .msg-edit-actions { display: flex; gap: 6px; margin-top: 6px; }
+
+  .cat-tabs {
+    display: flex; gap: 6px; width: 100%;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding-bottom: 2px;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    flex: 0 0 auto;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-secondary);
+    font-size: 11px; font-weight: 600;
+    padding: 7px 12px; border-radius: 999px;
+    cursor: pointer; font-family: var(--font-family-sans);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    white-space: nowrap; -webkit-tap-highlight-color: transparent;
+  }
+  .cat-tab.active {
+    background: rgba(118, 185, 0, 0.12);
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+  }
+  .cat-panel {
+    display: none; width: 100%;
+    animation: msg-in 0.18s ease-out;
+  }
+  .cat-panel.active { display: block; }
+  .cat-panel-grid {
+    display: flex; flex-wrap: wrap; gap: 6px; width: 100%;
+  }
+  .cat-chip {
+    flex: 0 0 auto;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-secondary);
+    font-size: 11px; padding: 8px 11px; border-radius: 12px;
+    cursor: pointer; font-family: var(--font-family-sans);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-chip:active { transform: scale(0.97); }
+  .cat-chip.active, .cat-chip:hover {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    background: rgba(118, 185, 0, 0.1);
+  }
+  .cat-chip.danger {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: var(--color-accent-danger);
+  }
+  .cat-chip.danger.active, .cat-chip.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--color-accent-danger);
+  }
+  .header-controls { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .control-item { flex: 1; min-width: 90px; display: flex; flex-direction: column; gap: 4px; }
+  .control-item label {
+    font-size: 9px; color: var(--color-accent-primary);
+    text-transform: uppercase; font-weight: 700; font-family: var(--font-family-mono);
+    letter-spacing: 0.04em;
+  }
+  .control-item input, .control-item select {
+    width: 100%; background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary); padding: 10px 9px; font-size: 12px;
+    border-radius: var(--border-radius-sm); font-family: var(--font-family-sans);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer; min-height: 40px;
+  }
+  .control-item select:hover { border-color: var(--color-border-strong); }
+  .control-item select:focus {
+    outline: none; border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 2px rgba(118, 185, 0, 0.18);
+  }
+
+  .app-workspace { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  .chat-viewport { flex: 1; display: flex; flex-direction: column; background: var(--color-bg-base); overflow: hidden; }
+  .messages-scroll-area {
+    flex: 1; overflow-y: auto; padding: 18px 16px;
+    display: flex; flex-direction: column; gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-viewport { position: relative; }
+
+  .message-bubble {
+    max-width: 92%; padding: 12px 16px;
+    border-radius: var(--border-radius-md);
+    word-break: break-word; line-height: 1.55;
+  }
+  .message-bubble p { margin-bottom: 8px; }
+  .message-bubble p:last-child { margin-bottom: 0; }
+  .message-bubble code {
+    font-family: var(--font-family-mono);
+    background: rgba(0, 0, 0, 0.35); padding: 2px 6px;
+    border-radius: 12px; font-size: 0.9em;
+  }
+  .message-bubble pre {
+    background: #121512 !important;
+    border: 1px solid var(--color-border-strong);
+    padding: 12px; border-radius: var(--border-radius-md);
+    overflow-x: auto; margin: 8px 0; position: relative;
+  }
+  .message-bubble pre code { background: transparent; padding: 0; font-size: 12px; }
+  .message-bubble table { display: block; width: 100%; overflow-x: auto; border-collapse: collapse; margin: 10px 0; }
+  .message-bubble th, .message-bubble td {
+    border: 1px solid var(--color-border-strong); padding: 8px 10px;
+    text-align: left; vertical-align: top;
+  }
+  .message-bubble th { background: rgba(118, 185, 0, 0.12); color: var(--color-text-primary); }
+  .message-bubble ul, .message-bubble ol { padding-left: 1.25rem; margin: 8px 0; }
+  .message-bubble li { margin: 4px 0; }
+  .message-bubble blockquote {
+    border-left: 3px solid var(--color-accent-primary);
+    padding-left: 10px; margin: 10px 0; color: var(--color-text-secondary);
+  }
+  .message-bubble hr { border: none; border-top: 1px solid var(--color-border-subtle); margin: 12px 0; }
+  .message-bubble a { color: #9ed0ff; }
+
+  .code-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .code-action-btn {
+    background: var(--color-bg-surface); color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-strong); border-radius: 10px;
+    padding: 4px 9px; font-family: var(--font-family-mono); font-size: 10px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .code-action-btn:hover {
+    color: var(--color-accent-primary); border-color: var(--color-accent-primary);
+    background: rgba(118, 185, 0, 0.08);
+  }
+  .messages-scroll-area {
+    gap: 18px !important;
+    padding: 20px 16px 28px !important;
+  }
+  .message-bubble {
+    max-width: min(720px, 100%);
+    padding: 0;
+    border-radius: 0;
+    word-break: break-word;
+    line-height: 1.65;
+    font-size: 15px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+  .message-bubble.user {
+    align-self: flex-end;
+    max-width: min(520px, 88%);
+    padding: 12px 16px;
+    border-radius: 22px 22px 6px 22px;
+    background: #2f3336;
+    color: #f4f4f5;
+    font-weight: 400;
+    box-shadow: none;
+  }
+  .message-bubble.user code {
+    background: rgba(255, 255, 255, 0.12);
+    color: #e8ffe0;
+  }
+  .message-bubble.assistant {
+    align-self: flex-start;
+    max-width: min(720px, 100%);
+    padding: 4px 2px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+  }
+  .message-bubble.assistant .msg-footer {
+    border-top: none;
+    margin-top: 8px;
+    padding-top: 4px;
+    opacity: 0.85;
+  }
+  .message-bubble.pending {
+    align-self: flex-start;
+    max-width: min(420px, 92%);
+    padding: 14px 16px !important;
+    border-radius: 18px;
+    background: #141a16;
+    border: 1px solid rgba(118, 185, 0, 0.25);
+    color: var(--color-text-secondary);
+    box-shadow: none;
+  }
+
+  .thinking-row {
+    display: flex; align-items: center; gap: 14px;
+    position: relative; z-index: 1;
+  }
+  .thinking-bars {
+    display: flex; align-items: flex-end; gap: 4px;
+    height: 22px; flex-shrink: 0;
+  }
+  .thinking-bars i {
+    display: block; width: 4px; border-radius: 2px;
+    background: var(--color-accent-primary);
+    animation: bar-wave 0.9s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  .thinking-bars i:nth-child(1) { height: 8px; animation-delay: 0s; }
+  .thinking-bars i:nth-child(2) { height: 14px; animation-delay: 0.12s; }
+  .thinking-bars i:nth-child(3) { height: 20px; animation-delay: 0.24s; }
+  .thinking-bars i:nth-child(4) { height: 12px; animation-delay: 0.36s; }
+  .thinking-bars i:nth-child(5) { height: 7px; animation-delay: 0.48s; }
+  @keyframes bar-wave {
+    0%, 100% { transform: scaleY(0.45); opacity: 0.45; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+  .thinking-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+  .thinking-title {
+    font-family: var(--font-family-mono); font-size: 12px; font-weight: 700;
+    color: var(--color-accent-primary); letter-spacing: 0.03em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .thinking-title .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--color-accent-primary);
+    box-shadow: 0 0 8px var(--color-accent-primary);
+    animation: core-pulse 1s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes core-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.65); opacity: 0.5; }
+  }
+  .thinking-sub {
+    font-size: 11px; color: var(--color-text-muted);
+    line-height: 1.35; word-break: break-word;
+  }
+  .thinking-track {
+    margin-top: 10px; height: 3px; border-radius: 99px;
+    background: rgba(118, 185, 0, 0.12); overflow: hidden;
+  }
+  .thinking-track span {
+    display: block; height: 100%; width: 40%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, transparent, var(--color-accent-primary), transparent);
+    animation: track-slide 1.2s ease-in-out infinite;
+  }
+  @keyframes track-slide {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(280%); }
+  }
+  .streaming-cursor {
+    display: inline-block; width: 7px; height: 1em; margin-left: 3px;
+    vertical-align: -2px; background: var(--color-accent-primary);
+    animation: blink 0.8s infinite; border-radius: 1px;
+  }
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  /* Ultra-smooth motion system */
+  html { scroll-behavior: smooth; }
+  *, *::before, *::after {
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .cat-tab, .cat-chip, .header-action-btn, .clear-memory-btn,
+  .code-action-btn, .attach-btn, .send-message-btn, .tb-btn,
+  .control-item select, .control-item input {
+    transition: border-color 0.22s cubic-bezier(0.22,1,0.36,1),
+                color 0.22s cubic-bezier(0.22,1,0.36,1),
+                background 0.22s cubic-bezier(0.22,1,0.36,1),
+                transform 0.18s cubic-bezier(0.22,1,0.36,1),
+                box-shadow 0.22s cubic-bezier(0.22,1,0.36,1),
+                opacity 0.22s ease;
+  }
+  .message-bubble {
+    animation: msg-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(2px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  }
+  .cat-panel {
+    animation: panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes panel-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .messages-scroll-area {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .messages-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .scroll-bottom-btn {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    z-index: 30;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(118, 185, 0, 0.4);
+    background: rgba(14, 19, 16, 0.92);
+    color: var(--color-accent-primary);
+    font-size: 18px;
+    line-height: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 12px rgba(118, 185, 0, 0.15);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), opacity 0.2s ease, background 0.2s ease;
+    pointer-events: auto;
+  }
+  .scroll-bottom-btn.visible { display: flex; animation: fab-in 0.28s cubic-bezier(0.22,1,0.36,1) both; }
+  .scroll-bottom-btn:hover { background: rgba(118, 185, 0, 0.18); transform: translateY(-2px); }
+  .scroll-bottom-btn:active { transform: scale(0.94); }
+  @keyframes fab-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal-backdrop {
+    transition: opacity 0.25s ease;
+  }
+  .modal-sheet {
+    animation: sheet-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes sheet-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .chat-image-preview { max-width: 100%; max-height: 220px; border-radius: 12px; margin-bottom: 6px; object-fit: contain; }
+  .chat-file-attachment {
+    background: rgba(0, 0, 0, 0.3); padding: 6px 10px; border-radius: 10px;
+    margin-bottom: 6px; font-size: 11px; font-family: var(--font-family-mono);
+    border: 1px dashed var(--color-border-strong); display: inline-block;
+  }
+
+  .input-container {
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, transparent 0%, var(--color-bg-base) 28%);
+    border-top: none;
+    padding: 4px 12px 12px;
+  }
+  .chat-input-bar {
+    display: flex; align-items: flex-end; gap: 8px;
+    padding: 8px 10px;
+    background: #1a1f1c;
+    border: 1px solid #2a322c;
+    border-radius: 28px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  .chat-input-bar textarea {
+    flex: 1; resize: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--color-text-primary);
+    padding: 10px 8px !important;
+    border-radius: 0 !important;
+    font-family: inherit; font-size: 15px;
+    max-height: 140px; min-height: 24px;
+    line-height: 1.45;
+  }
+  .chat-input-bar textarea:focus {
+    outline: none; border: none !important; box-shadow: none !important;
+  }
+  .chat-input-bar textarea::placeholder { color: #6b7a70; }
+  .attach-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #8b9b90;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+  }
+  .attach-btn:hover {
+    color: var(--color-accent-primary) !important;
+    background: rgba(118, 185, 0, 0.1) !important;
+  }
+  .send-message-btn {
+    width: 40px; height: 40px;
+    border-radius: 50% !important;
+    background: var(--color-accent-primary) !important;
+    color: #04130a !important;
+    border: none !important;
+    font-size: 16px;
+    box-shadow: none !important;
+  }
+  .send-message-btn:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: scale(1.04);
+  }
+  .attachment-preview-bar {
+    display: none; align-items: center; gap: 8px;
+    padding: 8px 12px; background: var(--color-bg-card);
+    border-bottom: 1px solid var(--color-border-subtle);
+    font-size: 11px; font-family: var(--font-family-mono);
+  }
+  .remove-file-btn {
+    margin-left: auto; background: none; border: none;
+    color: var(--color-accent-danger); cursor: pointer; font-weight: bold;
+    font-size: 14px; line-height: 1; padding: 2px 4px;
+  }
+  .remove-file-btn:hover { opacity: 0.8; }
+
+  .chat-input-bar { display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px; }
+  .attach-btn, .send-message-btn {
+    background: var(--color-bg-card); border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-secondary); width: 42px; height: 42px;
+    border-radius: var(--border-radius-md);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .attach-btn:hover { border-color: var(--color-accent-primary); color: var(--color-accent-primary); }
+  .send-message-btn {
+    background: var(--color-accent-primary); color: var(--color-text-inverse);
+    border: none; font-weight: 700; font-size: 16px;
+    box-shadow: 0 2px 10px rgba(118, 185, 0, 0.3);
+  }
+  .send-message-btn:hover:not(:disabled) { filter: brightness(1.08); transform: scale(1.03); }
+  .send-message-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+  .chat-input-bar textarea {
+    flex: 1; resize: none; background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle); color: var(--color-text-primary);
+    padding: 11px 12px; border-radius: var(--border-radius-md);
+    font-family: inherit; font-size: 13.5px; max-height: 120px; min-height: 42px;
+    line-height: 1.45; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .chat-input-bar textarea:focus {
+    outline: none; border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 2px rgba(118, 185, 0, 0.12);
+  }
+  .chat-input-bar textarea::placeholder { color: var(--color-text-muted); }
+  .generated-image-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+  .sources-box {
+    margin-top: 12px; padding: 10px 12px;
+    border: 1px solid var(--color-border-strong); border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25); font-size: 11px;
+  }
+  .sources-title {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--color-accent-primary); font-family: var(--font-family-mono);
+    font-weight: 700; margin-bottom: 7px;
+  }
+  .source-item {
+    display: flex; gap: 7px; align-items: flex-start;
+    padding: 5px 0; border-top: 1px solid var(--color-border-subtle);
+  }
+  .source-item:first-child { border-top: 0; }
+  .source-item a { color: #9ed0ff; text-decoration: none; line-height: 1.35; }
+  .source-item a:hover { text-decoration: underline; }
+  .source-domain { color: var(--color-text-muted); font-size: 10px; }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 6px; border-radius: 999px;
+    border: 1px solid rgba(118, 185, 0, 0.35);
+    color: var(--color-accent-primary); font-size: 9px;
+    font-family: var(--font-family-mono); margin-left: 5px;
+  }
+  .app-credit {
+    text-align: center; padding: 5px 8px 8px;
+    color: var(--color-text-muted); font-size: 9px;
+    font-family: var(--font-family-mono); letter-spacing: 0.04em;
+  }
+  .effort-badge {
+    display: inline-block; margin-left: 6px; padding: 1px 6px;
+    border-radius: 999px; font-size: 9px; font-family: var(--font-family-mono);
+    border: 1px solid rgba(118, 185, 0, 0.3); color: var(--color-accent-primary);
+    vertical-align: middle;
+  }
+
+  @media (max-width: 520px) {
+    .message-bubble { max-width: 96%; }
+    .app-header { padding: 10px 12px; gap: 8px; }
+    .header-top { font-size: 10px; }
+    .cat-tab { padding: 8px 12px; font-size: 12px; }
+    .cat-chip { padding: 10px 12px; font-size: 12px; }
+    .chat-input-bar { padding: 8px 10px; }
+    .attach-btn, .send-message-btn { width: 44px; height: 44px; }
+  }
+
+  /* UP-76 feature styles */
+  .offline-banner {
+    display: none; text-align: center; padding: 6px 12px;
+    background: rgba(239,68,68,0.18); color: #fca5a5;
+    font-size: 11px; font-family: var(--font-family-mono); border-bottom: 1px solid rgba(239,68,68,0.35);
+  }
+  .offline-banner.show { display: block; }
+  .chat-toolbar {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    padding: 6px 12px; border-bottom: 1px solid var(--color-border-subtle);
+    background: rgba(14,19,16,0.85);
+  }
+  .chat-toolbar input[type="search"] {
+    flex: 1; min-width: 120px; background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle); color: var(--color-text-primary);
+    border-radius: 12px; padding: 6px 10px; font-size: 12px;
+  }
+  .chat-toolbar input:focus { outline: none; border-color: var(--color-accent-primary); }
+  .tb-btn {
+    background: rgba(118,185,0,0.08); border: 1px solid var(--color-border-strong);
+    color: var(--color-text-secondary); border-radius: 12px; padding: 5px 9px;
+    font-size: 11px; cursor: pointer; font-family: var(--font-family-mono);
+  }
+  .tb-btn:hover, .tb-btn.on {
+    border-color: var(--color-accent-primary); color: var(--color-accent-primary);
+    background: rgba(118,185,0,0.16);
+  }
+  .msg-meta {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    margin-top: 6px; font-size: 10px; color: var(--color-text-muted);
+    font-family: var(--font-family-mono);
+  }
+  .msg-meta time { opacity: 0.85; }
+  .lightbox {
+    position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.88);
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 92vh; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+  .lightbox-close {
+    position: absolute; top: 14px; right: 14px; width: 40px; height: 40px;
+    border-radius: 50%; border: 1px solid #333; background: #111; color: #fff;
+    font-size: 18px; cursor: pointer;
+  }
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.65);
+    display: none; align-items: flex-end; justify-content: center; padding: 12px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-sheet {
+    width: min(520px, 100%); max-height: 80vh; overflow-y: auto;
+    background: var(--color-bg-surface); border: 1px solid var(--color-border-strong);
+    border-radius: 22px 22px 16px 16px; padding: 16px; box-shadow: 0 -8px 40px rgba(0,0,0,0.4);
+  }
+  .modal-sheet h3 { font-size: 14px; margin-bottom: 10px; color: var(--color-accent-primary); }
+  .modal-sheet label { display: block; font-size: 11px; color: var(--color-text-secondary); margin: 10px 0 4px; }
+  .modal-sheet textarea, .modal-sheet select, .modal-sheet input[type="text"] {
+    width: 100%; background: var(--color-bg-card); border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary); border-radius: 12px; padding: 8px 10px; font-size: 13px;
+  }
+  .modal-sheet textarea { min-height: 90px; font-family: var(--font-family-mono); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+  .session-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+  .session-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 12px; border: 1px solid var(--color-border-subtle);
+    background: var(--color-bg-card); cursor: pointer; font-size: 12px;
+  }
+  .session-item.active { border-color: var(--color-accent-primary); }
+  .session-item:hover { border-color: var(--color-border-strong); }
+  .drop-overlay {
+    position: absolute; inset: 0; z-index: 50; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(118,185,0,0.12); border: 2px dashed var(--color-accent-primary);
+    color: var(--color-accent-primary); font-weight: 600; font-size: 14px; pointer-events: none;
+  }
+  .drop-overlay.show { display: flex; }
+  body.compact .message-bubble { padding: 8px 12px; }
+  body.compact .messages-scroll-area { gap: 8px; padding: 12px; }
+  body.font-sm { font-size: 13px; }
+  body.font-md { font-size: 14px; }
+  body.font-lg { font-size: 16px; }
+  .ctx-pill {
+    font-size: 10px; color: var(--color-text-muted); font-family: var(--font-family-mono);
+    padding: 2px 8px; border-radius: 99px; border: 1px solid var(--color-border-subtle);
+  }
+  .fav-star { cursor: pointer; margin-left: 4px; }
+  .quick-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .quick-replies button {
+    background: rgba(118,185,0,0.08); border: 1px solid var(--color-border-strong);
+    color: var(--color-text-secondary); border-radius: 99px; padding: 4px 10px;
+    font-size: 11px; cursor: pointer;
+  }
+  .quick-replies button:hover { color: var(--color-accent-primary); border-color: var(--color-accent-primary); }
+  .theme-swatch {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer;
+    display: inline-block;
+  }
+  .theme-swatch.on { border-color: #fff; }
+  
+  .chat-input-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 12px 14px 10px !important;
+    background: #1a1f1c;
+    border: 1px solid #2a322c;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  .chat-input-bar textarea {
+    width: 100%;
+    flex: none !important;
+    min-height: 28px;
+    max-height: 160px;
+    padding: 4px 4px 8px !important;
+    font-size: 15.5px !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .composer-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .composer-spacer { flex: 1; }
+  .attach-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    background: #242a26 !important;
+    border: 1px solid #343c36 !important;
+    color: #c5d0c8 !important;
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+  }
+  .attach-btn:hover {
+    border-color: var(--color-accent-primary) !important;
+    color: var(--color-accent-primary) !important;
+  }
+  .effort-menu { position: relative; }
+  .effort-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid #343c36;
+    background: #242a26;
+    color: #e8f0ea;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-family-sans);
+  }
+  .effort-trigger:hover {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+  }
+  .effort-bolt { font-size: 12px; }
+  .effort-caret { font-size: 10px; opacity: 0.7; }
+  .effort-dropdown {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 8px);
+    min-width: 120px;
+    padding: 6px;
+    border-radius: 14px;
+    background: #151a16;
+    border: 1px solid #2d3a30;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .effort-dropdown[hidden] { display: none !important; }
+  .effort-dropdown button {
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: #d7e2da;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-family-sans);
+  }
+  .effort-dropdown button:hover,
+  .effort-dropdown button.active {
+    background: rgba(118, 185, 0, 0.14);
+    color: var(--color-accent-primary);
+  }
+  .send-message-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+  }
+
+</style>
+</head>
+<body>
+
+<div id="app-root">
+  <header class="app-header">
+    <div class="header-top">
+      <div class="header-top-left">
+        <div class="status-dot"></div>
+        <div>Uplink Studio // NVIDIA UP-76</div>
+      </div>
+      <div class="header-actions">
+        <button class="clear-memory-btn" id="clearMemoryBtn" type="button" title="Clear chat history">Clear 🗑️</button>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="cat-tabs" id="catTabs" role="tablist">
+        <button type="button" class="cat-tab active" data-cat="model">🎯 Model</button>
+                <button type="button" class="cat-tab" data-cat="auto">🤖 Auto</button>
+        <button type="button" class="cat-tab" data-cat="fallback">🔁 Fallback</button>
+        <button type="button" class="cat-tab" data-cat="actions">🚀 Actions</button>
+      </div>
+
+      <div class="cat-panel active" id="panel-model" data-cat="model">
+        <div class="control-item">
+          <label for="modelSelect">NVIDIA Models</label>
+          <select id="modelSelect"></select>
+        </div>
+      </div>
+
+      <select id="effortMode" style="display:none">
+        <option value="low">Low</option>
+        <option value="mid" selected>Mid</option>
+        <option value="high">High</option>
+        <option value="max">Max</option>
+      </select>
+      <select id="autoMode" style="display:none">
+        <option value="on" selected>ON</option>
+        <option value="off">OFF</option>
+      </select>
+      <select id="autoCallback" style="display:none">
+        <option value="on" selected>ON</option>
+        <option value="off">OFF</option>
+      </select>
+
+      <div class="cat-panel" id="panel-auto" data-cat="auto">
+        <div class="cat-panel-grid" id="autoChips"></div>
+      </div>
+
+      <div class="cat-panel" id="panel-fallback" data-cat="fallback">
+        <div class="cat-panel-grid" id="fallbackChips"></div>
+      </div>
+
+      <div class="cat-panel" id="panel-actions" data-cat="actions">
+        <div class="cat-panel-grid" id="actionChips"></div>
+      </div>
+      </div>
+  </header>
+
+  <main class="app-workspace">
+    <section class="chat-viewport">
+      <div class="messages-wrap">
+        <div class="messages-scroll-area" id="messagesContainer"></div>
+        <button type="button" class="scroll-bottom-btn" id="scrollBottomBtn" title="Jump to latest" aria-label="Scroll to latest">↓</button>
+      </div>
+      <div class="input-container">
+        <div id="attachmentPreviewBar" class="attachment-preview-bar">
+          <span id="attachmentIcon">📎</span>
+          <span id="attachmentNameText" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          <button type="button" id="removeFileBtn" class="remove-file-btn">✕</button>
+        </div>
+        <form class="chat-input-bar" id="chatForm" onsubmit="return false;">
+          <input type="file" id="fileInput" accept="image/*,.txt,.csv,.md,.json,.html,.js,.py" style="display: none;" />
+          <textarea id="messageTextInput" rows="1" placeholder="Ask anything..."></textarea>
+          <div class="composer-toolbar">
+            <button class="attach-btn" id="attachBtn" type="button" title="Attach">+</button>
+            <div class="effort-menu" id="effortMenu">
+              <button type="button" class="effort-trigger" id="effortTrigger" title="Effort">
+                <span class="effort-bolt">⚡</span>
+                <span id="effortTriggerLabel">Mid</span>
+                <span class="effort-caret">▾</span>
+              </button>
+              <div class="effort-dropdown" id="effortDropdown" hidden>
+                <button type="button" data-effort="low">Low</button>
+                <button type="button" data-effort="mid">Mid</button>
+                <button type="button" data-effort="high">High</button>
+                <button type="button" data-effort="max">Max</button>
+              </div>
+            </div>
+            <span class="composer-spacer"></span>
+            <button class="send-message-btn stop-message-btn" id="stopMessageBtn" type="button" title="Stop" style="display:none;">■</button>
+            <button class="send-message-btn" id="sendMessageBtn" type="button" title="Send">➤</button>
+          </div>
+        </form>
+        <div id="inputCounter" style="display:none; padding:0 12px 8px; font-size:10px; color:var(--color-text-muted); font-family:var(--font-family-mono); text-align:right;"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox"><button type="button" class="lightbox-close" id="lightboxClose">✕</button><img id="lightboxImg" alt="Preview" /></div>
+<div class="modal-backdrop" id="shortcutsModal">
+  <div class="modal-sheet">
+    <h3>⌨️ Keyboard Shortcuts</h3>
+    <div class="session-list" style="max-height:none;">
+      <div class="session-item" style="cursor:default;"><span>Focus search</span><span class="ctx-pill">Ctrl/Cmd + K</span></div>
+      <div class="session-item" style="cursor:default;"><span>Open settings</span><span class="ctx-pill">Ctrl/Cmd + ,</span></div>
+      <div class="session-item" style="cursor:default;"><span>Show shortcuts</span><span class="ctx-pill">Ctrl/Cmd + /</span></div>
+      <div class="session-item" style="cursor:default;"><span>Clear chat</span><span class="ctx-pill">Ctrl/Cmd + N</span></div>
+      <div class="session-item" style="cursor:default;"><span>Close modal / lightbox</span><span class="ctx-pill">Esc</span></div>
+      <div class="session-item" style="cursor:default;"><span>Send message</span><span class="ctx-pill">Enter</span></div>
+      <div class="session-item" style="cursor:default;"><span>New line</span><span class="ctx-pill">Shift + Enter</span></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="tb-btn" id="shortcutsClose">Done</button>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-sheet">
+    <h3>⚙️ Studio Settings</h3>
+    <label>Custom system prompt</label>
+    <textarea id="sysPromptInput" placeholder="Optional instructions always sent to the model…"></textarea>
+    <label>Font size</label>
+    <select id="fontSizeSelect"><option value="sm">Small</option><option value="md" selected>Medium</option><option value="lg">Large</option></select>
+    <label>Accent theme</label>
+    <div id="themeSwatches" style="display:flex;gap:8px;margin-top:4px;"></div>
+    <label>Voice language (mic)</label>
+    <select id="voiceLangSelect">
+      <option value="auto">Auto (detect)</option>
+      <option value="bn-IN">বাংলা — ভারত (bn-IN)</option>
+      <option value="bn-BD">বাংলা — বাংলাদেশ (bn-BD)</option>
+      <option value="en-US">English (US)</option>
+      <option value="en-IN">English (India)</option>
+      <option value="hi-IN">हिन्दी (hi-IN)</option>
+    </select>
+    <div class="modal-actions">
+      <button type="button" class="tb-btn" id="settingsClose">Done</button>
+    </div>
+  </div>
+</div>
+<script>
+  // Insert your Cloudflare Worker URL here:
+  const WORKER_PROXY_URL = "https://anybot.luchifer0p09.workers.dev/";
+
+  // ─── PWA: installable manifest + offline app-shell caching ──────────────
+  // Self-contained (no external files needed) so this still works as a single
+  // HTML file hosted anywhere, e.g. GitHub Pages.
+  (function setupPWA() {
+    try {
+      const manifest = {
+        name: "Uplink Studio",
+        short_name: "Uplink",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#080a09",
+        theme_color: "#080a09",
+        icons: [
+          {
+            src: "data:image/svg+xml," + encodeURIComponent(
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23080a09"/><circle cx="50" cy="50" r="24" fill="%2376b900"/></svg>'
+            ),
+            sizes: "192x192",
+            type: "image/svg+xml"
+          }
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+      const link = document.getElementById("pwaManifestLink");
+      if (link) link.href = URL.createObjectURL(manifestBlob);
+
+      if ("serviceWorker" in navigator) {
+        const swSource = `
+          const SHELL_CACHE = "uplink-shell-v1";
+          self.addEventListener("install", (e) => {
+            self.skipWaiting();
+            e.waitUntil(caches.open(SHELL_CACHE).then((c) => c.add(self.registration.scope)));
+          });
+          self.addEventListener("activate", (e) => { self.clients.claim(); });
+          self.addEventListener("fetch", (e) => {
+            if (e.request.method !== "GET") return;
+            const url = new URL(e.request.url);
+            // Only handle same-origin navigation/app-shell requests; let API/CDN calls pass through untouched.
+            if (url.origin !== self.location.origin) return;
+            e.respondWith(
+              caches.match(e.request).then((cached) => {
+                const network = fetch(e.request).then((res) => {
+                  if (res && res.ok) caches.open(SHELL_CACHE).then((c) => c.put(e.request, res.clone()));
+                  return res;
+                }).catch(() => cached);
+                return cached || network;
+              })
+            );
+          });
+        `;
+        const swBlob = new Blob([swSource], { type: "application/javascript" });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).catch(() => {});
+      }
+    } catch (_) { /* PWA setup is best-effort; ignore failures */ }
+  })();
+
+  // NVIDIA Build catalog: chat / reasoning / coding / vision models that fit this
+  // OpenAI-compatible chat proxy. Specialized NIMs (OCR, embeddings, rerankers,
+  // TTS, image generation, etc.) are intentionally not sent through /chat.
+  // Refreshed 2026 NVIDIA/NIM chat model catalog.
+  // Specialized NIMs (embeddings, rerankers, OCR-only, TTS, moderation, etc.)
+  // are intentionally excluded because this UI sends /chat/completions requests.
+  const NVIDIA_MODEL_GROUPS = [
+    {
+      category: "🏆 Recommended",
+      models: [
+        { value: "nvidia/nemotron-3-super-120b-a12b", label: "(DEFAULT) Nemotron 3 Super 120B", tags: "best overall" },
+        { value: "deepseek-ai/deepseek-v3.2", label: "DeepSeek V3.2", tags: "reasoning, coding" },
+        { value: "zhipuai/glm-4.7", label: "GLM-4.7", tags: "agentic, tools" },
+        { value: "meta/llama-3.3-70b-instruct", label: "Llama 3.3 70B Instruct", tags: "chat, tools" },
+        { value: "meta/llama-3.1-405b-instruct", label: "Llama 3.1 405B Instruct", tags: "frontier" }
+      ]
+    },
+    {
+      category: "🌐 Web Pulse",
+      models: [
+        { value: "moonshotai/kimi-k2.6", label: "Kimi K2.6 • Web Pulse", tags: "live search" },
+        { value: "webpulse/glm-5.1", label: "GLM-5.1 • Web Pulse", tags: "live search, multilingual" },
+        { value: "webpulse/deepseek-v3.2", label: "DeepSeek V3.2 • Web Pulse", tags: "live search, reasoning" },
+        { value: "webpulse/qwen3.5-122b", label: "Qwen3.5 122B • Web Pulse", tags: "live search, agent" },
+        { value: "webpulse/llama-3.3-70b", label: "Llama 3.3 70B • Web Pulse", tags: "live search, fast" }
+      ]
+    },
+    {
+      category: "🧠 Reasoning",
+      models: [
+        { value: "deepseek-ai/deepseek-r1", label: "DeepSeek R1", tags: "deep reasoning" },
+        { value: "openai/gpt-oss-120b", label: "GPT-OSS 120B", tags: "math, reasoning" },
+        { value: "qwen/qwq-32b", label: "QwQ 32B", tags: "reasoning" },
+        { value: "minimaxai/minimax-m2.5", label: "MiniMax M2.5", tags: "reasoning, agentic" },
+        { value: "zhipuai/glm-5.1", label: "GLM-5.1", tags: "reasoning, multilingual" }
+      ]
+    },
+    {
+      category: "💻 Coding",
+      models: [
+        { value: "nvidia/nemotron-3-ultra-550b-a55b", label: "Nemotron 3 Ultra 550B", tags: "coding, agentic, 1M ctx" }
+      ]
+    },
+    {
+      category: "👁️ Vision",
+      models: [
+        { value: "nvidia/nemotron-nano-12b-v2-vl", label: "Nemotron Nano 12B VL", tags: "vision QA" },
+        { value: "qwen/qwen3-vl-32b-instruct", label: "Qwen3-VL 32B", tags: "vision, OCR" },
+        { value: "meta/llama-3.2-90b-vision-instruct", label: "Llama 3.2 90B Vision", tags: "vision" },
+        { value: "meta/llama-3.2-11b-vision-instruct", label: "Llama 3.2 11B Vision", tags: "vision" },
+        { value: "microsoft/phi-3.5-vision-instruct", label: "Phi-3.5 Vision", tags: "vision" }
+      ]
+    },
+    {
+      category: "⚡ Fast",
+      models: [
+        { value: "meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B", tags: "fast" },
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "fast" },
+        { value: "mistralai/mistral-nemo-12b-instruct", label: "Mistral Nemo 12B", tags: "fast" },
+        { value: "google/gemma-2-9b-it", label: "Gemma 2 9B", tags: "fast" },
+        { value: "microsoft/phi-4-mini-instruct", label: "Phi-4 Mini", tags: "fast" }
+      ]
+    }
+  ];
+
+  const NVIDIA_MODELS = NVIDIA_MODEL_GROUPS.flatMap(g =>
+    g.models.map(m => ({ ...m, category: g.category }))
+  );
+
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+    headerIds: false,
+    mangle: false
+  });
+
+  const appState = {
+    messages: [],
+    selectedModelId: "deepseek-ai/deepseek-v3.2",
+    isGenerating: false,
+    abortController: null,
+    searchQuery: ""
+  };
+  let currentFile = null;
+
+  const prefs = {
+    font: localStorage.getItem("nv_font") || "md",
+    theme: localStorage.getItem("nv_theme") || "nvidia",
+    sound: localStorage.getItem("nv_sound") === "1",
+    haptic: localStorage.getItem("nv_haptic") !== "0",
+    compact: localStorage.getItem("nv_compact") === "1",
+    timestamps: localStorage.getItem("nv_ts") !== "0",
+    systemPrompt: localStorage.getItem("nv_sys") || "",
+    voiceLang: localStorage.getItem("nv_voice") || "auto",
+    favorites: JSON.parse(localStorage.getItem("nv_favs") || "[]")
+  };
+
+  const THEMES = {
+    nvidia: { accent: "#76b900", secondary: "#06b6d4" },
+    cyan:   { accent: "#22d3ee", secondary: "#818cf8" },
+    purple: { accent: "#a78bfa", secondary: "#f472b6" },
+    orange: { accent: "#fb923c", secondary: "#fbbf24" },
+    rose:   { accent: "#fb7185", secondary: "#c084fc" }
+  };
+
+  function applyPrefs() {
+    document.body.classList.remove("font-sm", "font-md", "font-lg", "compact");
+    document.body.classList.add("font-" + (prefs.font || "md"));
+    if (prefs.compact) document.body.classList.add("compact");
+    const t = THEMES[prefs.theme] || THEMES.nvidia;
+    document.documentElement.style.setProperty("--color-accent-primary", t.accent);
+    document.documentElement.style.setProperty("--color-accent-secondary", t.secondary);
+    document.documentElement.style.setProperty("--shadow-glow", "0 0 20px " + t.accent + "22");
+  }
+
+  function savePrefs() {
+    localStorage.setItem("nv_font", prefs.font);
+    localStorage.setItem("nv_theme", prefs.theme);
+    localStorage.setItem("nv_sound", prefs.sound ? "1" : "0");
+    localStorage.setItem("nv_haptic", prefs.haptic ? "1" : "0");
+    localStorage.setItem("nv_compact", prefs.compact ? "1" : "0");
+    localStorage.setItem("nv_ts", prefs.timestamps ? "1" : "0");
+    localStorage.setItem("nv_sys", prefs.systemPrompt || "");
+    localStorage.setItem("nv_voice", prefs.voiceLang || "auto");
+    localStorage.setItem("nv_favs", JSON.stringify(prefs.favorites || []));
+  }
+
+  function playDoneSound() {
+    if (!prefs.sound) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.value = 0.04;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      o.stop(ctx.currentTime + 0.26);
+    } catch (_) {}
+  }
+
+  function haptic() {
+    if (!prefs.haptic) return;
+    try { navigator.vibrate?.(12); } catch (_) {}
+  }
+
+  function sessionKey() { return "nv_msgs"; }
+
+
+  const dom = {
+    messagesContainer: document.getElementById("messagesContainer"),
+    messageTextInput: document.getElementById("messageTextInput"),
+    sendMessageBtn: document.getElementById("sendMessageBtn"),
+    stopMessageBtn: document.getElementById("stopMessageBtn"),
+    modelSelect: document.getElementById("modelSelect"),
+    effortMode: document.getElementById("effortMode"),
+    autoCallback: document.getElementById("autoCallback"),
+    autoMode: document.getElementById("autoMode"),
+    attachBtn: document.getElementById("attachBtn"),
+    fileInput: document.getElementById("fileInput"),
+    attachmentPreviewBar: document.getElementById("attachmentPreviewBar"),
+    attachmentNameText: document.getElementById("attachmentNameText"),
+    removeFileBtn: document.getElementById("removeFileBtn"),
+    clearMemoryBtn: document.getElementById("clearMemoryBtn"),
+            catTabs: document.getElementById("catTabs"),
+    effortChips: document.getElementById("effortChips"),
+    modeChips: document.getElementById("modeChips"),
+    actionChips: document.getElementById("actionChips"),
+  };
+
+  function setGenerating(on) {
+    const was = appState.isGenerating;
+    appState.isGenerating = !!on;
+    dom.sendMessageBtn.style.display = on ? "none" : "flex";
+    dom.stopMessageBtn.style.display = on ? "flex" : "none";
+    dom.sendMessageBtn.disabled = !!on;
+        if (was && !on) playDoneSound();
+  }
+
+  function stopGeneration() {
+    if (appState.abortController) {
+      try { appState.abortController.abort(); } catch (_) {}
+      appState.abortController = null;
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  function persistMessages() {
+    const payload = appState.messages.map(m => ({
+      role: m.role,
+      content: typeof m.content === "string" ? m.content : "[Attachment]",
+      model: m.model || undefined,
+      ts: m.ts || undefined
+    }));
+    localStorage.setItem(sessionKey(), JSON.stringify(payload));
+    updateCtxPill();
+  }
+
+  // Safe markdown wrapper: falls back to escaped plain text if the `marked`
+  // CDN script failed to load (e.g. blocked network, offline preview sandbox),
+  // so a single missing library never crashes render() and blanks the whole chat.
+  // Keeps the header and input bar pinned in place on mobile browsers, where
+  // the on-screen keyboard opening/closing can otherwise shift or resize the
+  // page in ways that make fixed elements appear to "float" or jump.
+  function setupViewportLock() {
+    const root = document.getElementById("app-root");
+    if (!root) return;
+    const vv = window.visualViewport;
+    if (!vv) return; // Unsupported browser: CSS fixed/dvh fallback still applies.
+    const apply = () => {
+      root.style.height = vv.height + "px";
+      root.style.top = vv.offsetTop + "px";
+    };
+    apply();
+    vv.addEventListener("resize", apply);
+    vv.addEventListener("scroll", apply);
+  }
+
+  function safeMarkdown(text) {
+    if (typeof text !== "string") return "";
+    if (typeof marked !== "undefined" && marked && typeof marked.parse === "function") {
+      try { return marked.parse(text); } catch (_) { /* fall through */ }
+    }
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return `<p>${escaped.replace(/\n/g, "<br>")}</p>`;
+  }
+
+  function estimateTokens(str) {
+    // Rough heuristic (~4 chars/token for English; conservative enough for a UI estimate).
+    if (!str) return 0;
+    return Math.ceil(str.length / 4);
+  }
+
+  function updateCtxPill() {
+    const el = document.getElementById("ctxPill");
+    if (!el) return;
+    const totalChars = appState.messages.reduce((sum, m) => {
+      const c = typeof m.content === "string" ? m.content : "";
+      return sum + c.length;
+    }, 0);
+    const tok = estimateTokens("x".repeat(totalChars));
+    el.textContent = `${appState.messages.length} msgs · ~${tok.toLocaleString()} tok`;
+    el.title = "Messages in this chat · estimated context tokens (rough, ~4 chars/token)";
+  }
+
+  // ─── Mobile category panels ──────────────────────────────────
+  const QUICK_PROMPTS = [
+    { label: "💡 Explain simply", text: "Explain this simply, like I'm smart but not an expert:" },
+    { label: "🐛 Debug code", text: "Find bugs and fix this code. Explain each change:\n\n```\n\n```" },
+    { label: "✍️ Rewrite better", text: "Rewrite this more clearly and professionally:\n\n" },
+    { label: "🌐 Live news", text: "What are the top tech news headlines today?" },
+    { label: "🎨 Describe a scene", text: "Describe this scene in vivid detail: " },
+    { label: "📝 Summarize", text: "Summarize the key points clearly:\n\n" }
+  ];
+
+  function switchCategory(cat) {
+    document.querySelectorAll(".cat-tab").forEach(t => {
+      t.classList.toggle("active", t.dataset.cat === cat);
+    });
+    document.querySelectorAll(".cat-panel").forEach(p => {
+      p.classList.toggle("active", p.dataset.cat === cat);
+    });
+    localStorage.setItem("nv_cat", cat);
+  }
+
+  function toastAssist(msg) {
+    // Non-chat toast — never pollute message history
+    let el = document.getElementById("liveToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "liveToast";
+      el.style.cssText = "position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:10000;max-width:90%;padding:10px 14px;border-radius:14px;background:rgba(14,19,16,0.96);border:1px solid var(--color-accent-primary);color:var(--color-text-primary);font-size:12px;box-shadow:0 8px 28px rgba(0,0,0,0.45);pointer-events:none;opacity:0;transition:opacity 0.2s;";
+      document.body.appendChild(el);
+    }
+    el.textContent = String(msg || "").replace(/[*_`#]/g, "").slice(0, 160);
+    el.style.opacity = "1";
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = "0"; }, 2200);
+  }
+
+  function setEffort(level) {
+    const v = level || "mid";
+    if (dom.effortMode) dom.effortMode.value = v;
+    localStorage.setItem("nv_effort", v);
+    const lab = document.getElementById("effortTriggerLabel");
+    if (lab) lab.textContent = ({ low: "Low", mid: "Mid", high: "High", max: "Max" })[v] || "Mid";
+    document.querySelectorAll("#effortDropdown button").forEach(b => {
+      b.classList.toggle("active", b.dataset.effort === v);
+    });
+    syncEffortChips();
+  }
+
+  function syncEffortChips() {
+    if (!dom.effortChips) return;
+    const cur = dom.effortMode.value || "mid";
+    dom.effortChips.querySelectorAll(".cat-chip").forEach(c => {
+      c.classList.toggle("active", c.dataset.val === cur);
+    });
+  }
+
+  function syncModeChips() {
+    if (!dom.modeChips) return;
+    const auto = dom.autoMode.value || "on";
+    const fb = dom.autoCallback.value || "on";
+    dom.modeChips.querySelectorAll(".cat-chip").forEach(c => {
+      if (c.dataset.group === "auto") c.classList.toggle("active", c.dataset.val === auto);
+      if (c.dataset.group === "fallback") c.classList.toggle("active", c.dataset.val === fb);
+    });
+  }
+
+  function renderCategoryPanels() {
+    // Effort chips
+    if (dom.effortChips) {
+      dom.effortChips.innerHTML = "";
+      [
+        { val: "low", label: "Low · Fast" },
+        { val: "mid", label: "Mid · Balanced" },
+        { val: "high", label: "High · Deep" },
+        { val: "max", label: "Max · Full power" }
+      ].forEach(item => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "cat-chip";
+        b.dataset.val = item.val;
+        b.textContent = item.label;
+        b.onclick = () => setEffort(item.val);
+        dom.effortChips.appendChild(b);
+      });
+      syncEffortChips();
+    }
+
+    // Auto chips (dedicated tab)
+    const autoBox = document.getElementById("autoChips");
+    if (autoBox) {
+      autoBox.innerHTML = "";
+      [["on", "Auto Mode ON"], ["off", "Auto Mode OFF"]].forEach(([val, label]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "cat-chip" + ((dom.autoMode?.value || "on") === val ? " active" : "");
+        b.dataset.val = val;
+        b.textContent = label;
+        b.onclick = () => {
+          if (dom.autoMode) dom.autoMode.value = val;
+          localStorage.setItem("nv_automode", val);
+          autoBox.querySelectorAll(".cat-chip").forEach(c => c.classList.toggle("active", c.dataset.val === val));
+          toastAssist("Auto Mode " + val.toUpperCase());
+        };
+        autoBox.appendChild(b);
+      });
+    }
+
+    // Fallback chips (dedicated tab)
+    const fbBox = document.getElementById("fallbackChips");
+    if (fbBox) {
+      fbBox.innerHTML = "";
+      [["on", "Fallback ON"], ["off", "Fallback OFF"]].forEach(([val, label]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "cat-chip" + ((dom.autoCallback?.value || "on") === val ? " active" : "");
+        b.dataset.val = val;
+        b.textContent = label;
+        b.onclick = () => {
+          if (dom.autoCallback) dom.autoCallback.value = val;
+          localStorage.setItem("nv_autocallback", val);
+          fbBox.querySelectorAll(".cat-chip").forEach(c => c.classList.toggle("active", c.dataset.val === val));
+          toastAssist("Fallback " + val.toUpperCase());
+        };
+        fbBox.appendChild(b);
+      });
+    }
+
+    // Action chips
+    if (dom.actionChips) {
+      dom.actionChips.innerHTML = "";
+      const pickModel = (id, note) => {
+        if (!NVIDIA_MODELS.some(m => m.value === id)) {
+          toastAssist("Model not in list");
+          return;
+        }
+        dom.modelSelect.value = id;
+        appState.selectedModelId = id;
+        localStorage.setItem("nv_model", id);
+        if (dom.autoMode) {
+          dom.autoMode.value = "off";
+          localStorage.setItem("nv_automode", "off");
+        }
+        switchCategory("model");
+        toastAssist(note || ("Selected " + (getModelInfo(id)?.label || id)));
+      };
+      const actions = [
+        {
+          label: "🌐 Web Pulse",
+          run: () => pickModel("moonshotai/kimi-k2.6", "Web Pulse ready — ask anything current")
+        },
+        {
+          label: "🏆 Best Model",
+          run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Nemotron 3 Super selected")
+        },
+        {
+          label: "💻 Coding",
+          run: () => pickModel("nvidia/nemotron-3-ultra-550b-a55b", "Nemotron 3 Ultra selected")
+        },
+        {
+          label: "🧠 Reasoning",
+          run: () => pickModel("deepseek-ai/deepseek-r1", "Reasoning model selected")
+        },
+        {
+          label: "👁️ Vision",
+          run: () => pickModel("nvidia/nemotron-nano-12b-v2-vl", "Vision model selected")
+        },
+        {
+          label: "⚡ Fast",
+          run: () => pickModel("meta/llama-3.2-3b-instruct", "Fast model selected")
+        },
+        {
+          label: "📋 Copy last",
+          run: async () => {
+            const last = [...appState.messages].reverse().find(m => m.role === "assistant" && typeof m.content === "string");
+            if (!last) { toastAssist("Nothing to copy"); return; }
+            try {
+              await navigator.clipboard.writeText(last.content);
+              toastAssist("Last reply copied");
+            } catch {
+              toastAssist("Copy failed");
+            }
+          }
+        },
+        {
+          label: "📝 Summarize",
+          run: () => {
+            dom.messageTextInput.value = "Summarize the conversation so far in clear bullet points.";
+            dom.messageTextInput.focus();
+            dom.messageTextInput.dispatchEvent(new Event("input"));
+          }
+        },
+        {
+          label: "✍️ Rewrite",
+          run: () => {
+            dom.messageTextInput.value = "Rewrite the last answer more clearly and concisely:\n\n";
+            dom.messageTextInput.focus();
+            dom.messageTextInput.dispatchEvent(new Event("input"));
+          }
+        },
+        {
+          label: "🐛 Debug code",
+          run: () => {
+            dom.messageTextInput.value = "Find bugs and fix this code. Explain each change:\n\n```\n\n```";
+            dom.messageTextInput.focus();
+            dom.messageTextInput.dispatchEvent(new Event("input"));
+          }
+        },
+        {
+          label: "💡 Explain simply",
+          run: () => {
+            dom.messageTextInput.value = "Explain this simply, like I'm smart but not an expert:\n\n";
+            dom.messageTextInput.focus();
+            dom.messageTextInput.dispatchEvent(new Event("input"));
+          }
+        },
+        {
+          label: "🗑️ Clear chat",
+          danger: true,
+          run: () => {
+            if (confirm("Clear chat history?")) {
+              stopGeneration();
+              appState.messages = [{ role: "assistant", content: "Memory cleared.", ts: Date.now() }];
+              localStorage.removeItem("nv_msgs");
+              setGenerating(false);
+              render();
+            }
+          }
+        }
+      ];
+      actions.forEach(a => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "cat-chip" + (a.danger ? " danger" : "");
+        b.textContent = a.label;
+        b.onclick = a.run;
+        dom.actionChips.appendChild(b);
+      });
+    }
+  }
+
+  function initCategoryTabs() {
+    dom.catTabs?.querySelectorAll(".cat-tab").forEach(tab => {
+      tab.addEventListener("click", () => switchCategory(tab.dataset.cat));
+    });
+    renderCategoryPanels();
+    const saved = localStorage.getItem("nv_cat") || "model";
+    switchCategory(saved);
+  }
+
+
+
+  async function regenerateLast() {
+    if (appState.isGenerating) return;
+    while (appState.messages.length && appState.messages[appState.messages.length - 1].role === "assistant") {
+      appState.messages.pop();
+    }
+    const lastUser = [...appState.messages].reverse().find(m => m.role === "user");
+    if (!lastUser) {
+      appState.messages.push({ role: "assistant", content: "Nothing to regenerate — send a message first." });
+      render();
+      return;
+    }
+    const text = typeof lastUser.content === "string"
+      ? lastUser.content
+      : (Array.isArray(lastUser.content)
+          ? (lastUser.content.find(p => p.type === "text")?.text || "Regenerate.")
+          : "Regenerate.");
+    const hadVision = Array.isArray(lastUser.content);
+    persistMessages();
+    render();
+    await runChatCompletion(text, hadVision);
+  }
+
+  // Effort levels → temperature, max_tokens, reasoning system hint
+  const EFFORT_PRESETS = {
+    low:  { temperature: 0.65, top_p: 0.92, max_tokens: 4096,   label: "Low",  systemHint: "Reply FAST and short. Prefer brevity unless the user asks for code or detail." },
+    mid:  { temperature: 0.55, top_p: 0.9,  max_tokens: 16384,  label: "Mid",  systemHint: "Clear answers. For code requests, output complete working code — do not truncate." },
+    high: { temperature: 0.35, top_p: 0.85, max_tokens: 32768,  label: "High", systemHint: "Thorough answers. For coding tasks, deliver full files/modules with no omitted sections." },
+    max:  { temperature: 0.25, top_p: 0.8,  max_tokens: 65536,  label: "Max",  systemHint: "Maximum output budget. Never truncate code, configs, or long answers. Complete every file fully. Prefer correctness and completeness over brevity." }
+  };
+
+  function getEffortConfig() {
+    const key = (dom.effortMode?.value || "mid").toLowerCase();
+    return EFFORT_PRESETS[key] || EFFORT_PRESETS.mid;
+  }
+
+  function populateModelSelect() {
+    dom.modelSelect.innerHTML = "";
+
+    const favs = prefs.favorites || [];
+    if (favs.length) {
+      const fg = document.createElement("optgroup");
+      fg.label = "⭐ Favorites";
+      favs.forEach(id => {
+        const info = NVIDIA_MODELS.find(m => m.value === id);
+        if (!info) return;
+        const opt = document.createElement("option");
+        opt.value = info.value;
+        opt.textContent = "★ " + info.label;
+        fg.appendChild(opt);
+      });
+      if (fg.children.length) dom.modelSelect.appendChild(fg);
+    }
+
+    NVIDIA_MODEL_GROUPS.forEach(group => {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = group.category;
+
+      group.models.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.value;
+        const starred = favs.includes(m.value) ? "★ " : "";
+        opt.textContent = starred + m.label;
+        opt.dataset.type = m.type || "chat";
+        optgroup.appendChild(opt);
+      });
+
+      dom.modelSelect.appendChild(optgroup);
+    });
+  }
+
+  function toggleFavoriteModel(id) {
+    const set = new Set(prefs.favorites || []);
+    if (set.has(id)) set.delete(id); else set.add(id);
+    prefs.favorites = [...set];
+    savePrefs();
+    const cur = dom.modelSelect.value;
+    populateModelSelect();
+    dom.modelSelect.value = cur;
+  }
+
+  function init() {
+    applyPrefs();
+    populateModelSelect();
+    setupViewportLock();
+
+    appState.selectedModelId = localStorage.getItem("nv_model") || "nvidia/nemotron-3-super-120b-a12b";
+    dom.modelSelect.value = appState.selectedModelId;
+    dom.effortMode.value = localStorage.getItem("nv_effort") || "mid";
+    if (dom.autoCallback) dom.autoCallback.value = localStorage.getItem("nv_autocallback") || "on";
+    if (dom.autoMode) dom.autoMode.value = localStorage.getItem("nv_automode") || "on";
+    
+    if (!dom.modelSelect.value) {
+      appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+      dom.modelSelect.value = appState.selectedModelId;
+    }
+
+    const saved = localStorage.getItem(sessionKey());
+    try {
+      appState.messages = saved ? JSON.parse(saved) : null;
+    } catch { appState.messages = null; }
+    if (!appState.messages || !appState.messages.length) {
+      appState.messages = [{
+        role: "assistant",
+        ts: Date.now(),
+        content: `**Uplink Studio UP-76**
+
+Model · Effort · Actions — type and send.`
+      }];
+    }
+
+    // Restore draft
+    const draft = localStorage.getItem("nv_draft");
+    if (draft) dom.messageTextInput.value = draft;
+
+    dom.modelSelect.addEventListener("change", (e) => {
+      appState.selectedModelId = e.target.value;
+      localStorage.setItem("nv_model", appState.selectedModelId);
+    });
+
+    dom.effortMode.addEventListener("change", (e) => {
+      localStorage.setItem("nv_effort", e.target.value);
+    });
+
+    dom.autoCallback?.addEventListener("change", (e) => {
+      localStorage.setItem("nv_autocallback", e.target.value);
+    });
+
+    dom.autoMode?.addEventListener("change", (e) => {
+      localStorage.setItem("nv_automode", e.target.value);
+    });
+
+    dom.clearMemoryBtn.addEventListener("click", () => {
+      if (confirm("Clear this chat session?")) {
+        stopGeneration();
+        appState.messages = [{ role: "assistant", content: "Memory cleared.", ts: Date.now() }];
+        localStorage.removeItem(sessionKey());
+        setGenerating(false);
+        render();
+      }
+    });
+
+    dom.stopMessageBtn?.addEventListener("click", stopGeneration);
+    
+    dom.attachBtn.addEventListener("click", () => dom.fileInput.click());
+    const effortTrigger = document.getElementById("effortTrigger");
+    const effortDropdown = document.getElementById("effortDropdown");
+    effortTrigger?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!effortDropdown) return;
+      effortDropdown.hidden = !effortDropdown.hidden;
+    });
+    effortDropdown?.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setEffort(btn.dataset.effort);
+        if (effortDropdown) effortDropdown.hidden = true;
+      });
+    });
+    document.addEventListener("click", () => {
+      if (effortDropdown) effortDropdown.hidden = true;
+    });
+    setEffort(localStorage.getItem("nv_effort") || "mid");
+    dom.removeFileBtn.addEventListener("click", clearFile);
+    dom.fileInput.addEventListener("change", handleFile);
+    dom.sendMessageBtn.addEventListener("click", () => { haptic(); sendMsg(); });
+
+    initCategoryTabs();
+    initStudioFeatures();
+
+    dom.messageTextInput.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = this.scrollHeight + "px";
+      localStorage.setItem("nv_draft", this.value);
+      const counter = document.getElementById("inputCounter");
+      if (counter) {
+        const len = this.value.length;
+        if (len > 0) {
+          counter.style.display = "block";
+          counter.textContent = `${len.toLocaleString()} chars · ~${estimateTokens(this.value).toLocaleString()} tok`;
+        } else {
+          counter.style.display = "none";
+        }
+      }
+    });
+
+    dom.messageTextInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (!appState.isGenerating) { haptic(); sendMsg(); }
+      }
+      if (e.key === "Escape" && appState.isGenerating) stopGeneration();
+    });
+
+    // Paste image from clipboard
+    dom.messageTextInput.addEventListener("paste", (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const it of items) {
+        if (it.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = it.getAsFile();
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            currentFile = { name: file.name || "paste.png", data: ev.target.result, isImg: true };
+            dom.attachmentNameText.textContent = currentFile.name;
+            dom.attachmentPreviewBar.style.display = "flex";
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    });
+
+    render();
+  }
+
+  function openModal(id) {
+    document.getElementById(id)?.classList.add("open");
+  }
+  function closeModal(id) {
+    document.getElementById(id)?.classList.remove("open");
+  }
+
+  function initStudioFeatures() {
+    // Settings modal fields
+    const sys = document.getElementById("sysPromptInput");
+    if (sys) sys.value = prefs.systemPrompt || "";
+    const fs = document.getElementById("fontSizeSelect");
+    const vl = document.getElementById("voiceLangSelect");
+    if (vl) vl.value = prefs.voiceLang || "auto";
+    if (fs) fs.value = prefs.font || "md";
+    const sound = document.getElementById("soundToggle");
+    if (sound) sound.checked = !!prefs.sound;
+    const hap = document.getElementById("hapticToggle");
+    if (hap) hap.checked = !!prefs.haptic;
+    const compact = document.getElementById("compactToggle");
+    if (compact) compact.checked = !!prefs.compact;
+    const ts = document.getElementById("timestampsToggle");
+    if (ts) ts.checked = !!prefs.timestamps;
+
+    const sw = document.getElementById("themeSwatches");
+    if (sw) {
+      sw.innerHTML = "";
+      Object.entries(THEMES).forEach(([name, t]) => {
+        const d = document.createElement("button");
+        d.type = "button";
+        d.className = "theme-swatch" + (prefs.theme === name ? " on" : "");
+        d.style.background = t.accent;
+        d.title = name;
+        d.onclick = () => {
+          prefs.theme = name;
+          savePrefs();
+          applyPrefs();
+          sw.querySelectorAll(".theme-swatch").forEach(x => x.classList.remove("on"));
+          d.classList.add("on");
+        };
+        sw.appendChild(d);
+      });
+    }
+
+    // Note: settingsBtn/shortcutsBtn were removed from the toolbar per user request.
+    // Modal markup + these close/save handlers are kept intact so the settings
+    // (system prompt, font size, theme) and shortcuts modal can be reconnected
+    // later just by adding a trigger button back with these same ids.
+    document.getElementById("settingsClose")?.addEventListener("click", () => {
+      prefs.systemPrompt = document.getElementById("sysPromptInput")?.value || "";
+      prefs.font = document.getElementById("fontSizeSelect")?.value || "md";
+      prefs.voiceLang = document.getElementById("voiceLangSelect")?.value || "auto";
+      prefs.sound = !!document.getElementById("soundToggle")?.checked;
+      prefs.haptic = !!document.getElementById("hapticToggle")?.checked;
+      prefs.compact = !!document.getElementById("compactToggle")?.checked;
+      prefs.timestamps = !!document.getElementById("timestampsToggle")?.checked;
+      savePrefs();
+      applyPrefs();
+      closeModal("settingsModal");
+      render();
+    });
+
+    document.getElementById("shortcutsClose")?.addEventListener("click", () => closeModal("shortcutsModal"));
+    document.getElementById("lightboxClose")?.addEventListener("click", () => {
+      document.getElementById("lightbox")?.classList.remove("open");
+    });
+    document.getElementById("lightbox")?.addEventListener("click", (e) => {
+      if (e.target.id === "lightbox") e.currentTarget.classList.remove("open");
+    });
+
+    document.getElementById("msgSearch")?.addEventListener("input", (e) => {
+      appState.searchQuery = e.target.value || "";
+      render();
+    });
+
+    // Offline banner
+    const banner = document.getElementById("offlineBanner");
+    const syncNet = () => {
+      if (!banner) return;
+      banner.classList.toggle("show", !navigator.onLine);
+    };
+    window.addEventListener("online", syncNet);
+    window.addEventListener("offline", syncNet);
+    syncNet();
+
+    // Drag & drop
+    const vp = document.querySelector(".chat-viewport");
+    const overlay = document.getElementById("dropOverlay");
+    if (vp) {
+      ["dragenter", "dragover"].forEach(ev => vp.addEventListener(ev, (e) => {
+        e.preventDefault(); overlay?.classList.add("show");
+      }));
+      ["dragleave", "drop"].forEach(ev => vp.addEventListener(ev, (e) => {
+        e.preventDefault();
+        if (ev === "drop") {
+          const file = e.dataTransfer?.files?.[0];
+          if (file) {
+            const isImg = file.type.startsWith("image/");
+            const reader = new FileReader();
+            reader.onload = (ev2) => {
+              currentFile = { name: file.name, data: ev2.target.result, isImg };
+              dom.attachmentNameText.textContent = file.name;
+              dom.attachmentPreviewBar.style.display = "flex";
+            };
+            if (isImg) reader.readAsDataURL(file);
+            else reader.readAsText(file);
+          }
+        }
+        overlay?.classList.remove("show");
+      }));
+    }
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        document.getElementById("msgSearch")?.focus();
+      }
+      if (meta && e.key === ",") {
+        e.preventDefault();
+        openModal("settingsModal");
+      }
+      if (meta && e.key === "/") {
+        e.preventDefault();
+        openModal("shortcutsModal");
+      }
+      if (meta && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        dom.clearMemoryBtn?.click();
+      }
+      if (e.key === "Escape") {
+        document.querySelectorAll(".modal-backdrop.open, .lightbox.open").forEach(el => el.classList.remove("open"));
+      }
+    });
+  }
+
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const isImg = file.type.startsWith("image/");
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      currentFile = { name: file.name, data: ev.target.result, isImg };
+      dom.attachmentNameText.textContent = file.name;
+      dom.attachmentPreviewBar.style.display = "flex";
+    };
+    if (isImg) reader.readAsDataURL(file);
+    else reader.readAsText(file);
+  }
+
+  function clearFile() {
+    currentFile = null;
+    dom.fileInput.value = "";
+    dom.attachmentPreviewBar.style.display = "none";
+  }
+
+  function detectCodeFilename(language, code) {
+    const lang = (language || "").toLowerCase();
+    const map = {
+      js: "script.js",
+      javascript: "script.js",
+      ts: "script.ts",
+      typescript: "script.ts",
+      html: "index.html",
+      css: "style.css",
+      py: "main.py",
+      python: "main.py",
+      json: "data.json",
+      csv: "data.csv",
+      md: "README.md",
+      markdown: "README.md",
+      java: "Main.java",
+      c: "main.c",
+      cpp: "main.cpp",
+      csharp: "Program.cs",
+      php: "index.php",
+      sh: "script.sh",
+      bash: "script.sh",
+      sql: "query.sql",
+      xml: "data.xml",
+      yaml: "config.yaml",
+      yml: "config.yml"
+    };
+    if (map[lang]) return map[lang];
+    if (/^<!doctype html/i.test(code) || /<html[\s>]/i.test(code)) return "index.html";
+    if (/function\s+\w+\s*\(/i.test(code) || /const\s+\w+\s*=\s*/i.test(code)) return "script.js";
+    return "code.txt";
+  }
+
+  function ensureCodeActions(root) {
+    root.querySelectorAll("pre").forEach(pre => {
+      if (pre.dataset.enhanced === "1") return;
+      const codeEl = pre.querySelector("code");
+      if (!codeEl) return;
+
+      pre.dataset.enhanced = "1";
+
+      const raw = codeEl.textContent || "";
+      const langClass = [...codeEl.classList].find(c => c.startsWith("language-"));
+      const language = langClass ? langClass.slice(9) : "";
+
+      const bar = document.createElement("div");
+      bar.className = "code-actions";
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "code-action-btn";
+      copyBtn.textContent = "📋 Copy Code";
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(raw);
+          const old = copyBtn.textContent;
+          copyBtn.textContent = "✓ Copied";
+          setTimeout(() => copyBtn.textContent = old, 1200);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = raw;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          const old = copyBtn.textContent;
+          copyBtn.textContent = "✓ Copied";
+          setTimeout(() => copyBtn.textContent = old, 1200);
+        }
+      };
+
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.className = "code-action-btn";
+      saveBtn.textContent = "💾 Save File";
+      saveBtn.onclick = () => {
+        const filename = detectCodeFilename(language, raw);
+        const blob = new Blob([raw], { type: "text/plain;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      };
+
+      bar.append(copyBtn, saveBtn);
+      pre.appendChild(bar);
+    });
+  }
+
+
+  function isNearBottom(el, threshold = 100) {
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  }
+
+  function updateScrollBottomBtn() {
+    const el = dom.messagesContainer;
+    const btn = document.getElementById("scrollBottomBtn");
+    if (!el || !btn) return;
+    // Only show when content actually overflows and user is not near bottom
+    const overflows = el.scrollHeight > el.clientHeight + 24;
+    if (!overflows || isNearBottom(el, 120)) btn.classList.remove("visible");
+    else btn.classList.add("visible");
+  }
+
+  function scrollToBottom(smooth = true) {
+    const el = dom.messagesContainer;
+    if (!el) return;
+    try {
+      el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    } catch (_) {
+      el.scrollTop = el.scrollHeight;
+    }
+    setTimeout(updateScrollBottomBtn, smooth ? 350 : 50);
+  }
+
+  function render() {
+    dom.messagesContainer.innerHTML = "";
+    const q = (appState.searchQuery || "").trim().toLowerCase();
+    const lastAssistantIdx = (() => {
+      for (let i = appState.messages.length - 1; i >= 0; i--) {
+        if (appState.messages[i].role === "assistant") return i;
+      }
+      return -1;
+    })();
+    const lastUserIdx = (() => {
+      for (let i = appState.messages.length - 1; i >= 0; i--) {
+        if (appState.messages[i].role === "user") return i;
+      }
+      return -1;
+    })();
+
+    appState.messages.forEach((m, idx) => {
+      if (q) {
+        const hay = (typeof m.content === "string" ? m.content : "").toLowerCase();
+        if (!hay.includes(q)) return;
+      }
+
+      const div = document.createElement("div");
+      div.className = "message-bubble " + m.role;
+      const body = m.ui || (typeof m.content === "string" ? safeMarkdown(m.content) : "");
+      div.innerHTML = body;
+
+      // Timestamps
+      if (prefs.timestamps && m.ts) {
+        const meta = document.createElement("div");
+        meta.className = "msg-meta";
+        const t = document.createElement("time");
+        try { t.textContent = new Date(m.ts).toLocaleString(); }
+        catch { t.textContent = ""; }
+        meta.appendChild(t);
+        div.appendChild(meta);
+      }
+
+      // Lightbox for generated / attached images in bubble
+      div.querySelectorAll("img").forEach(img => {
+        img.style.cursor = "zoom-in";
+        img.addEventListener("click", () => openLightbox(img.src));
+      });
+
+      if (m.role === "assistant" && typeof m.content === "string") {
+        const footer = document.createElement("div");
+        footer.className = "msg-footer";
+
+        if (m.model) {
+          const badge = document.createElement("span");
+          badge.className = "msg-model-badge";
+          badge.title = m.model;
+          badge.textContent = getModelInfo(m.model)?.label || m.model;
+          footer.appendChild(badge);
+        }
+
+        const spacer = document.createElement("span");
+        spacer.className = "msg-footer-spacer";
+        footer.appendChild(spacer);
+
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "code-action-btn";
+        copyBtn.textContent = "📋 Copy";
+        copyBtn.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(m.content);
+            copyBtn.textContent = "✓ Copied";
+            setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 1100);
+          } catch {
+            copyBtn.textContent = "Failed";
+            setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 1100);
+          }
+        };
+        footer.appendChild(copyBtn);
+if (idx === lastAssistantIdx) {
+          const regen = document.createElement("button");
+          regen.type = "button";
+          regen.className = "code-action-btn";
+          regen.textContent = "↻ Regen";
+          regen.onclick = () => regenerateLast();
+          footer.appendChild(regen);
+        }
+        div.appendChild(footer);
+      }
+
+      if (m.role === "user" && idx === lastUserIdx && typeof m.content === "string" && !appState.isGenerating) {
+        const footer = document.createElement("div");
+        footer.className = "msg-footer";
+        const spacer = document.createElement("span");
+        spacer.className = "msg-footer-spacer";
+        footer.appendChild(spacer);
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "code-action-btn";
+        editBtn.textContent = "✏️ Edit";
+        editBtn.onclick = () => startEditUserMessage(idx, div, m);
+        footer.appendChild(editBtn);
+        div.appendChild(footer);
+      }
+
+      dom.messagesContainer.appendChild(div);
+    });
+    if (typeof hljs !== "undefined" && hljs && typeof hljs.highlightElement === "function") {
+      document.querySelectorAll("pre code").forEach(el => {
+        try { hljs.highlightElement(el); } catch (_) { /* skip highlighting, keep raw code */ }
+      });
+    }
+    ensureCodeActions(dom.messagesContainer);
+    requestAnimationFrame(() => updateScrollBottomBtn());
+    updateCtxPill();
+  }
+
+  function openLightbox(src) {
+    const box = document.getElementById("lightbox");
+    const img = document.getElementById("lightboxImg");
+    if (!box || !img) return;
+    img.src = src;
+    box.classList.add("open");
+  }
+
+
+  function startEditUserMessage(idx, bubbleEl, msg) {
+    const original = typeof msg.content === "string" ? msg.content : "";
+    bubbleEl.innerHTML = "";
+    const ta = document.createElement("textarea");
+    ta.className = "msg-edit-box";
+    ta.value = original;
+    const actions = document.createElement("div");
+    actions.className = "msg-edit-actions";
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "code-action-btn";
+    save.textContent = "Save & Resend";
+    save.style.borderColor = "var(--color-accent-primary)";
+    save.style.color = "var(--color-accent-primary)";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "code-action-btn";
+    cancel.textContent = "Cancel";
+    cancel.onclick = () => render();
+    save.onclick = async () => {
+      const newText = ta.value.trim();
+      if (!newText) return;
+      // Drop this user message and everything after
+      appState.messages = appState.messages.slice(0, idx);
+      appState.messages.push({ role: "user", content: newText });
+      persistMessages();
+      render();
+      await runChatCompletion(newText, false);
+    };
+    actions.append(save, cancel);
+    bubbleEl.append(ta, actions);
+    ta.focus();
+  }
+
+
+
+  function chooseAutoModel(text, hasImage = false) {
+    const t = (text || "").toLowerCase();
+    const trimmed = (text || "").trim();
+    const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
+
+    const pick = (category, fallback) => {
+      const found = NVIDIA_MODELS.find(m => m.category === category);
+      return found?.value || fallback;
+    };
+
+    if (
+      hasImage ||
+      /image|photo|picture|screenshot|vision|ছবি|ইমেজ|স্ক্রিনশট/.test(t)
+    ) {
+      return pick("👁️ Vision / Multimodal", appState.selectedModelId);
+    }
+
+    if (
+      /code|coding|program|javascript|python|html|css|debug|কোড|প্রোগ্রাম/.test(t)
+    ) {
+      return pick("💻 Coding", appState.selectedModelId);
+    }
+
+    if (
+      /reason|math|solve|proof|logic|hard|complex|গণিত|সমাধান|যুক্তি|কঠিন/.test(t)
+    ) {
+      return pick("🧠 Reasoning / Deep Thinking", appState.selectedModelId);
+    }
+
+    if (/live search|web search|search the web|search online|latest|today|current|news|recent|internet|source|sources|cite|citation|ওয়েবে খোঁজ|ওয়েবে খোঁজ|লাইভ সার্চ|সাম্প্রতিক|আজকের খবর|বর্তমান|উৎস|সোর্স/.test(t)) {
+      return "moonshotai/kimi-k2.6";
+    }
+
+    if (/fast|quick|simple|সহজ|দ্রুত/.test(t)) {
+      return pick("⚡ Fast / Lightweight", appState.selectedModelId);
+    }
+
+    // Effort bias: High/Max prefer reasoning/frontier; Low prefers fast models.
+    const effortKey = (dom.effortMode?.value || "mid").toLowerCase();
+    if (effortKey === "max" || effortKey === "high") {
+      return pick("🏆 Frontier / Best Overall", "nvidia/nemotron-3-super-120b-a12b");
+    }
+    if (effortKey === "low") {
+      return pick("⚡ Fast / Lightweight", appState.selectedModelId);
+    }
+
+    // General/default traffic uses Nemotron 3 Super.
+    // Short, simple messages (greetings, quick facts, one-liners) get a fast,
+    // lightweight model for a snappier reply. Longer or multi-sentence messages
+    // likely need more capability, so they go to the Frontier model.
+    const looksComplex = wordCount > 30 || /[.?!].*[.?!]/.test(trimmed);
+    // Prefer fast models for short/casual traffic
+    if (!looksComplex && wordCount > 0 && wordCount <= 20) {
+      return pick("⚡ Fast / Lightweight", appState.selectedModelId);
+    }
+
+    return "nvidia/nemotron-3-super-120b-a12b";
+  }
+
+  function getModelInfo(id) {
+    return NVIDIA_MODELS.find(m => m.value === id) || null;
+  }
+
+  function getFallbackModels(primaryId) {
+    const primary = getModelInfo(primaryId);
+
+    // Image-generation/editing models never enter chat fallback.
+    if (isImageModel(primaryId)) return [];
+
+    const chatModels = NVIDIA_MODELS.filter(m => !isImageModel(m.value));
+
+    if (!primary) return chatModels.slice(0, 6);
+
+    const sameCategory = chatModels.filter(m =>
+      m.category === primary.category && m.value !== primaryId
+    );
+
+    const allOthers = chatModels.filter(m =>
+      m.value !== primaryId &&
+      !sameCategory.some(s => s.value === m.value)
+    );
+
+    return [...sameCategory, ...allOthers];
+  }
+
+  function applyEffortToMessages(messages) {
+    const effort = getEffortConfig();
+    const custom = (prefs.systemPrompt || "").trim();
+    const base = `[Effort: ${effort.label}] ${effort.systemHint}` + (custom ? "\n\nUser instructions:\n" + custom : "");
+    const hasSystem = messages.some(m => m.role === "system");
+    if (hasSystem) {
+      return messages.map((m, i) => {
+        if (i === 0 && m.role === "system" && typeof m.content === "string") {
+          return { ...m, content: base + "\n\n" + m.content };
+        }
+        return m;
+      });
+    }
+    return [
+      { role: "system", content: base },
+      ...messages
+    ];
+  }
+
+  // Retry helper: retries only transient failures (network drop, 429, 502/503/504)
+  // with exponential backoff. Never retries on user-abort or normal model/HTTP errors
+  // that should instead fall through to the next candidate model.
+  async function fetchWithRetry(url, options, signal, maxRetries = 2) {
+    let lastErr;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      try {
+        const res = await fetch(url, options);
+        if (res.ok || attempt === maxRetries) return res;
+        if ([429, 502, 503, 504].includes(res.status)) {
+          const wait = Math.min(600 * Math.pow(2, attempt), 4000);
+          await new Promise(r => setTimeout(r, wait));
+          continue;
+        }
+        return res; // non-transient HTTP error, don't retry
+      } catch (err) {
+        if (err?.name === "AbortError" || signal?.aborted) throw err;
+        lastErr = err;
+        if (attempt === maxRetries) throw err;
+        const wait = Math.min(600 * Math.pow(2, attempt), 4000);
+        await new Promise(r => setTimeout(r, wait));
+      }
+    }
+    throw lastErr || new Error("Request failed after retries.");
+  }
+
+  function extractAssistantText(obj) {
+    if (!obj || typeof obj !== "object") return "";
+    const choice = obj?.choices?.[0];
+    const delta = choice?.delta || {};
+    const msg = choice?.message || {};
+    // Prefer final content; fall back to reasoning (Nemotron / R1 style)
+    const parts = [
+      delta.content,
+      msg.content,
+      delta.text,
+      msg.text,
+      obj.output_text,
+      // only use reasoning if no normal content yet (caller may accumulate)
+      delta.reasoning_content,
+      msg.reasoning_content,
+      delta.reasoning,
+      msg.reasoning
+    ];
+    for (const p of parts) {
+      if (typeof p === "string" && p.length) return p;
+    }
+    // array content blocks
+    const blocks = msg.content || delta.content;
+    if (Array.isArray(blocks)) {
+      return blocks.map(b => (typeof b === "string" ? b : (b?.text || b?.content || ""))).join("");
+    }
+    return "";
+  }
+
+  async function callModelStreaming(modelId, messages, onChunk, signal) {
+    const effort = getEffortConfig();
+    const msgs = applyEffortToMessages(messages);
+    const payload = {
+      model: modelId,
+      messages: msgs,
+      temperature: effort.temperature,
+      top_p: effort.top_p,
+      max_tokens: effort.max_tokens,
+      stream: true
+    };
+    // Nemotron Ultra sometimes needs thinking disabled for plain content
+    if (/nemotron/i.test(modelId)) {
+      payload.chat_template_kwargs = { enable_thinking: false };
+    }
+
+    const res = await fetchWithRetry(WORKER_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream, application/json" },
+      body: JSON.stringify(payload),
+      signal
+    }, signal);
+
+    if (!res.ok) {
+      const raw = await res.text();
+      let detail = raw;
+      try {
+        const d = JSON.parse(raw);
+        detail = d?.detail || d?.message || d?.error?.message || d?.error || raw;
+      } catch (_) {}
+      return { ok: false, status: res.status, error: String(detail).slice(0, 800) };
+    }
+
+    // Non-SSE JSON body (some proxies collapse stream)
+    const ct = (res.headers.get("Content-Type") || "").toLowerCase();
+    if (!ct.includes("text/event-stream") && !ct.includes("stream")) {
+      const raw = await res.text();
+      try {
+        const data = JSON.parse(raw);
+        const reply = extractAssistantText(data) || data?.choices?.[0]?.message?.content || "";
+        if (reply) {
+          onChunk?.(reply);
+          return { ok: true, reply };
+        }
+        return { ok: false, status: res.status, error: "No assistant content returned.", rawText: raw.slice(0, 500) };
+      } catch {
+        if (raw && raw.trim()) {
+          onChunk?.(raw);
+          return { ok: true, reply: raw };
+        }
+        return { ok: false, status: res.status, error: "Empty non-stream response." };
+      }
+    }
+
+    if (!res.body) {
+      return { ok: false, status: res.status, error: "Streaming response body is unavailable." };
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullText = "";
+    let reasoning = "";
+
+    const processLine = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === "[DONE]") return;
+      const payloadLine = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+      if (!payloadLine || payloadLine === "[DONE]") return;
+
+      try {
+        const obj = JSON.parse(payloadLine);
+        const choice = obj?.choices?.[0];
+        const delta = choice?.delta || {};
+        const content =
+          (typeof delta.content === "string" && delta.content) ||
+          (typeof choice?.message?.content === "string" && choice.message.content) ||
+          (typeof delta.text === "string" && delta.text) ||
+          "";
+        const reason =
+          (typeof delta.reasoning_content === "string" && delta.reasoning_content) ||
+          (typeof delta.reasoning === "string" && delta.reasoning) ||
+          "";
+
+        if (content) {
+          fullText += content;
+          onChunk?.(fullText);
+        } else if (reason) {
+          reasoning += reason;
+          // Show reasoning live only until real content arrives
+          if (!fullText) onChunk?.("_(thinking...)_\n" + reasoning.slice(-2000));
+        }
+      } catch (_) {}
+    };
+
+    try {
+      while (true) {
+        if (signal?.aborted) {
+          try { await reader.cancel(); } catch (_) {}
+          return { ok: true, reply: fullText || reasoning || "_(generation stopped)_", stopped: true };
+        }
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || "";
+        lines.forEach(processLine);
+      }
+    } catch (err) {
+      if (err?.name === "AbortError" || signal?.aborted) {
+        return { ok: true, reply: fullText || reasoning || "_(generation stopped)_", stopped: true };
+      }
+      throw err;
+    }
+
+    buffer += decoder.decode();
+    if (buffer.trim()) processLine(buffer);
+
+    if (fullText) return { ok: true, reply: fullText };
+    if (reasoning) return { ok: true, reply: reasoning };
+
+    // Stream empty → one non-stream retry
+    try {
+      const fallback = await callModel(modelId, messages, signal);
+      if (fallback?.ok && fallback.reply) {
+        onChunk?.(fallback.reply);
+        return fallback;
+      }
+      return fallback || { ok: false, status: res.status, error: "Stream ended without assistant content." };
+    } catch (e) {
+      return { ok: false, status: res.status, error: e.message || "Stream ended without assistant content." };
+    }
+  }
+
+  async function callModel(modelId, messages, signal) {
+    const effort = getEffortConfig();
+    const msgs = applyEffortToMessages(messages);
+    const res = await fetchWithRetry(WORKER_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelId,
+        messages: msgs,
+        temperature: effort.temperature,
+        top_p: effort.top_p,
+        max_tokens: effort.max_tokens
+      }),
+      signal
+    }, signal);
+
+    const rawText = await res.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      return {
+        ok: false,
+        status: res.status,
+        error: "Server returned non-JSON response.",
+        rawText
+      };
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        error: data?.detail || data?.message || data?.error?.message || JSON.stringify(data),
+        rawText
+      };
+    }
+
+    const msg = data?.choices?.[0]?.message || {};
+    let reply = msg.content || msg.text || data?.output_text || "";
+    if (!reply && msg.reasoning_content) reply = msg.reasoning_content;
+    if (!reply && Array.isArray(msg.content)) {
+      reply = msg.content.map(b => (typeof b === "string" ? b : (b?.text || ""))).join("");
+    }
+    if (!reply) {
+      return {
+        ok: false,
+        status: res.status,
+        error: "No assistant content returned. Model may be unavailable on free tier.",
+        rawText: String(rawText).slice(0, 600)
+      };
+    }
+
+    return { ok: true, reply, data };
+  }
+
+  const IMAGE_MODEL_IDS = new Set([
+    "qwen/qwen-image",
+    "qwen/qwen-image-2512",
+    "qwen/qwen-image-edit",
+    "black-forest-labs/flux.1-dev",
+    "black-forest-labs/flux.1-schnell",
+    "stabilityai/stable-diffusion-3.5-large"
+  ]);
+
+  function isImageModel(modelId) {
+    const id = String(modelId || "").toLowerCase();
+    if (!id) return false;
+    if (IMAGE_MODEL_IDS.has(modelId) || IMAGE_MODEL_IDS.has(id)) return true;
+    const info = getModelInfo(modelId);
+    if (info && /image/i.test(info.category || "")) return true;
+    // Hard fallback by id patterns used on NVIDIA NIM
+    return /qwen-image|flux\.|stable-diffusion|sdxl|sd3|imagen|text-to-image/i.test(id);
+  }
+
+  const LIVE_SEARCH_MODEL_IDS = new Set([
+    "moonshotai/kimi-k2.6",
+    "webpulse/glm-5.1",
+    "webpulse/deepseek-v3.2",
+    "webpulse/qwen3.5-122b",
+    "webpulse/llama-3.3-70b"
+  ]);
+
+  function isLiveSearchModel(modelId) {
+    return LIVE_SEARCH_MODEL_IDS.has(modelId);
+  }
+
+  // Maps each Web Pulse dropdown entry to the real NIM model that should
+  // synthesize its answer, so picking e.g. "GLM-5.1 • Web Pulse" actually
+  // prefers GLM-5.1 rather than always defaulting to the same model.
+  const WEB_PULSE_SYNTH_MAP = {
+    "moonshotai/kimi-k2.6": "moonshotai/kimi-k2.6",
+    "webpulse/glm-5.1": "zhipuai/glm-5.1",
+    "webpulse/deepseek-v3.2": "deepseek-ai/deepseek-v3.2",
+    "webpulse/qwen3.5-122b": "qwen/qwen3.5-122b-a10b",
+    "webpulse/llama-3.3-70b": "meta/llama-3.3-70b-instruct"
+  };
+
+  // Models used to synthesize live-search answers (fast → strong fallbacks)
+  const LIVE_SYNTH_MODELS = [
+    "nvidia/nemotron-nano-12b-v2-vl",
+    "deepseek-ai/deepseek-v3.2",
+    "nvidia/nemotron-3-super-120b-a12b",
+    "moonshotai/kimi-k2.6",
+    "zhipuai/glm-5.1",
+    "qwen/qwen3.5-122b-a10b",
+    "meta/llama-3.3-70b-instruct"
+  ];
+
+  async function liveWebSearch(query) {
+    const q = String(query || "").trim();
+    if (!q) throw new Error("Empty search query.");
+
+    // PRIMARY: Cloudflare Worker /search (server-side, no CORS block)
+    const endpoint = WORKER_PROXY_URL.replace(/\/+$/, "") + "/search";
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ query: q })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data && (data.text || (data.sources && data.sources.length))) {
+        return {
+          text: String(data.text || "").slice(0, 22000),
+          sources: Array.isArray(data.sources) ? data.sources.slice(0, 10) : [],
+          providerCount: data.providerCount || 0
+        };
+      }
+      // If worker returned error, fall through to limited client fallback
+      console.warn("Worker /search failed:", data?.error || res.status);
+    } catch (e) {
+      console.warn("Worker /search network error:", e.message);
+    }
+
+    // FALLBACK: Wikipedia + DDG Instant only (usually CORS-OK)
+    const enc = encodeURIComponent(q);
+    const mergedSources = [];
+    const seen = new Set();
+    const chunks = [];
+    const pushSource = (title, url, snippet = "") => {
+      try {
+        const u = new URL(String(url));
+        const key = u.hostname + u.pathname;
+        if (seen.has(key)) return;
+        seen.add(key);
+        mergedSources.push({
+          title: String(title || u.hostname).slice(0, 160),
+          url: u.href,
+          domain: u.hostname.replace(/^www\./, ""),
+          snippet: String(snippet || "").slice(0, 240)
+        });
+      } catch (_) {}
+    };
+
+    try {
+      const wiki = await fetch(
+        `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${enc}&utf8=1&format=json&origin=*&srlimit=5`
+      );
+      if (wiki.ok) {
+        const j = await wiki.json();
+        const bits = [];
+        (j?.query?.search || []).forEach(h => {
+          const title = h.title || "";
+          const snippet = String(h.snippet || "").replace(/<[^>]+>/g, "");
+          const url = `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+          bits.push(`• ${title}: ${snippet}`);
+          pushSource(title + " — Wikipedia", url, snippet);
+        });
+        if (bits.length) chunks.push("[Wikipedia]\n" + bits.join("\n"));
+      }
+    } catch (_) {}
+
+    try {
+      const ddg = await fetch(
+        `https://api.duckduckgo.com/?q=${enc}&format=json&no_html=1&skip_disambig=1`
+      );
+      if (ddg.ok) {
+        const j = await ddg.json();
+        const bits = [];
+        if (j.AbstractText) bits.push(j.AbstractText);
+        if (j.Answer) bits.push(j.Answer);
+        (j.RelatedTopics || []).slice(0, 6).forEach(t => {
+          if (t.Text) bits.push("• " + t.Text);
+          if (t.FirstURL && t.Text) pushSource(t.Text, t.FirstURL, t.Text);
+        });
+        if (j.AbstractURL) pushSource(j.Heading || "DDG", j.AbstractURL, j.AbstractText || "");
+        if (bits.length) chunks.push("[DuckDuckGo]\n" + bits.join("\n"));
+      }
+    } catch (_) {}
+
+    const combined = chunks.join("\n\n");
+    if (combined.trim().length < 40 && !mergedSources.length) {
+      throw new Error(
+        "Web search failed. Deploy the updated Worker with POST /search, then hard-refresh the app."
+      );
+    }
+    return {
+      text: combined.slice(0, 16000),
+      sources: mergedSources.slice(0, 10),
+      providerCount: chunks.length
+    };
+  }
+
+  function isJunkSource(title, url) {
+    const t = String(title || "").trim();
+    const href = String(url || "");
+    let host = "";
+    try { host = new URL(href).hostname.toLowerCase(); } catch { return true; }
+
+    if (/external-content\.duckduckgo\.com/i.test(host)) return true;
+    if (/duckduckgo\.com$/i.test(host) && /\/(i\/|y\.js|l\/|cdn)/i.test(href)) return true;
+    if (/^(www\.)?(google|bing|yahoo)\./i.test(host) && /\/(search|url|aclk|images|imgres)/i.test(href)) return true;
+    if (/\.(png|jpe?g|gif|webp|svg|ico|bmp|css|js)(\?|$)/i.test(href)) return true;
+    if (/\/(images?|img|static|thumb|thumbnail|icon|avatar|logo)\//i.test(href)) return true;
+    if (/^!?\[?Image\b/i.test(t)) return true;
+    if (/^Image\s*\d+$/i.test(t)) return true;
+    if (/^!\[/i.test(t)) return true;
+    if (t.length < 3) return true;
+    return false;
+  }
+
+  function extractSearchSources(raw) {
+    const results = [];
+    const seen = new Set();
+
+    const push = (title, url) => {
+      if (results.length >= 12) return;
+      try {
+        const u = new URL(String(url).replace(/[),.;]+$/, ""));
+        if (!/^https?:$/.test(u.protocol)) return;
+        let cleanTitle = String(title || "").replace(/\s+/g, " ").trim();
+        cleanTitle = cleanTitle.replace(/^!\[[^\]]*\]\s*/g, "").replace(/^\[[^\]]*\]\s*/g, "").trim();
+        if (isJunkSource(cleanTitle, u.href)) return;
+        const key = u.hostname + u.pathname;
+        if (seen.has(key)) return;
+        seen.add(key);
+        results.push({
+          title: cleanTitle || u.hostname.replace(/^www\./, ""),
+          url: u.href,
+          domain: u.hostname.replace(/^www\./, "")
+        });
+      } catch (_) {}
+    };
+
+    const re = /\[([^\]]{2,180})\]\((https?:\/\/[^)\s]+)\)/g;
+    let m;
+    while ((m = re.exec(raw)) !== null && results.length < 12) {
+      push(m[1], m[2]);
+    }
+
+    // Title-like lines near URLs
+    const lines = String(raw || "").split(/\n/);
+    for (let i = 0; i < lines.length && results.length < 12; i++) {
+      const line = lines[i];
+      const urlMatch = line.match(/https?:\/\/[^\s<>"')]+/);
+      if (!urlMatch) continue;
+      let title = line.replace(urlMatch[0], "").replace(/[\[\]\(\)*#_]/g, " ").trim();
+      if (title.length < 4 && i > 0) {
+        title = lines[i - 1].replace(/[\[\]\(\)*#_]/g, " ").trim();
+      }
+      push(title, urlMatch[0]);
+    }
+
+    if (results.length < 3) {
+      const urls = raw.match(/https?:\/\/[^\s<>"')]+/g) || [];
+      for (const rawUrl of urls) {
+        if (results.length >= 12) break;
+        push("", rawUrl);
+      }
+    }
+    return results;
+  }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, ch => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[ch]));
+  }
+
+  function renderSources(sources) {
+    if (!Array.isArray(sources) || !sources.length) return "";
+    const items = sources.slice(0, 10).map((src, i) => `
+      <div class="source-item">
+        <span>${i + 1}.</span>
+        <div>
+          <a href="${escapeHtml(src.url)}" target="_blank" rel="noopener noreferrer">
+            ${escapeHtml(src.title || src.domain)}
+          </a>
+          <div class="source-domain">${escapeHtml(src.domain || "")}${src.snippet ? " · " + escapeHtml(src.snippet.slice(0, 100)) : ""}</div>
+        </div>
+      </div>
+    `).join("");
+
+    return `<div class="sources-box">
+      <div class="sources-title">🌐 Sources <span class="live-badge">WEB PULSE</span></div>
+      ${items}
+    </div>`;
+  }
+
+  async function answerWithLiveSearch(query, conversation, onChunk, preferredModelId) {
+    const searchResult = await liveWebSearch(query);
+    const searchText = searchResult.text;
+    if (!searchText || searchText.trim().length < 40) {
+      return {
+        ok: false,
+        error: "No live web evidence found. Update Cloudflare Worker (POST /search) and try again."
+      };
+    }
+    const sourceList = (searchResult.sources || [])
+      .map((s, i) => `${i + 1}. ${s.title} — ${s.url}`)
+      .join("\n");
+
+    const searchMessages = [
+      {
+        role: "system",
+        content:
+          "You are WEB PULSE, powered by live web search — answer like a sharp research assistant (Grok-style).\n\n" +
+          "How to answer:\n" +
+          "1) Lead with the direct answer in 1–2 sentences (no fluff).\n" +
+          "2) Then give the key facts as clear bullets or short sections.\n" +
+          "3) Prefer specific numbers, dates, names, and claims that appear in the evidence.\n" +
+          "4) When sources disagree, say so and show both sides.\n" +
+          "5) If evidence is thin or outdated, say what is confirmed vs uncertain.\n" +
+          "6) Cite inline lightly when useful (e.g. according to Reuters / Wikipedia).\n" +
+          "7) End with a one-line 'Bottom line' when the topic is complex.\n" +
+          "8) Never invent URLs, scores, or quotes that are not in the evidence.\n" +
+          "9) Match the user's language. Support both Bangladeshi Bangla (বাংলাদেশ) and Indian Bangla (পশ্চিমবঙ্গ/ভারত) — same script, natural local wording.\n" +
+          "10) Be thorough when the user asks for depth; stay tight for simple facts."
+      },
+      ...conversation.filter(m => m.role === "user" || m.role === "assistant").slice(-4),
+      {
+        role: "user",
+        content:
+          `USER QUESTION:\n${query}\n\n` +
+          `SOURCE LIST:\n${sourceList || "(none extracted)"}\n\n` +
+          `RAW WEB EVIDENCE (may be noisy — extract truth carefully):\n${searchText}\n\n` +
+          `Write the best possible answer from this evidence now.`
+      }
+    ];
+
+    const realPreferred = WEB_PULSE_SYNTH_MAP[preferredModelId];
+    const tryOrder = realPreferred
+      ? [realPreferred, ...LIVE_SYNTH_MODELS.filter(m => m !== realPreferred)]
+      : LIVE_SYNTH_MODELS;
+
+    let result = null;
+    let used = null;
+    for (const modelId of tryOrder) {
+      try {
+        const attempt = await callModelStreaming(
+          modelId,
+          searchMessages,
+          onChunk || (() => {}),
+          undefined
+        );
+        if (attempt?.ok && attempt.reply) {
+          result = attempt;
+          used = modelId;
+          break;
+        }
+      } catch (_) {}
+    }
+
+    if (!result) {
+      for (const modelId of tryOrder) {
+        try {
+          const attempt = await callModel(modelId, searchMessages);
+          if (attempt?.ok && attempt.reply) {
+            result = attempt;
+            used = modelId;
+            break;
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (result?.ok) {
+      result.sources = searchResult.sources;
+      result.model = used;
+      result.providerCount = searchResult.providerCount;
+    }
+    return result || { ok: false, error: "All live synthesizer models failed." };
+  }
+
+  function getSelectedModelId() {
+    return dom.modelSelect.value || appState.selectedModelId;
+  }
+
+  function thinkingHTML(title, sub = "") {
+    return `<div class="thinking-row">
+      <div class="thinking-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="thinking-meta">
+        <div class="thinking-title"><span class="pulse-dot"></span>${escapeHtml(title)}</div>
+        ${sub ? `<div class="thinking-sub">${escapeHtml(sub)}</div>` : ""}
+      </div>
+    </div>
+    <div class="thinking-track"><span></span></div>`;
+  }
+
+  function setThinking(el, title, sub = "") {
+    if (!el) return;
+    el.className = "message-bubble pending";
+    el.innerHTML = thinkingHTML(title, sub);
+  }
+
+  function extractImageUrl(data) {
+    // OpenAI-style: data[0].url or data[0].b64_json
+    const item = data?.data?.[0] || data?.images?.[0] || null;
+    if (item) {
+      if (item.url) return item.url;
+      if (item.image_url?.url) return item.image_url.url;
+      if (item.b64_json) return `data:image/png;base64,${item.b64_json}`;
+      if (item.b64) return `data:image/png;base64,${item.b64}`;
+      if (typeof item === "string" && item.startsWith("http")) return item;
+      if (typeof item === "string" && item.length > 100) return `data:image/png;base64,${item}`;
+    }
+    if (data?.image_url) return typeof data.image_url === "string" ? data.image_url : data.image_url?.url;
+    if (data?.url && typeof data.url === "string") return data.url;
+    if (data?.b64_json) return `data:image/png;base64,${data.b64_json}`;
+    if (data?.image && typeof data.image === "string") {
+      return data.image.startsWith("http") || data.image.startsWith("data:")
+        ? data.image
+        : `data:image/png;base64,${data.image}`;
+    }
+    // Nested result wrappers some workers return
+    if (data?.result) return extractImageUrl(data.result);
+    if (data?.output) return extractImageUrl(data.output);
+    if (data?.response) return extractImageUrl(data.response);
+    return null;
+  }
+
+  async function generateImage(modelId, prompt) {
+    const endpoint = WORKER_PROXY_URL.replace(/\/+$/, "") + "/image";
+
+    // Worker expects clean { model, prompt }. Try b64 first, then plain.
+    const attempts = [
+      { model: modelId, prompt, n: 1, response_format: "b64_json" },
+      { model: modelId, prompt, n: 1 },
+      { model: modelId, prompt, n: 1, size: "1024x1024" }
+    ];
+
+    let lastError = "Image generation failed.";
+
+    for (const body of attempts) {
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        const raw = await res.text();
+        let data;
+        try { data = JSON.parse(raw); } catch { data = { raw }; }
+
+        if (!res.ok) {
+          lastError =
+            (typeof data?.error === "string" ? data.error : null) ||
+            data?.error?.message ||
+            data?.message ||
+            data?.detail ||
+            (data?.nvidia && (data.nvidia.error?.message || data.nvidia.message)) ||
+            (typeof data?.raw === "string" ? data.raw.slice(0, 240) : null) ||
+            `Image API HTTP ${res.status}`;
+          if (data?.hint) lastError += "\n\n" + data.hint;
+
+          if (res.status === 404 || res.status === 400 || res.status === 422) {
+            throw new Error(lastError);
+          }
+          continue;
+        }
+
+        const imageUrl = extractImageUrl(data);
+        if (imageUrl) return imageUrl;
+        lastError = "Worker OK but no image URL/base64 in response.";
+      } catch (err) {
+        lastError = err.message || lastError;
+        if (/not found|invalid|missing|unsupported/i.test(String(err.message))) {
+          throw err;
+        }
+      }
+    }
+
+    throw new Error(lastError);
+  }
+
+  function addGeneratedImage(url, prompt) {
+    const div = document.createElement("div");
+    div.className = "message-bubble assistant";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = prompt || "Generated image";
+    img.style.cssText = "display:block;max-width:100%;border-radius:12px;background:rgba(0,0,0,.25);";
+    img.onerror = () => {
+      img.replaceWith(Object.assign(document.createElement("div"), {
+        textContent: "⚠️ Image failed to load (broken URL / blocked).",
+        style: "color:#ef4444;font-size:12px;padding:8px 0;"
+      }));
+    };
+
+    const actions = document.createElement("div");
+    actions.className = "generated-image-actions";
+
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "code-action-btn";
+    save.textContent = "💾 Save Image";
+    save.onclick = async () => {
+      try {
+        if (url.startsWith("data:")) {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "uplink-generated-image.png";
+          a.click();
+          return;
+        }
+        const r = await fetch(url);
+        const blob = await r.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "uplink-generated-image.png";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+      } catch {
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.click();
+      }
+    };
+
+    const openBtn = document.createElement("button");
+    openBtn.type = "button";
+    openBtn.className = "code-action-btn";
+    openBtn.textContent = "↗ Open";
+    openBtn.onclick = () => window.open(url, "_blank", "noopener");
+
+    actions.append(save, openBtn);
+    div.appendChild(img);
+    div.appendChild(actions);
+    dom.messagesContainer.appendChild(div);
+    
+  }
+
+  async function sendMsg() {
+    const text = dom.messageTextInput.value.trim();
+    if (!text && !currentFile) return;
+
+    // IMAGE MODELS ARE ISOLATED FROM CHAT/FALLBACK.
+    // They always use the Worker /image route and never fall back to Nemotron,
+    // DeepSeek, or any other chat model.
+    const selectedImageModelForRequest = getSelectedModelId();
+    if (isImageModel(selectedImageModelForRequest)) {
+      if (selectedImageModelForRequest === "qwen/qwen-image-edit" && !currentFile?.isImg) {
+        appState.messages.push({
+          role: "assistant",
+          content: "🖼️ **Qwen-Image-Edit** needs an attached image."
+        });
+        render();
+        return;
+      }
+
+      const imagePrompt = text || "Create an image from the attached reference.";
+      const imageInfo = getModelInfo(selectedImageModelForRequest);
+      appState.messages.push({ role: "user", content: imagePrompt });
+      dom.messageTextInput.value = "";
+      dom.messageTextInput.style.height = "auto";
+      clearFile();
+      render();
+
+      setGenerating(true);
+      const imgPending = document.createElement("div");
+      setThinking(imgPending, "Generating image", imageInfo?.label || selectedImageModelForRequest);
+      dom.messagesContainer.appendChild(imgPending);
+      
+
+      try {
+        const imageUrl = await generateImage(
+          selectedImageModelForRequest,
+          imagePrompt
+        );
+        imgPending.remove();
+        addGeneratedImage(imageUrl, imagePrompt);
+        appState.messages.push({
+          role: "assistant",
+          content: `🎨 Generated image with **${imageInfo?.label || selectedImageModelForRequest}**\n\n> ${imagePrompt}`,
+          model: selectedImageModelForRequest
+        });
+        persistMessages();
+      } catch (err) {
+        imgPending.remove();
+        appState.messages.push({
+          role: "assistant",
+          content: `🎨 **Image generation failed**\n\n${err.message}\n\n_Tip: check Worker \`/image\` route supports this model, or try another Image Model._`
+        });
+        render();
+      } finally {
+        setGenerating(false);
+      }
+
+      return;
+    }
+
+    // WEB PULSE (Live Search): fetch web evidence + fast synth models
+    const selectedModelForRequest = getSelectedModelId();
+    if (isLiveSearchModel(selectedModelForRequest)) {
+      if (!text) return;
+      appState.messages.push({ role: "user", content: text });
+      dom.messageTextInput.value = "";
+      dom.messageTextInput.style.height = "auto";
+      clearFile();
+      render();
+
+      setGenerating(true);
+      const livePending = document.createElement("div");
+      setThinking(livePending, "Web Pulse", "Worker searching the live web…");
+      dom.messagesContainer.appendChild(livePending);
+      
+
+      try {
+        const apiMessages = appState.messages.map(m => ({
+          role: m.role,
+          content: m.content
+        }));
+
+        const result = await answerWithLiveSearch(text, apiMessages, (partial) => {
+          livePending.className = "message-bubble assistant";
+          livePending.innerHTML = safeMarkdown(partial) + '<span class="streaming-cursor"></span>';
+          
+        }, selectedModelForRequest);
+
+        livePending.remove();
+
+        if (result?.ok) {
+          let reply = result.reply || "";
+          const foot = "⚡ **Web Pulse** — live web evidence, not training memory.";
+          if (!/Web Pulse/i.test(reply)) reply += "\n\n> " + foot;
+          appState.messages.push({
+            role: "assistant",
+            content: reply,
+            ui: safeMarkdown(reply) + renderSources(result.sources),
+            model: result.model || "web-pulse",
+            ts: Date.now()
+          });
+        } else {
+          livePending.remove();
+          toastAssist("Web Pulse failed — switching to normal chat…");
+          // Auto fallback: answer with Nemotron without web
+          appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+          if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
+          setGenerating(false);
+          await runChatCompletion(text, false);
+          return;
+        }
+      } catch (err) {
+        livePending.remove();
+        toastAssist("Web Pulse error — falling back to chat…");
+        appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+        if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
+        setGenerating(false);
+        await runChatCompletion(text, false);
+        return;
+      } finally {
+        persistMessages();
+        setGenerating(false);
+        render();
+      }
+      return;
+    }
+
+    let apiContent = text, uiContent = null;
+    if (currentFile) {
+      if (currentFile.isImg) {
+        apiContent = [
+          { type: "text", text: text || "Analyze this image." },
+          { type: "image_url", image_url: { url: currentFile.data } }
+        ];
+        uiContent = `<img src="${currentFile.data}" class="chat-image-preview"><br>${safeMarkdown(text)}`;
+      } else {
+        apiContent = text + `\n\n[File Content: ${currentFile.name}]\n` + currentFile.data;
+        uiContent = `<div class="chat-file-attachment">📄 ${currentFile.name}</div><br>${safeMarkdown(text)}`;
+      }
+    }
+
+    const hadFile = !!currentFile;
+    appState.messages.push({ role: "user", content: apiContent, ui: uiContent, ts: Date.now() });
+    localStorage.removeItem("nv_draft");
+    dom.messageTextInput.value = "";
+    dom.messageTextInput.style.height = "auto";
+    clearFile();
+    render();
+
+    await runChatCompletion(text, hadFile);
+  }
+
+  async function runChatCompletion(text, hadFile = false) {
+    // Never run pure image models through /chat
+    if (isImageModel(getSelectedModelId()) || isImageModel(appState.selectedModelId)) {
+      appState.messages.push({
+        role: "assistant",
+        content: "🎨 This is an **image model**. Describe what you want to generate and send again — or pick a chat model from **🎯 Model**."
+      });
+      persistMessages();
+      render();
+      return;
+    }
+
+    const effort = getEffortConfig();
+    const pid = "p_" + Date.now();
+    const pdiv = document.createElement("div");
+    pdiv.id = pid;
+    setThinking(pdiv, "Thinking", `Effort ${effort.label}`);
+    dom.messagesContainer.appendChild(pdiv);
+    
+
+    const controller = new AbortController();
+    appState.abortController = controller;
+    setGenerating(true);
+
+    try {
+      const apiMessages = appState.messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+      let primary = dom.autoMode.value === "on"
+        ? chooseAutoModel(text, hadFile)
+        : appState.selectedModelId;
+      // Guard: auto picker must never return an image model for chat
+      if (isImageModel(primary)) {
+        primary = "nvidia/nemotron-3-super-120b-a12b";
+      }
+      const autoCallback = dom.autoCallback.value === "on";
+      const candidates = (autoCallback
+        ? [primary, ...getFallbackModels(primary).map(m => m.value)]
+        : [primary]
+      ).filter(id => !isImageModel(id));
+
+      let result = null;
+      let usedModel = primary;
+      let attempts = [];
+
+      for (let i = 0; i < candidates.length; i++) {
+        if (controller.signal.aborted) break;
+        const modelId = candidates[i];
+        const info = getModelInfo(modelId);
+        setThinking(
+          pdiv,
+          i === 0 ? "Thinking" : `Fallback ${i}/${candidates.length - 1}`,
+          `${info?.label || modelId} • Effort ${effort.label}`
+        );
+
+        try {
+          let attempt = await callModelStreaming(
+            modelId,
+            apiMessages,
+            (partial) => {
+              pdiv.className = "message-bubble assistant";
+              pdiv.innerHTML = safeMarkdown(partial) + '<span class="streaming-cursor"></span>';
+              
+            },
+            controller.signal
+          );
+
+          if (!attempt.ok && /stream|body|SSE|ReadableStream/i.test(String(attempt.error || ""))) {
+            setThinking(pdiv, "Processing", info?.label || modelId);
+            attempt = await callModel(modelId, apiMessages, controller.signal);
+          }
+
+          attempts.push({ modelId, ...attempt });
+
+          if (attempt.ok) {
+            result = attempt;
+            usedModel = modelId;
+            break;
+          }
+        } catch (err) {
+          if (err?.name === "AbortError" || controller.signal.aborted) {
+            result = { ok: true, reply: "_(generation stopped)_", stopped: true };
+            usedModel = modelId;
+            break;
+          }
+          attempts.push({ modelId, ok: false, error: err.message });
+        }
+      }
+
+      document.getElementById(pid)?.remove();
+
+      if (result?.ok) {
+        const callbackNote = usedModel !== primary && !result.stopped
+          ? `\n\n> 🔁 **Auto Callback:** Primary model failed, so the response was completed by **${getModelInfo(usedModel)?.label || usedModel}**.`
+          : "";
+        appState.messages.push({
+          role: "assistant",
+          content: result.reply + callbackNote,
+          model: usedModel
+        });
+      } else {
+        const last = attempts[attempts.length - 1] || {};
+        appState.messages.push({
+          role: "assistant",
+          content: `⚠️ **Model failed**\n\n${last.error || "Unknown error"}\n\n**Tried:** ${attempts.map(a => getModelInfo(a.modelId)?.label || a.modelId).join(", ")}\n\n_Tip: pick another model from 🎯 Model, or turn **Fallback ON**._`
+        });
+      }
+    } catch (err) {
+      document.getElementById(pid)?.remove();
+      if (err?.name !== "AbortError") {
+        appState.messages.push({ role: "assistant", content: `[Network Exception]: ${err.message}` });
+      }
+    } finally {
+      appState.abortController = null;
+      setGenerating(false);
+      persistMessages();
+      render();
+    }
+  }
+
+  // Remove any stale model stored from an older version of the app.
+  function sanitizeSavedModel() {
+    const saved = localStorage.getItem("nv_model");
+    if (saved && (!getModelInfo(saved) || isImageModel(saved))) {
+      localStorage.removeItem("nv_model");
+      appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+      if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
+    }
+  }
+
+  sanitizeSavedModel();
+  init();
+</script>
+</body>
+  </html>
+  
+
