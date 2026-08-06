@@ -1,4 +1,4 @@
-# ⚡ Uplink Studio (UP-74)
+# ⚡ Uplink Studio (UP-1)
 
 A fast, **mobile-first** AI chat interface powered by **NVIDIA NIM** — one self-contained HTML file on GitHub Pages, backed by a Cloudflare Worker proxy.
 
