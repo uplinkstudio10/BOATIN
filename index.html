@@ -448,35 +448,30 @@
     scroll-behavior: smooth;
   }
   .scroll-bottom-btn {
-    position: absolute;
-    right: 14px;
-    bottom: 14px;
-    z-index: 50;
+    position: absolute !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    z-index: 80 !important;
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 1px solid rgba(118, 185, 0, 0.45);
-    background: rgba(14, 19, 16, 0.95);
+    border: 1px solid rgba(118, 185, 0, 0.5);
+    background: rgba(14, 19, 16, 0.96);
     color: var(--color-accent-primary);
     font-size: 20px;
     line-height: 1;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(8px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 12px rgba(118, 185, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.45), 0 0 12px rgba(118, 185, 0, 0.2);
     backdrop-filter: blur(10px);
-    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
   }
   .scroll-bottom-btn.visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
+    display: flex !important;
   }
-  .scroll-bottom-btn:hover { background: rgba(118, 185, 0, 0.2); }
+  .scroll-bottom-btn:hover { background: rgba(118, 185, 0, 0.22); }
   .scroll-bottom-btn:active { transform: scale(0.94); }
   @keyframes fab-in {
     from { opacity: 0; transform: translateY(10px) scale(0.9); }
@@ -875,6 +870,70 @@
     opacity: 0.9;
   }
 
+
+  .listen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid #343c36;
+    background: #242a26;
+    color: #e8f0ea;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-family-sans);
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .listen-btn:hover {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+  }
+  .listen-btn.speaking {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    background: rgba(118, 185, 0, 0.14);
+  }
+
+
+  .sources-wrap { margin-top: 10px; }
+  .sources-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(118, 185, 0, 0.08);
+    border: 1px solid rgba(118, 185, 0, 0.28);
+    color: var(--color-accent-primary);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-family-mono);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sources-toggle:hover { background: rgba(118, 185, 0, 0.16); }
+  .sources-toggle .src-count {
+    background: rgba(118, 185, 0, 0.2);
+    border-radius: 99px;
+    padding: 1px 7px;
+    font-size: 10px;
+  }
+  .sources-panel {
+    display: none;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.28);
+    font-size: 11px;
+    animation: panel-in 0.22s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .sources-panel.open { display: block; }
+
 </style>
 </head>
 <body>
@@ -965,6 +1024,7 @@
               </div>
             </div>
             <span class="composer-spacer"></span>
+            <button type="button" class="listen-btn" id="listenBtn" title="Listen to last reply">🎧 Listen</button>
             <button class="send-message-btn stop-message-btn" id="stopMessageBtn" type="button" title="Stop" style="display:none;">■</button>
             <button class="send-message-btn" id="sendMessageBtn" type="button" title="Send">➤</button>
           </div>
@@ -1118,7 +1178,12 @@
     {
       category: "💻 Coding",
       models: [
-        { value: "nvidia/nemotron-3-ultra-550b-a55b", label: "Nemotron 3 Ultra 550B", tags: "coding, agentic, 1M ctx" }
+        { value: "qwen/qwen3-coder-480b-a35b-instruct", label: "Qwen3 Coder 480B ★ Best", tags: "best dedicated coder, 256K" },
+        { value: "nvidia/nemotron-3-ultra-550b-a55b", label: "Nemotron 3 Ultra 550B", tags: "coding, agentic, 1M ctx" },
+        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "SWE-bench, coding" },
+        { value: "deepseek-ai/deepseek-v3.2", label: "DeepSeek V3.2", tags: "coding, reasoning" },
+        { value: "moonshotai/kimi-k2.6", label: "Kimi K2.6", tags: "agentic coding" },
+        { value: "mistralai/devstral-2-123b-instruct-2512", label: "Devstral 2 123B", tags: "multi-file coding" }
       ]
     },
     {
@@ -1482,7 +1547,7 @@
         },
         {
           label: "💻 Coding",
-          run: () => pickModel("nvidia/nemotron-3-ultra-550b-a55b", "Nemotron 3 Ultra selected")
+          run: () => pickModel("qwen/qwen3-coder-480b-a35b-instruct", "Qwen3 Coder selected")
         },
         {
           label: "🧠 Reasoning",
@@ -1722,6 +1787,7 @@ Model · Effort · Actions — type and send.`
     
     dom.attachBtn.addEventListener("click", () => dom.fileInput.click());
     bindScrollUi();
+    document.getElementById("listenBtn")?.addEventListener("click", listenLastReply);
     const effortTrigger = document.getElementById("effortTrigger");
     const effortDropdown = document.getElementById("effortDropdown");
     effortTrigger?.addEventListener("click", (e) => {
@@ -2057,8 +2123,8 @@ Model · Effort · Actions — type and send.`
     const el = dom.messagesContainer || document.getElementById("messagesContainer");
     const btn = document.getElementById("scrollBottomBtn");
     if (!el || !btn) return;
-    const overflows = el.scrollHeight > el.clientHeight + 40;
-    const near = isNearBottom(el, 140);
+    const overflows = el.scrollHeight > el.clientHeight + 24;
+    const near = isNearBottom(el, 120);
     if (overflows && !near) btn.classList.add("visible");
     else btn.classList.remove("visible");
   }
@@ -2066,16 +2132,68 @@ Model · Effort · Actions — type and send.`
   function scrollToBottom(smooth = true) {
     const el = dom.messagesContainer || document.getElementById("messagesContainer");
     if (!el) return;
-    const top = el.scrollHeight + 9999;
+    const go = () => {
+      const top = el.scrollHeight;
+      try { el.scrollTo({ top, behavior: smooth ? "smooth" : "auto" }); }
+      catch (_) { el.scrollTop = top; }
+      el.scrollTop = top;
+    };
+    go();
+    requestAnimationFrame(go);
+    setTimeout(() => { go(); updateScrollBottomBtn(); }, smooth ? 350 : 40);
+  }
+
+
+  function resolveVoiceLang() {
+    const pref = (typeof prefs !== "undefined" && prefs.voiceLang) || localStorage.getItem("nv_voice") || "auto";
+    if (pref && pref !== "auto") return pref;
+    const sample = (dom.messageTextInput?.value || "") + " " +
+      (appState.messages || []).slice(-3).map(m => typeof m.content === "string" ? m.content : "").join(" ");
+    if (/[\u0980-\u09FF]/.test(sample)) return "bn-IN";
+    if (/[\u0900-\u097F]/.test(sample)) return "hi-IN";
+    return "en-US";
+  }
+
+  function listenLastReply() {
+    if (!window.speechSynthesis) {
+      toastAssist("Listen not supported in this browser");
+      return;
+    }
+    const btn = document.getElementById("listenBtn");
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      if (btn) { btn.classList.remove("speaking"); btn.textContent = "🎧 Listen"; }
+      return;
+    }
+    const last = [...(appState.messages || [])].reverse().find(
+      m => m.role === "assistant" && typeof m.content === "string" && m.content.trim()
+    );
+    if (!last) {
+      toastAssist("Listen করার মতো কোনো রিপ্লাই নেই");
+      return;
+    }
+    const clean = String(last.content)
+      .replace(/```[\s\S]*?```/g, " code block ")
+      .replace(/[`*_#>\[\]\(\)]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 4000);
+    const u = new SpeechSynthesisUtterance(clean);
+    u.rate = 1.02;
+    u.pitch = 1;
     try {
-      el.scrollTo({ top: top, behavior: smooth ? "smooth" : "auto" });
+      const want = resolveVoiceLang();
+      const voices = window.speechSynthesis.getVoices() || [];
+      const pick = voices.find(v => v.lang === want) ||
+        voices.find(v => v.lang && v.lang.startsWith(want.slice(0, 2)));
+      if (pick) u.voice = pick;
+      u.lang = want;
     } catch (_) {}
-    el.scrollTop = el.scrollHeight;
-    requestAnimationFrame(() => {
-      el.scrollTop = el.scrollHeight;
-      updateScrollBottomBtn();
-    });
-    setTimeout(updateScrollBottomBtn, smooth ? 400 : 60);
+    if (btn) { btn.classList.add("speaking"); btn.textContent = "⏹ Stop"; }
+    u.onend = u.onerror = () => {
+      if (btn) { btn.classList.remove("speaking"); btn.textContent = "🎧 Listen"; }
+    };
+    window.speechSynthesis.speak(u);
   }
 
   function bindScrollUi() {
@@ -2083,7 +2201,12 @@ Model · Effort · Actions — type and send.`
     const btn = document.getElementById("scrollBottomBtn");
     if (el && !el.dataset.scrollBound) {
       el.dataset.scrollBound = "1";
-      el.addEventListener("scroll", () => updateScrollBottomBtn(), { passive: true });
+      el.addEventListener("scroll", updateScrollBottomBtn, { passive: true });
+      // Re-check when content size changes (images, streaming)
+      try {
+        const ro = new ResizeObserver(() => updateScrollBottomBtn());
+        ro.observe(el);
+      } catch (_) {}
     }
     if (btn && !btn.dataset.scrollBound) {
       btn.dataset.scrollBound = "1";
@@ -2821,21 +2944,24 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
   function renderSources(sources) {
     if (!Array.isArray(sources) || !sources.length) return "";
-    const items = sources.slice(0, 10).map((src, i) => `
+    const id = "src_" + Date.now() + "_" + Math.floor(Math.random() * 9999);
+    const items = sources.slice(0, 12).map((src, idx) => `
       <div class="source-item">
-        <span>${i + 1}.</span>
+        <span>${idx + 1}.</span>
         <div>
           <a href="${escapeHtml(src.url)}" target="_blank" rel="noopener noreferrer">
             ${escapeHtml(src.title || src.domain)}
           </a>
-          <div class="source-domain">${escapeHtml(src.domain || "")}${src.snippet ? " · " + escapeHtml(src.snippet.slice(0, 100)) : ""}</div>
+          <div class="source-domain">${escapeHtml(src.domain || "")}${src.snippet ? " · " + escapeHtml(String(src.snippet).slice(0, 90)) : ""}</div>
         </div>
       </div>
     `).join("");
 
-    return `<div class="sources-box">
-      <div class="sources-title">🌐 Sources <span class="live-badge">WEB PULSE</span></div>
-      ${items}
+    return `<div class="sources-wrap">
+      <button type="button" class="sources-toggle" data-src-panel="${id}" onclick="(function(b){var p=document.getElementById('${id}');if(!p)return;var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false');})(this)">
+        🔗 Sources <span class="src-count">${Math.min(sources.length, 12)}</span>
+      </button>
+      <div class="sources-panel" id="${id}">${items}</div>
     </div>`;
   }
 
@@ -2856,18 +2982,18 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       {
         role: "system",
         content:
-          "You are WEB PULSE, powered by live web search — answer like a sharp research assistant (Grok-style).\n\n" +
+          "You are WEB PULSE — a live research engine (not Wikipedia-only).\n\n" +
+          "You receive multi-source web evidence: Google/Bing/DDG snippets, full pages, news, forums, Wikipedia.\n" +
           "How to answer:\n" +
-          "1) Lead with the direct answer in 1–2 sentences (no fluff).\n" +
-          "2) Then give the key facts as clear bullets or short sections.\n" +
-          "3) Prefer specific numbers, dates, names, and claims that appear in the evidence.\n" +
-          "4) When sources disagree, say so and show both sides.\n" +
-          "5) If evidence is thin or outdated, say what is confirmed vs uncertain.\n" +
-          "6) Cite inline lightly when useful (e.g. according to Reuters / Wikipedia).\n" +
-          "7) End with a one-line 'Bottom line' when the topic is complex.\n" +
-          "8) Never invent URLs, scores, or quotes that are not in the evidence.\n" +
-          "9) Match the user's language. Support both Bangladeshi Bangla (বাংলাদেশ) and Indian Bangla (পশ্চিমবঙ্গ/ভারত) — same script, natural local wording.\n" +
-          "10) Be thorough when the user asks for depth; stay tight for simple facts."
+          "1) Lead with a direct answer in 1–2 sentences.\n" +
+          "2) Then structured findings with specific numbers, dates, names from the evidence.\n" +
+          "3) Prefer primary/news/official sources over generic wiki when both exist.\n" +
+          "4) When sources conflict, show both sides clearly.\n" +
+          "5) Mark what is confirmed vs uncertain; never invent facts or URLs.\n" +
+          "6) Light inline attribution (e.g. according to Reuters / official docs).\n" +
+          "7) For research questions: cover angles, recent developments, and practical takeaways.\n" +
+          "8) End with a short Bottom line when useful.\n" +
+          "9) Match the user language (Bangla BD/IN or English)."
       },
       ...conversation.filter(m => m.role === "user" || m.role === "assistant").slice(-4),
       {
@@ -3157,7 +3283,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
       setGenerating(true);
       const livePending = document.createElement("div");
-      setThinking(livePending, "Web Pulse", "Worker searching the live web…");
+      setThinking(livePending, "Web Pulse", "Researching Google + web sources…");
       dom.messagesContainer.appendChild(livePending);
       
 

@@ -151,12 +151,13 @@ async function runWebSearch(query) {
   if (!q) return { text: "", sources: [], error: "Empty query" };
   var enc = encodeURIComponent(q);
   var providers = [
+    ["google", "https://r.jina.ai/http://www.google.com/search?q=" + enc + "&hl=en&num=15", "html"],
+    ["google-news", "https://r.jina.ai/http://news.google.com/search?q=" + enc + "&hl=en-US&gl=US&ceid=US:en", "html"],
+    ["bing", "https://r.jina.ai/http://www.bing.com/search?q=" + enc + "&count=15", "html"],
     ["ddg-html", "https://r.jina.ai/http://duckduckgo.com/html/?q=" + enc, "html"],
-    ["bing", "https://r.jina.ai/http://www.bing.com/search?q=" + enc, "html"],
-    ["google", "https://r.jina.ai/http://www.google.com/search?q=" + enc + "&hl=en&num=10", "html"],
     ["ddg-api", "https://api.duckduckgo.com/?q=" + enc + "&format=json&no_html=1&skip_disambig=1", "ddg"],
     ["wiki", "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" + enc + "&utf8=1&format=json&srlimit=5", "wiki"],
-    ["reddit", "https://r.jina.ai/http://www.reddit.com/search/?q=" + enc + "&sort=relevance&t=week", "html"]
+    ["reddit", "https://r.jina.ai/http://www.reddit.com/search/?q=" + enc + "&sort=relevance&t=month", "html"]
   ];
 
   var sources = [];
@@ -287,7 +288,7 @@ async function runWebSearch(query) {
   }
 
   var deep = [];
-  for (var si = 0; si < sources.length && deep.length < 3; si++) {
+  for (var si = 0; si < sources.length && deep.length < 5; si++) {
     var s = sources[si];
     if (!/(wikipedia\.org|reddit\.com|duckduckgo|google\.|bing\.|yahoo\.)/i.test(s.domain || "")) {
       deep.push(s);
@@ -308,7 +309,7 @@ async function runWebSearch(query) {
         if (!res.ok) return null;
         var body = await res.text();
         if (!body || body.length < 120) return null;
-        return "[Full page: " + s.title + " | " + s.url + "]\n" + body.slice(0, 5000);
+        return "[Full page: " + s.title + " | " + s.url + "]\n" + body.slice(0, 6000);
       } catch (e) {
         return null;
       }
@@ -326,7 +327,7 @@ async function runWebSearch(query) {
   }
 
   return {
-    text: combined.slice(0, 24000),
+    text: combined.slice(0, 28000),
     sources: sources.slice(0, 10),
     providerCount: okCount,
     error: okCount === 0 ? lastError : undefined
