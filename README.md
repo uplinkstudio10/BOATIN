@@ -1,8 +1,8 @@
-# ⚡ Uplink Studio (UP-01)
+# ⚡ Uplink Studio (UP-04)
 
 A fast, **mobile-first** AI chat interface powered by **NVIDIA NIM** — one self-contained HTML file on GitHub Pages, backed by a Cloudflare Worker proxy.
 
-🔗 **Live demo:** [luchifer0p09.github.io/anybot](https://luchifer0p09.github.io/anybot/)
+🔗 **Live demo:** [CLICK 👆🏻](https://uplinkstudio10.github.io/BOATIN/)
 
 ---
 
