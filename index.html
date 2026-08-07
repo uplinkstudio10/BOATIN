@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Uplink Studio // NVIDIA UP-76</title>
+<title>BOATIN // UP-2</title>
 <meta name="theme-color" content="#080a09" />
-<meta name="description" content="Uplink Studio — NVIDIA NIM powered chat, vision, coding & live search" />
+<meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Uplink" />
+<meta name="apple-mobile-web-app-title" content="BOATIN" />
 <link rel="manifest" id="pwaManifestLink" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -430,6 +430,7 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
+
   .messages-wrap {
     position: relative;
     flex: 1;
@@ -438,30 +439,44 @@
     flex-direction: column;
     overflow: hidden;
   }
+  .messages-wrap .messages-scroll-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
   .scroll-bottom-btn {
     position: absolute;
     right: 14px;
     bottom: 14px;
-    z-index: 30;
-    width: 42px;
-    height: 42px;
+    z-index: 50;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    border: 1px solid rgba(118, 185, 0, 0.4);
-    background: rgba(14, 19, 16, 0.92);
+    border: 1px solid rgba(118, 185, 0, 0.45);
+    background: rgba(14, 19, 16, 0.95);
     color: var(--color-accent-primary);
-    font-size: 18px;
+    font-size: 20px;
     line-height: 1;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 12px rgba(118, 185, 0, 0.15);
     backdrop-filter: blur(10px);
-    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), opacity 0.2s ease, background 0.2s ease;
-    pointer-events: auto;
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s ease;
   }
-  .scroll-bottom-btn.visible { display: flex; animation: fab-in 0.28s cubic-bezier(0.22,1,0.36,1) both; }
-  .scroll-bottom-btn:hover { background: rgba(118, 185, 0, 0.18); transform: translateY(-2px); }
+  .scroll-bottom-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .scroll-bottom-btn:hover { background: rgba(118, 185, 0, 0.2); }
   .scroll-bottom-btn:active { transform: scale(0.94); }
   @keyframes fab-in {
     from { opacity: 0; transform: translateY(10px) scale(0.9); }
@@ -637,7 +652,7 @@
     .attach-btn, .send-message-btn { width: 44px; height: 44px; }
   }
 
-  /* UP-76 feature styles */
+  /* UP-2 feature styles */
   .offline-banner {
     display: none; text-align: center; padding: 6px 12px;
     background: rgba(239,68,68,0.18); color: #fca5a5;
@@ -842,6 +857,24 @@
     border-radius: 50% !important;
   }
 
+
+  .studio-foot {
+    text-align: center;
+    padding: 6px 8px 10px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    font-family: var(--font-family-mono);
+    font-weight: 600;
+    opacity: 0.75;
+    user-select: none;
+  }
+  .studio-foot span {
+    color: var(--color-accent-primary);
+    opacity: 0.9;
+  }
+
 </style>
 </head>
 <body>
@@ -851,7 +884,7 @@
     <div class="header-top">
       <div class="header-top-left">
         <div class="status-dot"></div>
-        <div>Uplink Studio // NVIDIA UP-76</div>
+        <div>BOATIN</div>
       </div>
       <div class="header-actions">
         <button class="clear-memory-btn" id="clearMemoryBtn" type="button" title="Clear chat history">Clear 🗑️</button>
@@ -937,6 +970,7 @@
           </div>
         </form>
         <div id="inputCounter" style="display:none; padding:0 12px 8px; font-size:10px; color:var(--color-text-muted); font-family:var(--font-family-mono); text-align:right;"></div>
+        <div class="studio-foot">UPLINKSTUDIO POWERED BY <span>NVIDIA NIM</span></div>
       </div>
     </section>
   </main>
@@ -993,8 +1027,8 @@
   (function setupPWA() {
     try {
       const manifest = {
-        name: "Uplink Studio",
-        short_name: "Uplink",
+        name: "BOATIN",
+        short_name: "BOATIN",
         start_url: "./",
         display: "standalone",
         background_color: "#080a09",
@@ -1647,7 +1681,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**Uplink Studio UP-76**
+        content: `**BOATIN UP-2**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -1687,6 +1721,7 @@ Model · Effort · Actions — type and send.`
     dom.stopMessageBtn?.addEventListener("click", stopGeneration);
     
     dom.attachBtn.addEventListener("click", () => dom.fileInput.click());
+    bindScrollUi();
     const effortTrigger = document.getElementById("effortTrigger");
     const effortDropdown = document.getElementById("effortDropdown");
     effortTrigger?.addEventListener("click", (e) => {
@@ -2015,28 +2050,50 @@ Model · Effort · Actions — type and send.`
 
   function isNearBottom(el, threshold = 100) {
     if (!el) return true;
-    return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    return (el.scrollHeight - el.scrollTop - el.clientHeight) <= threshold;
   }
 
   function updateScrollBottomBtn() {
-    const el = dom.messagesContainer;
+    const el = dom.messagesContainer || document.getElementById("messagesContainer");
     const btn = document.getElementById("scrollBottomBtn");
     if (!el || !btn) return;
-    // Only show when content actually overflows and user is not near bottom
-    const overflows = el.scrollHeight > el.clientHeight + 24;
-    if (!overflows || isNearBottom(el, 120)) btn.classList.remove("visible");
-    else btn.classList.add("visible");
+    const overflows = el.scrollHeight > el.clientHeight + 40;
+    const near = isNearBottom(el, 140);
+    if (overflows && !near) btn.classList.add("visible");
+    else btn.classList.remove("visible");
   }
 
   function scrollToBottom(smooth = true) {
-    const el = dom.messagesContainer;
+    const el = dom.messagesContainer || document.getElementById("messagesContainer");
     if (!el) return;
+    const top = el.scrollHeight + 9999;
     try {
-      el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
-    } catch (_) {
+      el.scrollTo({ top: top, behavior: smooth ? "smooth" : "auto" });
+    } catch (_) {}
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
+      updateScrollBottomBtn();
+    });
+    setTimeout(updateScrollBottomBtn, smooth ? 400 : 60);
+  }
+
+  function bindScrollUi() {
+    const el = dom.messagesContainer || document.getElementById("messagesContainer");
+    const btn = document.getElementById("scrollBottomBtn");
+    if (el && !el.dataset.scrollBound) {
+      el.dataset.scrollBound = "1";
+      el.addEventListener("scroll", () => updateScrollBottomBtn(), { passive: true });
     }
-    setTimeout(updateScrollBottomBtn, smooth ? 350 : 50);
+    if (btn && !btn.dataset.scrollBound) {
+      btn.dataset.scrollBound = "1";
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToBottom(true);
+      });
+    }
+    updateScrollBottomBtn();
   }
 
   function render() {
@@ -2148,7 +2205,7 @@ if (idx === lastAssistantIdx) {
       });
     }
     ensureCodeActions(dom.messagesContainer);
-    requestAnimationFrame(() => updateScrollBottomBtn());
+    requestAnimationFrame(() => { bindScrollUi(); updateScrollBottomBtn(); });
     updateCtxPill();
   }
 
@@ -2304,60 +2361,51 @@ if (idx === lastAssistantIdx) {
   // Retry helper: retries only transient failures (network drop, 429, 502/503/504)
   // with exponential backoff. Never retries on user-abort or normal model/HTTP errors
   // that should instead fall through to the next candidate model.
-  async function fetchWithRetry(url, options, signal, maxRetries = 2) {
+    async function fetchWithRetry(url, options, signal, maxRetries = 2) {
     let lastErr;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      if (signal?.aborted) {
+        const e = new Error("Aborted");
+        e.name = "AbortError";
+        throw e;
+      }
       try {
-        const res = await fetch(url, options);
-        if (res.ok || attempt === maxRetries) return res;
-        if ([429, 502, 503, 504].includes(res.status)) {
-          const wait = Math.min(600 * Math.pow(2, attempt), 4000);
-          await new Promise(r => setTimeout(r, wait));
-          continue;
+        const res = await fetch(url, { ...options, signal, mode: "cors", cache: "no-store" });
+        // Retry transient 5xx / 429
+        if (res.status === 429 || res.status >= 500) {
+          lastErr = new Error("Server " + res.status);
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+            continue;
+          }
+          return res;
         }
-        return res; // non-transient HTTP error, don't retry
+        return res;
       } catch (err) {
         if (err?.name === "AbortError" || signal?.aborted) throw err;
         lastErr = err;
-        if (attempt === maxRetries) throw err;
-        const wait = Math.min(600 * Math.pow(2, attempt), 4000);
-        await new Promise(r => setTimeout(r, wait));
+        const msg = String(err?.message || err || "");
+        if (attempt < maxRetries && /fetch|network|Failed|Load failed|CORS/i.test(msg)) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          continue;
+        }
+        // Friendlier message for the classic browser network error
+        if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) {
+          throw new Error(
+            "Failed to fetch — Worker unreachable or CORS blocked.\\n" +
+            "1) Deploy latest worker.js to Cloudflare\\n" +
+            "2) Open https://anybot.luchifer0p09.workers.dev/health\\n" +
+            "3) Hard-refresh this page\\n" +
+            "Worker: " + String(url).replace(/\/+$/, "")
+          );
+        }
+        throw err;
       }
     }
     throw lastErr || new Error("Request failed after retries.");
   }
 
-  function extractAssistantText(obj) {
-    if (!obj || typeof obj !== "object") return "";
-    const choice = obj?.choices?.[0];
-    const delta = choice?.delta || {};
-    const msg = choice?.message || {};
-    // Prefer final content; fall back to reasoning (Nemotron / R1 style)
-    const parts = [
-      delta.content,
-      msg.content,
-      delta.text,
-      msg.text,
-      obj.output_text,
-      // only use reasoning if no normal content yet (caller may accumulate)
-      delta.reasoning_content,
-      msg.reasoning_content,
-      delta.reasoning,
-      msg.reasoning
-    ];
-    for (const p of parts) {
-      if (typeof p === "string" && p.length) return p;
-    }
-    // array content blocks
-    const blocks = msg.content || delta.content;
-    if (Array.isArray(blocks)) {
-      return blocks.map(b => (typeof b === "string" ? b : (b?.text || b?.content || ""))).join("");
-    }
-    return "";
-  }
-
-  async function callModelStreaming(modelId, messages, onChunk, signal) {
+async function callModelStreaming(modelId, messages, onChunk, signal) {
     const effort = getEffortConfig();
     const msgs = applyEffortToMessages(messages);
     const payload = {
