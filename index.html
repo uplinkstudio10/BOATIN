@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>BOATIN // UP-2</title>
-<meta name="theme-color" content="#080a09" />
+<title>BOATIN // UP-4</title>
+<meta name="theme-color" content="#050608" />
 <meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -21,24 +21,27 @@
 
 <style>
   :root {
-    --color-bg-base: #080a09;
-    --color-bg-surface: #0e1310;
-    --color-bg-card: #141b16;
-    --color-border-subtle: #1c271e;
-    --color-border-strong: #2d3e30;
-    --color-accent-primary: #76b900;
-    --color-accent-secondary: #06b6d4;
-    --color-accent-danger: #ef4444;
-    --color-text-primary: #ecfdf5;
-    --color-text-secondary: #8b9b90;
-    --color-text-muted: #526357;
-    --color-text-inverse: #04130a;
-    --border-radius-sm: 8px;
-    --border-radius-md: 14px;
-    --border-radius-lg: 20px;
-    --font-family-mono: 'JetBrains Mono', Consolas, monospace;
-    --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --shadow-glow: 0 0 20px rgba(118, 185, 0, 0.12);
+    --color-bg-base: #050608;
+    --color-bg-surface: rgba(22, 24, 28, 0.55);
+    --color-bg-card: rgba(36, 38, 44, 0.45);
+    --color-border-subtle: rgba(255, 255, 255, 0.08);
+    --color-border-strong: rgba(255, 255, 255, 0.14);
+    --color-accent-primary: #32d74b;
+    --color-accent-secondary: #64d2ff;
+    --color-accent-danger: #ff453a;
+    --color-text-primary: #f5f5f7;
+    --color-text-secondary: rgba(235, 235, 245, 0.65);
+    --color-text-muted: rgba(235, 235, 245, 0.38);
+    --color-text-inverse: #0a0a0c;
+    --border-radius-sm: 12px;
+    --border-radius-md: 18px;
+    --border-radius-lg: 26px;
+    --font-family-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif;
+    --shadow-glow: 0 8px 32px rgba(50, 215, 75, 0.12);
+    --glass: rgba(255, 255, 255, 0.06);
+    --glass-strong: rgba(255, 255, 255, 0.1);
+    --glass-blur: blur(28px) saturate(160%);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -647,7 +650,7 @@
     .attach-btn, .send-message-btn { width: 44px; height: 44px; }
   }
 
-  /* UP-2 feature styles */
+  /* UP-4 feature styles */
   .offline-banner {
     display: none; text-align: center; padding: 6px 12px;
     background: rgba(239,68,68,0.18); color: #fca5a5;
@@ -934,6 +937,149 @@
   }
   .sources-panel.open { display: block; }
 
+
+  /* ── iPhone Liquid Glass Theme ── */
+  html, body {
+    background:
+      radial-gradient(ellipse 90% 60% at 10% -10%, rgba(50, 215, 75, 0.18), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 100% 20%, rgba(100, 210, 255, 0.12), transparent 50%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(175, 82, 222, 0.1), transparent 50%),
+      #050608 !important;
+  }
+  #app-root {
+    background: transparent;
+  }
+  .app-header {
+    background: rgba(18, 18, 22, 0.45) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  .header-top {
+    color: var(--color-accent-primary) !important;
+    letter-spacing: 0.12em;
+  }
+  .status-dot {
+    background: var(--color-accent-primary) !important;
+    box-shadow: 0 0 12px rgba(50, 215, 75, 0.7) !important;
+  }
+  .cat-tab {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 999px !important;
+  }
+  .cat-tab.active {
+    background: rgba(50, 215, 75, 0.16) !important;
+    border-color: rgba(50, 215, 75, 0.45) !important;
+    color: #32d74b !important;
+    box-shadow: 0 0 20px rgba(50, 215, 75, 0.15);
+  }
+  .cat-chip, .header-action-btn, .clear-memory-btn, .tb-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .control-item select, .control-item input {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 14px !important;
+    backdrop-filter: blur(12px);
+  }
+  .message-bubble.user {
+    background: linear-gradient(145deg, rgba(50, 215, 75, 0.85), rgba(40, 180, 60, 0.75)) !important;
+    color: #04130a !important;
+    border-radius: 22px 22px 6px 22px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow:
+      0 8px 24px rgba(50, 215, 75, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(8px);
+  }
+  .message-bubble.assistant {
+    background: transparent !important;
+    border: none !important;
+  }
+  .message-bubble.pending {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(50, 215, 75, 0.3) !important;
+    border-radius: 20px !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25) !important;
+  }
+  .input-container {
+    background: linear-gradient(180deg, transparent, rgba(5, 6, 8, 0.5) 40%) !important;
+  }
+  .chat-input-bar {
+    background: rgba(28, 28, 32, 0.55) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 26px !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  }
+  .attach-btn, .effort-trigger, .listen-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(10px);
+    color: var(--color-text-primary) !important;
+  }
+  .effort-dropdown {
+    background: rgba(22, 22, 26, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 16px !important;
+  }
+  .send-message-btn {
+    background: linear-gradient(145deg, #32d74b, #28c840) !important;
+    color: #04130a !important;
+    box-shadow: 0 4px 16px rgba(50, 215, 75, 0.35) !important;
+  }
+  .scroll-bottom-btn {
+    background: rgba(22, 22, 26, 0.7) !important;
+    border: 1px solid rgba(50, 215, 75, 0.4) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+  .modal-sheet {
+    background: rgba(22, 22, 28, 0.72) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 24px !important;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5) !important;
+  }
+  .sources-toggle {
+    background: rgba(50, 215, 75, 0.12) !important;
+    border-color: rgba(50, 215, 75, 0.35) !important;
+    backdrop-filter: blur(12px);
+  }
+  .sources-panel {
+    background: rgba(0, 0, 0, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(16px);
+  }
+  .studio-foot {
+    color: rgba(235, 235, 245, 0.35) !important;
+  }
+  .message-bubble pre {
+    background: rgba(0, 0, 0, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+  }
+  .code-action-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+  }
+
 </style>
 </head>
 <body>
@@ -1158,11 +1304,10 @@
     {
       category: "🌐 Web Pulse",
       models: [
-        { value: "moonshotai/kimi-k2.6", label: "Kimi K2.6 • Web Pulse", tags: "live search" },
-        { value: "webpulse/glm-5.1", label: "GLM-5.1 • Web Pulse", tags: "live search, multilingual" },
-        { value: "webpulse/deepseek-v3.2", label: "DeepSeek V3.2 • Web Pulse", tags: "live search, reasoning" },
-        { value: "webpulse/qwen3.5-122b", label: "Qwen3.5 122B • Web Pulse", tags: "live search, agent" },
-        { value: "webpulse/llama-3.3-70b", label: "Llama 3.3 70B • Web Pulse", tags: "live search, fast" }
+        { value: "webpulse/nemotron-super", label: "Research • Nemotron Super", tags: "live search, reliable" },
+        { value: "webpulse/deepseek", label: "Research • DeepSeek V3.2", tags: "live search, reasoning" },
+        { value: "webpulse/llama70", label: "Research • Llama 3.3 70B", tags: "live search, fast" },
+        { value: "webpulse/llama405", label: "Research • Llama 3.1 405B", tags: "live search, deep" }
       ]
     },
     {
@@ -1539,7 +1684,7 @@
       const actions = [
         {
           label: "🌐 Web Pulse",
-          run: () => pickModel("moonshotai/kimi-k2.6", "Web Pulse ready — ask anything current")
+          run: () => pickModel("webpulse/nemotron-super", "Web Pulse ready — ask anything current")
         },
         {
           label: "🏆 Best Model",
@@ -1746,7 +1891,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-2**
+        content: `**BOATIN UP-4**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2738,6 +2883,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   const LIVE_SEARCH_MODEL_IDS = new Set([
+    "webpulse/nemotron-super",
+    "webpulse/deepseek",
+    "webpulse/llama70",
+    "webpulse/llama405",
+    // legacy aliases
     "moonshotai/kimi-k2.6",
     "webpulse/glm-5.1",
     "webpulse/deepseek-v3.2",
@@ -2753,22 +2903,25 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // synthesize its answer, so picking e.g. "GLM-5.1 • Web Pulse" actually
   // prefers GLM-5.1 rather than always defaulting to the same model.
   const WEB_PULSE_SYNTH_MAP = {
-    "moonshotai/kimi-k2.6": "moonshotai/kimi-k2.6",
-    "webpulse/glm-5.1": "zhipuai/glm-5.1",
+    "webpulse/nemotron-super": "nvidia/nemotron-3-super-120b-a12b",
+    "webpulse/deepseek": "deepseek-ai/deepseek-v3.2",
+    "webpulse/llama70": "meta/llama-3.3-70b-instruct",
+    "webpulse/llama405": "meta/llama-3.1-405b-instruct",
+    // legacy
+    "moonshotai/kimi-k2.6": "nvidia/nemotron-3-super-120b-a12b",
+    "webpulse/glm-5.1": "nvidia/nemotron-3-super-120b-a12b",
     "webpulse/deepseek-v3.2": "deepseek-ai/deepseek-v3.2",
-    "webpulse/qwen3.5-122b": "qwen/qwen3.5-122b-a10b",
+    "webpulse/qwen3.5-122b": "meta/llama-3.3-70b-instruct",
     "webpulse/llama-3.3-70b": "meta/llama-3.3-70b-instruct"
   };
 
-  // Models used to synthesize live-search answers (fast → strong fallbacks)
+  // Reliable NIM chat models for synthesizing search answers (404-prone IDs removed)
   const LIVE_SYNTH_MODELS = [
-    "nvidia/nemotron-nano-12b-v2-vl",
-    "deepseek-ai/deepseek-v3.2",
     "nvidia/nemotron-3-super-120b-a12b",
-    "moonshotai/kimi-k2.6",
-    "zhipuai/glm-5.1",
-    "qwen/qwen3.5-122b-a10b",
-    "meta/llama-3.3-70b-instruct"
+    "deepseek-ai/deepseek-v3.2",
+    "meta/llama-3.3-70b-instruct",
+    "meta/llama-3.1-405b-instruct",
+    "meta/llama-3.1-8b-instruct"
   ];
 
   async function liveWebSearch(query) {
@@ -3013,6 +3166,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
     let result = null;
     let used = null;
+    const failNotes = [];
     for (const modelId of tryOrder) {
       try {
         const attempt = await callModelStreaming(
@@ -3026,7 +3180,13 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           used = modelId;
           break;
         }
-      } catch (_) {}
+        const err = String(attempt?.error || "failed");
+        failNotes.push((getModelInfo(modelId)?.label || modelId) + ": " + err.slice(0, 80));
+        // skip 404 / unavailable and try next
+        if (/404|not found|unavailable|does not exist|unknown model/i.test(err)) continue;
+      } catch (e) {
+        failNotes.push((modelId) + ": " + (e.message || "error"));
+      }
     }
 
     if (!result) {
@@ -3038,6 +3198,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
             used = modelId;
             break;
           }
+          const err = String(attempt?.error || "failed");
+          failNotes.push((getModelInfo(modelId)?.label || modelId) + " (ns): " + err.slice(0, 80));
         } catch (_) {}
       }
     }
@@ -3047,7 +3209,12 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       result.model = used;
       result.providerCount = searchResult.providerCount;
     }
-    return result || { ok: false, error: "All live synthesizer models failed." };
+    return result || {
+      ok: false,
+      error: "Research synthesizer failed (model 404/unavailable). Tried:\n• " +
+        (failNotes.slice(0, 6).join("\n• ") || "no models") +
+        "\n\nTip: pick Research • Nemotron Super, or turn Fallback ON and use normal chat."
+    };
   }
 
   function getSelectedModelId() {
