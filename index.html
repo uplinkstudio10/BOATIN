@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>BOATIN // UP-6</title>
+<title>BOATIN // UP-9</title>
 <meta name="theme-color" content="#050608" />
 <meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -650,7 +650,7 @@
     .attach-btn, .send-message-btn { width: 44px; height: 44px; }
   }
 
-  /* UP-6 feature styles */
+  /* UP-9 feature styles */
   .offline-banner {
     display: none; text-align: center; padding: 6px 12px;
     background: rgba(239,68,68,0.18); color: #fca5a5;
@@ -1313,7 +1313,10 @@
       category: "🌐 Web Pulse",
       models: [
         { value: "webpulse/nemotron-super", label: "Research • Nemotron Super", tags: "live search, reliable" },
-        { value: "webpulse/llama8b", label: "Research • Llama 3.1 8B", tags: "live search, fast" }
+        { value: "webpulse/llama8b", label: "Research • Llama 3.1 8B", tags: "live search, fast" },
+        { value: "webpulse/llama3b", label: "Research • Llama 3.2 3B", tags: "live search, light" },
+        { value: "webpulse/mistral", label: "Research • Mistral Nemo 12B", tags: "live search, balanced" },
+        { value: "webpulse/nemotron-fast", label: "Research • Nemotron (quick)", tags: "live search, same engine" }
       ]
     },
     {
@@ -1360,7 +1363,7 @@
 
   const appState = {
     messages: [],
-    selectedModelId: "deepseek-ai/deepseek-v3.2",
+    selectedModelId: "nvidia/nemotron-3-super-120b-a12b",
     isGenerating: false,
     abortController: null,
     searchQuery: ""
@@ -1889,16 +1892,23 @@
     populateModelSelect();
     setupViewportLock();
 
-    appState.selectedModelId = localStorage.getItem("nv_model") || "nvidia/nemotron-3-super-120b-a12b";
+    const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b";
+    let savedModel = localStorage.getItem("nv_model") || DEFAULT_MODEL;
+    // Default must be a normal chat model — never Research / webpulse
+    if (/^webpulse\//i.test(savedModel) || isLiveSearchModel(savedModel)) {
+      savedModel = DEFAULT_MODEL;
+      localStorage.setItem("nv_model", DEFAULT_MODEL);
+    }
+    appState.selectedModelId = savedModel;
     dom.modelSelect.value = appState.selectedModelId;
+    if (!dom.modelSelect.value || isLiveSearchModel(dom.modelSelect.value)) {
+      appState.selectedModelId = DEFAULT_MODEL;
+      dom.modelSelect.value = DEFAULT_MODEL;
+      localStorage.setItem("nv_model", DEFAULT_MODEL);
+    }
     dom.effortMode.value = localStorage.getItem("nv_effort") || "mid";
     if (dom.autoCallback) dom.autoCallback.value = localStorage.getItem("nv_autocallback") || "on";
     if (dom.autoMode) dom.autoMode.value = localStorage.getItem("nv_automode") || "on";
-    
-    if (!dom.modelSelect.value) {
-      appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
-      dom.modelSelect.value = appState.selectedModelId;
-    }
 
     const saved = localStorage.getItem(sessionKey());
     try {
@@ -1908,7 +1918,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-6**
+        content: `**BOATIN UP-9**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2902,6 +2912,9 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   const LIVE_SEARCH_MODEL_IDS = new Set([
     "webpulse/nemotron-super",
     "webpulse/llama8b",
+    "webpulse/llama3b",
+    "webpulse/mistral",
+    "webpulse/nemotron-fast",
     // legacy
     "webpulse/deepseek",
     "webpulse/llama70",
@@ -2940,7 +2953,10 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // prefers GLM-5.1 rather than always defaulting to the same model.
   const WEB_PULSE_SYNTH_MAP = {
     "webpulse/nemotron-super": "nvidia/nemotron-3-super-120b-a12b",
+    "webpulse/nemotron-fast": "nvidia/nemotron-3-super-120b-a12b",
     "webpulse/llama8b": "meta/llama-3.1-8b-instruct",
+    "webpulse/llama3b": "meta/llama-3.2-3b-instruct",
+    "webpulse/mistral": "mistralai/mistral-nemo-12b-instruct",
     "webpulse/deepseek": "nvidia/nemotron-3-super-120b-a12b",
     "webpulse/llama70": "meta/llama-3.1-8b-instruct",
     "webpulse/llama405": "nvidia/nemotron-3-super-120b-a12b",
@@ -3700,8 +3716,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   function sanitizeSavedModel() {
     const saved = localStorage.getItem("nv_model");
     const dead = /405b|deepseek-v3|kimi-k2|glm-5|qwen3-coder-480|gpt-oss|qwq-32|minimax|devstral/i;
-    if (saved && (!getModelInfo(saved) || isImageModel(saved) || dead.test(saved))) {
-      localStorage.removeItem("nv_model");
+    if (saved && (!getModelInfo(saved) || isImageModel(saved) || dead.test(saved) || /^webpulse\//i.test(saved))) {
+      localStorage.setItem("nv_model", "nvidia/nemotron-3-super-120b-a12b");
       appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
       if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
     }
@@ -3712,5 +3728,3 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 </script>
 </body>
   </html>
-  
-
