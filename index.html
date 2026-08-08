@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>BOATIN // UP-4</title>
+<title>BOATIN // UP-5</title>
 <meta name="theme-color" content="#050608" />
 <meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -41,7 +41,7 @@
     --shadow-glow: 0 8px 32px rgba(50, 215, 75, 0.12);
     --glass: rgba(255, 255, 255, 0.06);
     --glass-strong: rgba(255, 255, 255, 0.1);
-    --glass-blur: blur(28px) saturate(160%);
+    --glass-blur: blur(12px) saturate(130%);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -89,7 +89,7 @@
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--color-accent-primary);
     box-shadow: 0 0 8px var(--color-accent-primary);
-    animation: pulse-dot 2.2s ease-in-out infinite;
+    animation: pulse-dot 3.5s ease-in-out infinite;
   }
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--color-accent-primary); }
@@ -401,7 +401,7 @@
   @keyframes blink { 50% { opacity: 0.2; } }
 
   /* Ultra-smooth motion system */
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: auto; }
   *, *::before, *::after {
     transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -650,7 +650,7 @@
     .attach-btn, .send-message-btn { width: 44px; height: 44px; }
   }
 
-  /* UP-4 feature styles */
+  /* UP-5 feature styles */
   .offline-banner {
     display: none; text-align: center; padding: 6px 12px;
     background: rgba(239,68,68,0.18); color: #fca5a5;
@@ -1080,6 +1080,15 @@
     border-radius: 12px !important;
   }
 
+
+  .message-bubble.assistant, .message-bubble.user {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 80px;
+  }
+  .message-bubble.pending { content-visibility: visible; }
+  @media (prefers-reduced-motion: reduce) {
+    .status-dot, .thinking-bars i, .streaming-cursor { animation: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -1225,7 +1234,7 @@
 </div>
 <script>
   // Insert your Cloudflare Worker URL here:
-  const WORKER_PROXY_URL = "https://anybot.luchifer0p09.workers.dev/";
+  const WORKER_PROXY_URL = "https://boatin.uplinkstudio.workers.dev/";
 
   // ─── PWA: installable manifest + offline app-shell caching ──────────────
   // Self-contained (no external files needed) so this still works as a single
@@ -1517,6 +1526,29 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
     return `<p>${escaped.replace(/\n/g, "<br>")}</p>`;
+  }
+
+  // Throttle stream UI updates to ~1 frame / 50ms (big lag fix while typing tokens)
+  function createStreamRenderer(el) {
+    let pending = "";
+    let raf = 0;
+    let last = 0;
+    const paint = () => {
+      raf = 0;
+      last = Date.now();
+      if (!el) return;
+      el.className = "message-bubble assistant";
+      el.innerHTML = safeMarkdown(pending) + '<span class="streaming-cursor"></span>';
+    };
+    return (partial) => {
+      pending = partial;
+      const now = Date.now();
+      if (now - last >= 48 && !raf) {
+        paint();
+        return;
+      }
+      if (!raf) raf = requestAnimationFrame(paint);
+    };
   }
 
   function estimateTokens(str) {
@@ -1891,7 +1923,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-4**
+        content: `**BOATIN UP-5**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2662,7 +2694,7 @@ if (idx === lastAssistantIdx) {
           throw new Error(
             "Failed to fetch — Worker unreachable or CORS blocked.\\n" +
             "1) Deploy latest worker.js to Cloudflare\\n" +
-            "2) Open https://anybot.luchifer0p09.workers.dev/health\\n" +
+            "2) Open https://boatin.uplinkstudio.workers.dev/health\\n" +
             "3) Hard-refresh this page\\n" +
             "Worker: " + String(url).replace(/\/+$/, "")
           );
@@ -3460,11 +3492,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           content: m.content
         }));
 
-        const result = await answerWithLiveSearch(text, apiMessages, (partial) => {
-          livePending.className = "message-bubble assistant";
-          livePending.innerHTML = safeMarkdown(partial) + '<span class="streaming-cursor"></span>';
-          
-        }, selectedModelForRequest);
+        const result = await answerWithLiveSearch(text, apiMessages, createStreamRenderer(livePending), selectedModelForRequest);
 
         livePending.remove();
 
@@ -3591,11 +3619,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           let attempt = await callModelStreaming(
             modelId,
             apiMessages,
-            (partial) => {
-              pdiv.className = "message-bubble assistant";
-              pdiv.innerHTML = safeMarkdown(partial) + '<span class="streaming-cursor"></span>';
-              
-            },
+            createStreamRenderer(pdiv),
             controller.signal
           );
 
