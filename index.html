@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>BOATIN // UP-9</title>
+<title>BOATIN // UP-11</title>
 <meta name="theme-color" content="#050608" />
 <meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -650,7 +650,7 @@
     .attach-btn, .send-message-btn { width: 44px; height: 44px; }
   }
 
-  /* UP-9 feature styles */
+  /* UP-11 feature styles */
   .offline-banner {
     display: none; text-align: center; padding: 6px 12px;
     background: rgba(239,68,68,0.18); color: #fca5a5;
@@ -1707,6 +1707,14 @@
           run: () => pickModel("webpulse/nemotron-super", "Web Pulse ready — ask anything current")
         },
         {
+          label: "🌤️ Weather",
+          run: () => {
+            dom.messageTextInput.value = "Weather in Dhaka";
+            dom.messageTextInput.focus();
+            toastAssist("Edit city, then Send");
+          }
+        },
+        {
           label: "🏆 Best Model",
           run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Nemotron 3 Super selected")
         },
@@ -1918,7 +1926,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-9**
+        content: `**BOATIN UP-11**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2975,6 +2983,64 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     "mistralai/mistral-nemo-12b-instruct"
   ];
 
+
+  function isWeatherQuery(text) {
+    return /(?:\bweather\b|\bforecast\b|\btemperature\b|আবহাওয়া|আবহাওয়া|তাপমাত্রা|বৃষ্টি|গরম|ঠান্ডা|cold\b|rain\b|humidity)/i.test(String(text || ""));
+  }
+
+  function extractWeatherPlace(text) {
+    const t = String(text || "").trim();
+    const m =
+      t.match(/(?:in|at|for|এ|তে|এর)\s+([A-Za-z\u0980-\u09FF][A-Za-z\u0980-\u09FF\s\-]{1,40})$/i) ||
+      t.match(/^(?:weather|forecast|আবহাওয়া|আবহাওয়া)\s+(?:in\s+|at\s+|for\s+)?(.+)$/i) ||
+      t.match(/^(.+?)\s+(?:weather|forecast|আবহাওয়া|আবহাওয়া)\s*$/i);
+    if (m) return m[1].replace(/[?!.]+$/, "").trim();
+    // strip keywords
+    const cleaned = t
+      .replace(/(?:what(?:'s| is)?|how is|tell me|show|check|এখন|কেমন|কি|কী)/gi, " ")
+      .replace(/(?:weather|forecast|temperature|আবহাওয়া|আবহাওয়া|তাপমাত্রা)/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return cleaned || "Dhaka";
+  }
+
+  function formatWeatherMarkdown(data) {
+    const c = data.current || {};
+    const lines = [
+      `### 🌤️ Weather — ${data.location || "Unknown"}`,
+      "",
+      `**Now:** ${c.condition || "—"}`,
+      `- Temperature: **${c.temperature ?? "—"}°C** (feels like ${c.feelsLike ?? "—"}°C)`,
+      `- Humidity: ${c.humidity ?? "—"}%`,
+      `- Wind: ${c.windSpeed ?? "—"} km/h`,
+      `- Precipitation: ${c.precipitation ?? "—"} mm`,
+      ""
+    ];
+    if (Array.isArray(data.daily) && data.daily.length) {
+      lines.push("**Next days:**");
+      data.daily.forEach((d) => {
+        lines.push(
+          `- ${d.date}: ${d.condition || "—"} · ${d.min ?? "—"}° / ${d.max ?? "—"}°C · rain ${d.rain ?? "—"} mm`
+        );
+      });
+    }
+    lines.push("", `_Source: Open-Meteo_`);
+    return lines.join("\n");
+  }
+
+  async function fetchWeather(place) {
+    const endpoint = WORKER_PROXY_URL.replace(/\/+$/, "") + "/weather";
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ query: place || "Dhaka" })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || data.details || ("Weather HTTP " + res.status));
+    return data;
+  }
+
+
   async function liveWebSearch(query) {
     const q = String(query || "").trim();
     if (!q) throw new Error("Empty search query.");
@@ -3170,89 +3236,102 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   async function answerWithLiveSearch(query, conversation, onChunk, preferredModelId) {
-    const searchResult = await liveWebSearch(query);
-    const searchText = searchResult.text;
-    if (!searchText || searchText.trim().length < 40) {
-      return {
-        ok: false,
-        error: "No live web evidence found. Update Cloudflare Worker (POST /search) and try again."
+    let searchResult;
+    try {
+      searchResult = await liveWebSearch(query);
+    } catch (e) {
+      searchResult = {
+        text: `(Search error: ${e.message || e}. Answer carefully and mark uncertainty.)\nQuestion: ${query}`,
+        sources: [],
+        providerCount: 0
       };
     }
+    const searchText = String(searchResult?.text || "");
     const sourceList = (searchResult.sources || [])
       .map((s, i) => `${i + 1}. ${s.title} — ${s.url}`)
       .join("\n");
 
-    const searchMessages = [
+    const realPreferred = WEB_PULSE_SYNTH_MAP[preferredModelId] || "nvidia/nemotron-3-super-120b-a12b";
+    const tryOrder = [realPreferred, ...LIVE_SYNTH_MODELS.filter(m => m !== realPreferred)];
+
+    // Shorter evidence → fewer timeouts / empty streams
+    const shortEvidence = String(searchText || "").slice(0, 12000);
+    const compactMessages = [
       {
         role: "system",
         content:
-          "You are WEB PULSE — a live research engine (not Wikipedia-only).\n\n" +
-          "You receive multi-source web evidence: Google/Bing/DDG snippets, full pages, news, forums, Wikipedia.\n" +
-          "How to answer:\n" +
-          "1) Lead with a direct answer in 1–2 sentences.\n" +
-          "2) Then structured findings with specific numbers, dates, names from the evidence.\n" +
-          "3) Prefer primary/news/official sources over generic wiki when both exist.\n" +
-          "4) When sources conflict, show both sides clearly.\n" +
-          "5) Mark what is confirmed vs uncertain; never invent facts or URLs.\n" +
-          "6) Light inline attribution (e.g. according to Reuters / official docs).\n" +
-          "7) For research questions: cover angles, recent developments, and practical takeaways.\n" +
-          "8) End with a short Bottom line when useful.\n" +
-          "9) Match the user language (Bangla BD/IN or English)."
+          "You are WEB PULSE. Answer from the web evidence only. " +
+          "Be direct. Use bullets. Match user language. Never invent URLs."
       },
-      ...conversation.filter(m => m.role === "user" || m.role === "assistant").slice(-4),
       {
         role: "user",
         content:
-          `USER QUESTION:\n${query}\n\n` +
-          `SOURCE LIST:\n${sourceList || "(none extracted)"}\n\n` +
-          `RAW WEB EVIDENCE (may be noisy — extract truth carefully):\n${searchText}\n\n` +
-          `Write the best possible answer from this evidence now.`
+          `QUESTION:\n${query}\n\nSOURCES:\n${sourceList || "(none)"}\n\nEVIDENCE:\n${shortEvidence}\n\nAnswer now.`
       }
     ];
-
-    const realPreferred = WEB_PULSE_SYNTH_MAP[preferredModelId];
-    const tryOrder = realPreferred
-      ? [realPreferred, ...LIVE_SYNTH_MODELS.filter(m => m !== realPreferred)]
-      : LIVE_SYNTH_MODELS;
 
     let result = null;
     let used = null;
     const failNotes = [];
+
+    // 1) Non-stream first (more reliable than SSE for research)
     for (const modelId of tryOrder) {
       try {
-        const attempt = await callModelStreaming(
-          modelId,
-          searchMessages,
-          onChunk || (() => {}),
-          undefined
-        );
-        if (attempt?.ok && attempt.reply) {
+        const attempt = await callModel(modelId, compactMessages);
+        if (attempt?.ok && attempt.reply && String(attempt.reply).trim().length > 8) {
           result = attempt;
           used = modelId;
+          onChunk?.(attempt.reply);
           break;
         }
-        const err = String(attempt?.error || "failed");
-        failNotes.push((getModelInfo(modelId)?.label || modelId) + ": " + err.slice(0, 80));
-        // skip 404 / unavailable and try next
-        if (/404|not found|unavailable|does not exist|unknown model/i.test(err)) continue;
+        failNotes.push((modelId.split("/").pop() || modelId) + ": " + String(attempt?.error || "empty").slice(0, 60));
       } catch (e) {
-        failNotes.push((modelId) + ": " + (e.message || "error"));
+        failNotes.push((modelId.split("/").pop() || modelId) + ": " + (e.message || "err"));
       }
     }
 
+    // 2) Stream fallback
     if (!result) {
       for (const modelId of tryOrder) {
         try {
-          const attempt = await callModel(modelId, searchMessages);
-          if (attempt?.ok && attempt.reply) {
+          const attempt = await callModelStreaming(
+            modelId,
+            compactMessages,
+            onChunk || (() => {}),
+            undefined
+          );
+          if (attempt?.ok && attempt.reply && String(attempt.reply).trim().length > 8) {
             result = attempt;
             used = modelId;
             break;
           }
-          const err = String(attempt?.error || "failed");
-          failNotes.push((getModelInfo(modelId)?.label || modelId) + " (ns): " + err.slice(0, 80));
-        } catch (_) {}
+          failNotes.push((modelId.split("/").pop() || modelId) + " stream: " + String(attempt?.error || "empty").slice(0, 60));
+        } catch (e) {
+          failNotes.push((modelId.split("/").pop() || modelId) + " stream: " + (e.message || "err"));
+        }
       }
+    }
+
+    // 3) Last resort: show search evidence so Web Pulse never total-fails
+    if (!result && (shortEvidence.trim() || (searchResult.sources || []).length)) {
+      const lines = (searchResult.sources || []).slice(0, 8).map((s, i) =>
+        `${i + 1}. [${s.title}](${s.url})` + (s.snippet ? ` — ${s.snippet}` : "")
+      );
+      const digest = shortEvidence
+        .replace(/\n{3,}/g, "\n\n")
+        .split("\n")
+        .map(l => l.trim())
+        .filter(l => l.length > 40)
+        .slice(0, 12)
+        .join("\n");
+      const fallbackReply =
+        `### Research results for: ${query}\n\n` +
+        (digest ? digest + "\n\n" : "") +
+        (lines.length ? `**Sources**\n${lines.join("\n")}` : "_No structured sources_") +
+        `\n\n> ⚠️ Live synthesizer was busy — showing raw search evidence. Try again or use **Nemotron Super** chat.`;
+      onChunk?.(fallbackReply);
+      result = { ok: true, reply: fallbackReply };
+      used = "search-digest";
     }
 
     if (result?.ok) {
@@ -3262,9 +3341,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     }
     return result || {
       ok: false,
-      error: "Research synthesizer failed (model 404/unavailable). Tried:\n• " +
-        (failNotes.slice(0, 6).join("\n• ") || "no models") +
-        "\n\nTip: pick Research • Nemotron Super, or turn Fallback ON and use normal chat."
+      error: "Web Pulse failed.\n• " + (failNotes.slice(0, 5).join("\n• ") || "no details") +
+        "\n\nTip: Deploy latest worker.js, then pick **Research • Nemotron Super**."
     };
   }
 
@@ -3486,6 +3564,44 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         setGenerating(false);
       }
 
+      return;
+    }
+
+    // WEATHER: dedicated Open-Meteo via Worker
+    if (isWeatherQuery(text) && !currentFile) {
+      const place = extractWeatherPlace(text);
+      appState.messages.push({ role: "user", content: text });
+      dom.messageTextInput.value = "";
+      dom.messageTextInput.style.height = "auto";
+      render();
+      setGenerating(true);
+      const pending = document.createElement("div");
+      setThinking(pending, "Weather", "Checking " + place + "…");
+      dom.messagesContainer.appendChild(pending);
+      try {
+        const data = await fetchWeather(place);
+        pending.remove();
+        const reply = formatWeatherMarkdown(data);
+        appState.messages.push({
+          role: "assistant",
+          content: reply,
+          ui: safeMarkdown(reply),
+          model: "weather/open-meteo",
+          ts: Date.now()
+        });
+        persistMessages();
+        render();
+      } catch (err) {
+        pending.remove();
+        appState.messages.push({
+          role: "assistant",
+          content: "🌤️ **Weather failed**\n\n" + (err.message || err) +
+            "\n\n_Deploy Worker with POST /weather, or try: weather in Dhaka_"
+        });
+        render();
+      } finally {
+        setGenerating(false);
+      }
       return;
     }
 
