@@ -1,4 +1,4 @@
-# ⚡ Uplink Studio (UP-04)
+# ⚡ Uplink Studio (UP-05)
 
 A fast, **mobile-first** AI chat interface powered by **NVIDIA NIM** — one self-contained HTML file on GitHub Pages, backed by a Cloudflare Worker proxy.
 
@@ -16,6 +16,7 @@ A fast, **mobile-first** AI chat interface powered by **NVIDIA NIM** — one sel
 - 🔁 **Fallback** — if a model fails, retries the next one automatically
 - 🌐 Replies match your language (**Bangladeshi Bangla**, **Indian Bangla**, English, Hindi…)
 - 🟢 Smooth **thinking** animation + ultra-smooth UI transitions
+- 🌸 New liquid Glass Theme
 
 ### Categories (top tabs — touch friendly)
 | Tab | What it does |
