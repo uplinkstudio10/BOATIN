@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>BOATIN // UP-5</title>
+<title>BOATIN // UP-6</title>
 <meta name="theme-color" content="#050608" />
 <meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -650,7 +650,7 @@
     .attach-btn, .send-message-btn { width: 44px; height: 44px; }
   }
 
-  /* UP-5 feature styles */
+  /* UP-6 feature styles */
   .offline-banner {
     display: none; text-align: center; padding: 6px 12px;
     background: rgba(239,68,68,0.18); color: #fca5a5;
@@ -1304,50 +1304,37 @@
       category: "🏆 Recommended",
       models: [
         { value: "nvidia/nemotron-3-super-120b-a12b", label: "(DEFAULT) Nemotron 3 Super 120B", tags: "best overall" },
-        { value: "deepseek-ai/deepseek-v3.2", label: "DeepSeek V3.2", tags: "reasoning, coding" },
-        { value: "zhipuai/glm-4.7", label: "GLM-4.7", tags: "agentic, tools" },
-        { value: "meta/llama-3.3-70b-instruct", label: "Llama 3.3 70B Instruct", tags: "chat, tools" },
-        { value: "meta/llama-3.1-405b-instruct", label: "Llama 3.1 405B Instruct", tags: "frontier" }
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "stable, fast" },
+        { value: "meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B Instruct", tags: "fast" },
+        { value: "mistralai/mistral-nemo-12b-instruct", label: "Mistral Nemo 12B", tags: "chat" }
       ]
     },
     {
       category: "🌐 Web Pulse",
       models: [
         { value: "webpulse/nemotron-super", label: "Research • Nemotron Super", tags: "live search, reliable" },
-        { value: "webpulse/deepseek", label: "Research • DeepSeek V3.2", tags: "live search, reasoning" },
-        { value: "webpulse/llama70", label: "Research • Llama 3.3 70B", tags: "live search, fast" },
-        { value: "webpulse/llama405", label: "Research • Llama 3.1 405B", tags: "live search, deep" }
+        { value: "webpulse/llama8b", label: "Research • Llama 3.1 8B", tags: "live search, fast" }
       ]
     },
     {
       category: "🧠 Reasoning",
       models: [
-        { value: "deepseek-ai/deepseek-r1", label: "DeepSeek R1", tags: "deep reasoning" },
-        { value: "openai/gpt-oss-120b", label: "GPT-OSS 120B", tags: "math, reasoning" },
-        { value: "qwen/qwq-32b", label: "QwQ 32B", tags: "reasoning" },
-        { value: "minimaxai/minimax-m2.5", label: "MiniMax M2.5", tags: "reasoning, agentic" },
-        { value: "zhipuai/glm-5.1", label: "GLM-5.1", tags: "reasoning, multilingual" }
+        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "reasoning" },
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "reasoning" }
       ]
     },
     {
       category: "💻 Coding",
       models: [
-        { value: "qwen/qwen3-coder-480b-a35b-instruct", label: "Qwen3 Coder 480B ★ Best", tags: "best dedicated coder, 256K" },
-        { value: "nvidia/nemotron-3-ultra-550b-a55b", label: "Nemotron 3 Ultra 550B", tags: "coding, agentic, 1M ctx" },
-        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "SWE-bench, coding" },
-        { value: "deepseek-ai/deepseek-v3.2", label: "DeepSeek V3.2", tags: "coding, reasoning" },
-        { value: "moonshotai/kimi-k2.6", label: "Kimi K2.6", tags: "agentic coding" },
-        { value: "mistralai/devstral-2-123b-instruct-2512", label: "Devstral 2 123B", tags: "multi-file coding" }
+        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "coding" },
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "coding" }
       ]
     },
     {
       category: "👁️ Vision",
       models: [
         { value: "nvidia/nemotron-nano-12b-v2-vl", label: "Nemotron Nano 12B VL", tags: "vision QA" },
-        { value: "qwen/qwen3-vl-32b-instruct", label: "Qwen3-VL 32B", tags: "vision, OCR" },
-        { value: "meta/llama-3.2-90b-vision-instruct", label: "Llama 3.2 90B Vision", tags: "vision" },
-        { value: "meta/llama-3.2-11b-vision-instruct", label: "Llama 3.2 11B Vision", tags: "vision" },
-        { value: "microsoft/phi-3.5-vision-instruct", label: "Phi-3.5 Vision", tags: "vision" }
+        { value: "meta/llama-3.2-11b-vision-instruct", label: "Llama 3.2 11B Vision", tags: "vision" }
       ]
     },
     {
@@ -1355,9 +1342,7 @@
       models: [
         { value: "meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B", tags: "fast" },
         { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "fast" },
-        { value: "mistralai/mistral-nemo-12b-instruct", label: "Mistral Nemo 12B", tags: "fast" },
-        { value: "google/gemma-2-9b-it", label: "Gemma 2 9B", tags: "fast" },
-        { value: "microsoft/phi-4-mini-instruct", label: "Phi-4 Mini", tags: "fast" }
+        { value: "mistralai/mistral-nemo-12b-instruct", label: "Mistral Nemo 12B", tags: "fast" }
       ]
     }
   ];
@@ -1724,11 +1709,11 @@
         },
         {
           label: "💻 Coding",
-          run: () => pickModel("qwen/qwen3-coder-480b-a35b-instruct", "Qwen3 Coder selected")
+          run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Qwen3 Coder selected")
         },
         {
           label: "🧠 Reasoning",
-          run: () => pickModel("deepseek-ai/deepseek-r1", "Reasoning model selected")
+          run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Reasoning model selected")
         },
         {
           label: "👁️ Vision",
@@ -1923,7 +1908,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-5**
+        content: `**BOATIN UP-6**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2916,10 +2901,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
   const LIVE_SEARCH_MODEL_IDS = new Set([
     "webpulse/nemotron-super",
+    "webpulse/llama8b",
+    // legacy
     "webpulse/deepseek",
     "webpulse/llama70",
     "webpulse/llama405",
-    // legacy aliases
     "moonshotai/kimi-k2.6",
     "webpulse/glm-5.1",
     "webpulse/deepseek-v3.2",
@@ -2928,7 +2914,25 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   ]);
 
   function isLiveSearchModel(modelId) {
-    return LIVE_SEARCH_MODEL_IDS.has(modelId);
+    const id = String(modelId || "");
+    if (!id) return false;
+    if (LIVE_SEARCH_MODEL_IDS.has(id)) return true;
+    // Any webpulse/* alias is research mode (never send these IDs to NVIDIA)
+    if (/^webpulse\//i.test(id)) return true;
+    if (/research|web\s*pulse|live\s*search/i.test(id)) return true;
+    const info = getModelInfo(id);
+    if (info && /web\s*pulse|live\s*search/i.test(info.category || "")) return true;
+    return false;
+  }
+
+  /** Map UI / research aliases → real NVIDIA chat model IDs */
+  function resolveChatModelId(modelId) {
+    const id = String(modelId || "");
+    if (!id) return "nvidia/nemotron-3-super-120b-a12b";
+    if (WEB_PULSE_SYNTH_MAP[id]) return WEB_PULSE_SYNTH_MAP[id];
+    if (/^webpulse\//i.test(id)) return "nvidia/nemotron-3-super-120b-a12b";
+    if (isLiveSearchModel(id)) return "nvidia/nemotron-3-super-120b-a12b";
+    return id;
   }
 
   // Maps each Web Pulse dropdown entry to the real NIM model that should
@@ -2936,24 +2940,23 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // prefers GLM-5.1 rather than always defaulting to the same model.
   const WEB_PULSE_SYNTH_MAP = {
     "webpulse/nemotron-super": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/deepseek": "deepseek-ai/deepseek-v3.2",
-    "webpulse/llama70": "meta/llama-3.3-70b-instruct",
-    "webpulse/llama405": "meta/llama-3.1-405b-instruct",
-    // legacy
+    "webpulse/llama8b": "meta/llama-3.1-8b-instruct",
+    "webpulse/deepseek": "nvidia/nemotron-3-super-120b-a12b",
+    "webpulse/llama70": "meta/llama-3.1-8b-instruct",
+    "webpulse/llama405": "nvidia/nemotron-3-super-120b-a12b",
     "moonshotai/kimi-k2.6": "nvidia/nemotron-3-super-120b-a12b",
     "webpulse/glm-5.1": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/deepseek-v3.2": "deepseek-ai/deepseek-v3.2",
-    "webpulse/qwen3.5-122b": "meta/llama-3.3-70b-instruct",
-    "webpulse/llama-3.3-70b": "meta/llama-3.3-70b-instruct"
+    "webpulse/deepseek-v3.2": "nvidia/nemotron-3-super-120b-a12b",
+    "webpulse/qwen3.5-122b": "meta/llama-3.1-8b-instruct",
+    "webpulse/llama-3.3-70b": "meta/llama-3.1-8b-instruct"
   };
 
-  // Reliable NIM chat models for synthesizing search answers (404-prone IDs removed)
+  // Only models verified on this NVIDIA key (others return 404)
   const LIVE_SYNTH_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b",
-    "deepseek-ai/deepseek-v3.2",
-    "meta/llama-3.3-70b-instruct",
-    "meta/llama-3.1-405b-instruct",
-    "meta/llama-3.1-8b-instruct"
+    "meta/llama-3.1-8b-instruct",
+    "meta/llama-3.2-3b-instruct",
+    "mistralai/mistral-nemo-12b-instruct"
   ];
 
   async function liveWebSearch(query) {
@@ -3472,7 +3475,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
     // WEB PULSE (Live Search): fetch web evidence + fast synth models
     const selectedModelForRequest = getSelectedModelId();
-    if (isLiveSearchModel(selectedModelForRequest)) {
+    if (isLiveSearchModel(selectedModelForRequest) || /^webpulse\//i.test(String(selectedModelForRequest))) {
       if (!text) return;
       appState.messages.push({ role: "user", content: text });
       dom.messageTextInput.value = "";
@@ -3591,7 +3594,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       let primary = dom.autoMode.value === "on"
         ? chooseAutoModel(text, hadFile)
         : appState.selectedModelId;
-      // Guard: auto picker must never return an image model for chat
+      // Never send research aliases or image models to /chat
+      if (isImageModel(primary) || isLiveSearchModel(primary) || /^webpulse\//i.test(String(primary))) {
+        primary = resolveChatModelId(primary);
+      }
+      primary = resolveChatModelId(primary);
       if (isImageModel(primary)) {
         primary = "nvidia/nemotron-3-super-120b-a12b";
       }
@@ -3599,7 +3606,20 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       const candidates = (autoCallback
         ? [primary, ...getFallbackModels(primary).map(m => m.value)]
         : [primary]
-      ).filter(id => !isImageModel(id));
+      )
+        .map(resolveChatModelId)
+        .filter(id => id && !isImageModel(id) && !isLiveSearchModel(id) && !/^webpulse\//i.test(id));
+      // Always keep proven free-tier models in the retry chain
+      const STABLE = [
+        "nvidia/nemotron-3-super-120b-a12b",
+        "meta/llama-3.1-8b-instruct",
+        "meta/llama-3.2-3b-instruct",
+        "mistralai/mistral-nemo-12b-instruct"
+      ];
+      for (const s of STABLE) {
+        if (!candidates.includes(s)) candidates.push(s);
+      }
+      if (!candidates.length) candidates.push("nvidia/nemotron-3-super-120b-a12b");
 
       let result = null;
       let usedModel = primary;
@@ -3679,7 +3699,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // Remove any stale model stored from an older version of the app.
   function sanitizeSavedModel() {
     const saved = localStorage.getItem("nv_model");
-    if (saved && (!getModelInfo(saved) || isImageModel(saved))) {
+    const dead = /405b|deepseek-v3|kimi-k2|glm-5|qwen3-coder-480|gpt-oss|qwq-32|minimax|devstral/i;
+    if (saved && (!getModelInfo(saved) || isImageModel(saved) || dead.test(saved))) {
       localStorage.removeItem("nv_model");
       appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
       if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
