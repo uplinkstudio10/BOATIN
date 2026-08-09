@@ -19,7 +19,7 @@
     --shadow-glow: 0 8px 32px rgba(50, 215, 75, 0.12);
     --glass: rgba(255, 255, 255, 0.06);
     --glass-strong: rgba(255, 255, 255, 0.1);
-    --glass-blur: blur(8px) saturate(120%);
+    --glass-blur: blur(6px) saturate(110%);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -67,7 +67,7 @@
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--color-accent-primary);
     box-shadow: 0 0 8px var(--color-accent-primary);
-    animation: pulse-dot 3.5s ease-in-out infinite;
+    animation: pulse-dot 4.5s ease-in-out infinite;
   }
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--color-accent-primary); }
@@ -324,7 +324,7 @@
   .thinking-bars i {
     display: block; width: 4px; border-radius: 2px;
     background: var(--color-accent-primary);
-    animation: bar-wave 0.9s ease-in-out infinite;
+    animation: bar-wave 1.2s ease-in-out infinite;
     transform-origin: bottom center;
   }
   .thinking-bars i:nth-child(1) { height: 8px; animation-delay: 0s; }
@@ -365,7 +365,7 @@
     display: block; height: 100%; width: 40%;
     border-radius: 99px;
     background: linear-gradient(90deg, transparent, var(--color-accent-primary), transparent);
-    animation: track-slide 1.2s ease-in-out infinite;
+    animation: track-slide 1.8s ease-in-out infinite;
   }
   @keyframes track-slide {
     0% { transform: translateX(-120%); }
@@ -1148,4 +1148,73 @@
   @media (prefers-reduced-motion: reduce) {
     .status-dot, .thinking-bars i, .streaming-cursor,
     html, body, body::after { animation: none !important; }
+  }
+
+#livePreviewModal .modal-sheet {
+  width: min(100vw, 960px);
+  height: min(92vh, 900px);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+#livePreviewFrame {
+  flex: 1;
+  width: 100%;
+  min-height: 60vh;
+  border: none;
+  border-radius: 12px;
+  background: #fff;
+}
+.code-action-btn.preview-btn {
+  border-color: rgba(50, 215, 75, 0.45) !important;
+  color: #32d74b !important;
+}
+
+
+  /* HTML Preview editor (sandbox) */
+  #livePreviewModal {
+    display: none;
+    align-items: stretch;
+    justify-content: center;
+    z-index: 200;
+    padding: 12px;
+  }
+  #livePreviewModal.open, #livePreviewModal[style*="flex"] {
+    display: flex !important;
+  }
+  .preview-sheet {
+    width: min(960px, 100%);
+    height: min(88vh, 900px);
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 18px !important;
+  }
+  .preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  .preview-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--color-accent-primary);
+  }
+  .preview-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  #livePreviewFrame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: #fff;
+    min-height: 0;
+  }
+  .code-action-btn.preview-btn {
+    border-color: rgba(50, 215, 75, 0.45) !important;
+    color: var(--color-accent-primary) !important;
   }

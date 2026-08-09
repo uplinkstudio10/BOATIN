@@ -125,12 +125,32 @@
     g.models.map(m => ({ ...m, category: g.category }))
   );
 
-  marked.setOptions({
-    breaks: true,
-    gfm: true,
-    headerIds: false,
-    mangle: false
-  });
+  // Custom renderer: never inject raw HTML into chat (prevents canvas/games auto-running)
+  try {
+    if (typeof marked !== "undefined" && marked) {
+      const mdRenderer = new marked.Renderer();
+      mdRenderer.html = () => "";
+      mdRenderer.code = (code, infostring) => {
+        const lang = String(infostring || "").trim().split(/\s+/)[0] || "";
+        const esc = String(code)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+        const cls = lang ? ` class="language-${lang}"` : "";
+        return `<pre><code${cls}>${esc}</code></pre>`;
+      };
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        headerIds: false,
+        mangle: false,
+        renderer: mdRenderer
+      });
+    }
+  } catch (e) {
+    console.warn("marked renderer setup failed", e);
+  }
 
   const appState = {
     messages: [],
@@ -277,14 +297,19 @@
 
   function safeMarkdown(text) {
     if (typeof text !== "string") return "";
+    // Escape HTML outside fenced code blocks so previews never render inside chat
+    const parts = String(text).split(/(```[\s\S]*?```)/g);
+    const safe = parts.map((part) => {
+      if (part.startsWith("```")) return part;
+      return part
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }).join("");
     if (typeof marked !== "undefined" && marked && typeof marked.parse === "function") {
-      try { return marked.parse(text); } catch (_) { /* fall through */ }
+      try { return marked.parse(safe); } catch (_) { /* fall through */ }
     }
-    const escaped = text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    return `<p>${escaped.replace(/\n/g, "<br>")}</p>`;
+    return `<p>${safe.replace(/\n/g, "<br>")}</p>`;
   }
 
   // Throttle stream UI updates to ~1 frame / 50ms (big lag fix while typing tokens)
@@ -701,7 +726,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-15**
+        content: `**BOATIN UP-16**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -1018,13 +1043,94 @@ Model · Effort · Actions — type and send.`
     return "code.txt";
   }
 
-  function openLivePreview(html) {
+  function wrapHtmlDocument(code) {
+    let html = String(code || "").trim();
+    // strip outer fence if user passed fenced block
+    const fence = html.match(/^```(?:html|htm)?\s*[\r\n]+([\s\S]*?)```$/i);
+    if (fence) html = fence[1].trim();
+    if (/<!DOCTYPE/i.test(html) || /<html[\s>]/i.test(html)) return html;
+    // fragment → full document (like online HTML editors)
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BOATIN Preview</title>
+<style>
+  html, body { margin: 0; min-height: 100%; background: #111; color: #eee; font-family: system-ui, sans-serif; }
+  canvas { display: block; max-width: 100%; }
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+  }
+
+  function ensurePreviewModal() {
+    let modal = document.getElementById("livePreviewModal");
+    if (modal) return modal;
+    modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.id = "livePreviewModal";
+    modal.innerHTML = `
+      <div class="modal-sheet preview-sheet">
+        <div class="preview-toolbar">
+          <span class="preview-title">▶ HTML Preview</span>
+          <div class="preview-actions">
+            <button type="button" class="tb-btn" id="livePreviewReload">↻ Reload</button>
+            <button type="button" class="tb-btn" id="livePreviewNewTab">↗ New tab</button>
+            <button type="button" class="tb-btn" id="livePreviewClose">✕ Close</button>
+          </div>
+        </div>
+        <iframe id="livePreviewFrame" title="HTML Preview"
+          sandbox="allow-scripts allow-forms allow-modals allow-popups"
+          referrerpolicy="no-referrer"></iframe>
+      </div>`;
+    document.body.appendChild(modal);
+    document.getElementById("livePreviewClose")?.addEventListener("click", () => {
+      const f = document.getElementById("livePreviewFrame");
+      if (f) f.srcdoc = "about:blank";
+      closeModal("livePreviewModal");
+    });
+    document.getElementById("livePreviewReload")?.addEventListener("click", () => {
+      const f = document.getElementById("livePreviewFrame");
+      if (f && f.dataset.srcHtml) {
+        const html = f.dataset.srcHtml;
+        f.srcdoc = "about:blank";
+        requestAnimationFrame(() => { f.srcdoc = html; });
+      }
+    });
+    document.getElementById("livePreviewNewTab")?.addEventListener("click", () => {
+      const f = document.getElementById("livePreviewFrame");
+      const html = f?.dataset?.srcHtml;
+      if (!html) return;
+      const w = window.open("", "_blank");
+      if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+    });
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        const f = document.getElementById("livePreviewFrame");
+        if (f) f.srcdoc = "about:blank";
+        closeModal("livePreviewModal");
+      }
+    });
+    return modal;
+  }
+
+  function openLivePreview(code) {
+    ensurePreviewModal();
     const modal = document.getElementById("livePreviewModal");
     const frame = document.getElementById("livePreviewFrame");
-    if (!modal || !frame) return;
-    frame.dataset.srcHtml = html;
-    frame.srcdoc = html;
+    if (!modal || !frame) {
+      toastAssist("Preview UI missing");
+      return;
+    }
+    const doc = wrapHtmlDocument(code);
+    frame.dataset.srcHtml = doc;
+    frame.srcdoc = "about:blank";
     openModal("livePreviewModal");
+    requestAnimationFrame(() => { frame.srcdoc = doc; });
   }
 
   function ensureCodeActions(root) {
@@ -1086,14 +1192,24 @@ Model · Effort · Actions — type and send.`
 
       bar.append(copyBtn, saveBtn);
 
-      // Live preview for HTML (or code that clearly contains a full HTML document)
-      const looksLikeHtml = language === "html" || /<html[\s>]/i.test(raw) || /<!DOCTYPE html/i.test(raw);
-      if (looksLikeHtml) {
+      // HTML / canvas / browser-runnable code → Preview (opens in-app editor frame)
+      const looksRunnable =
+        language === "html" || language === "htm" || language === "svg" ||
+        /<html[\s>]/i.test(raw) || /<!DOCTYPE html/i.test(raw) ||
+        /<canvas[\s>]/i.test(raw) || /<body[\s>]/i.test(raw) ||
+        /document\.(body|write|getElementById|querySelector)/i.test(raw) ||
+        /<script[\s>]/i.test(raw) && /<style[\s>]/i.test(raw);
+      if (looksRunnable) {
         const previewBtn = document.createElement("button");
         previewBtn.type = "button";
-        previewBtn.className = "code-action-btn";
-        previewBtn.textContent = "▶ Live Preview";
-        previewBtn.onclick = () => openLivePreview(raw);
+        previewBtn.className = "code-action-btn preview-btn";
+        previewBtn.textContent = "▶ Preview HTML";
+        previewBtn.title = "Open live preview (sandbox) — like an online HTML editor";
+        previewBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openLivePreview(raw);
+        };
         bar.appendChild(previewBtn);
       }
 
@@ -2618,10 +2734,16 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         agentPending.remove();
 
         if (result?.ok) {
+          let reply = result.reply || "";
+          // Ensure HTML/JS is in a fence so chat never auto-runs it
+          if (result.code && !/```/.test(reply)) {
+            reply = "Here's the build:\n\n```html\n" + result.code + "\n```\n\n> Tap **▶ Preview** under the code to run it.";
+          } else if (!/▶ Preview|Live Preview/i.test(reply)) {
+            reply += "\n\n> Tap **▶ Preview** under the code block to run this in the built-in HTML editor.";
+          }
           appState.messages.push({
             role: "assistant",
-            content: result.reply,
-            ui: safeMarkdown(result.reply),
+            content: reply,
             model: "power/agent",
             ts: Date.now()
           });
