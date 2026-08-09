@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>BOATIN // UP-12</title>
+<meta name="theme-color" content="#050608" />
+<meta name="description" content="BOATIN — UplinkStudio powered by NVIDIA NIM" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="BOATIN" />
+<link rel="manifest" id="pwaManifestLink" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="app-root">
+  <header class="app-header">
+    <div class="header-top">
+      <div class="header-top-left">
+        <div class="status-dot"></div>
+        <div>BOATIN</div>
+      </div>
+      <div class="header-actions">
+        <button class="clear-memory-btn" id="clearMemoryBtn" type="button" title="Clear chat history">Clear 🗑️</button>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="cat-tabs" id="catTabs" role="tablist">
+        <button type="button" class="cat-tab active" data-cat="model">🎯 Model</button>
+                <button type="button" class="cat-tab" data-cat="auto">🤖 Auto</button>
+        <button type="button" class="cat-tab" data-cat="fallback">🔁 Fallback</button>
+        <button type="button" class="cat-tab" data-cat="actions">🚀 Actions</button>
+      </div>
+
+      <div class="cat-panel active" id="panel-model" data-cat="model">
+        <div class="control-item">
+          <label for="modelSelect">NVIDIA Models</label>
+          <select id="modelSelect"></select>
+        </div>
+      </div>
+
+      <select id="effortMode" style="display:none">
+        <option value="low">Low</option>
+        <option value="mid" selected>Mid</option>
+        <option value="high">High</option>
+        <option value="max">Max</option>
+      </select>
+      <select id="autoMode" style="display:none">
+        <option value="on" selected>ON</option>
+        <option value="off">OFF</option>
+      </select>
+      <select id="autoCallback" style="display:none">
+        <option value="on" selected>ON</option>
+        <option value="off">OFF</option>
+      </select>
+
+      <div class="cat-panel" id="panel-auto" data-cat="auto">
+        <div class="cat-panel-grid" id="autoChips"></div>
+      </div>
+
+      <div class="cat-panel" id="panel-fallback" data-cat="fallback">
+        <div class="cat-panel-grid" id="fallbackChips"></div>
+      </div>
+
+      <div class="cat-panel" id="panel-actions" data-cat="actions">
+        <div class="cat-panel-grid" id="actionChips"></div>
+      </div>
+      </div>
+  </header>
+
+  <main class="app-workspace">
+    <section class="chat-viewport">
+      <div class="messages-wrap">
+        <div class="messages-scroll-area" id="messagesContainer"></div>
+        <button type="button" class="scroll-bottom-btn" id="scrollBottomBtn" title="Jump to latest" aria-label="Scroll to latest">↓</button>
+      </div>
+      <div class="input-container">
+        <div id="attachmentPreviewBar" class="attachment-preview-bar">
+          <span id="attachmentIcon">📎</span>
+          <span id="attachmentNameText" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          <button type="button" id="removeFileBtn" class="remove-file-btn">✕</button>
+        </div>
+        <form class="chat-input-bar" id="chatForm" onsubmit="return false;">
+          <input type="file" id="fileInput" accept="image/*,.txt,.csv,.md,.json,.html,.js,.py" style="display: none;" />
+          <textarea id="messageTextInput" rows="1" placeholder="Ask anything..."></textarea>
+          <div class="composer-toolbar">
+            <button class="attach-btn" id="attachBtn" type="button" title="Attach">+</button>
+            <div class="effort-menu" id="effortMenu">
+              <button type="button" class="effort-trigger" id="effortTrigger" title="Effort">
+                <span class="effort-bolt">⚡</span>
+                <span id="effortTriggerLabel">Mid</span>
+                <span class="effort-caret">▾</span>
+              </button>
+              <div class="effort-dropdown" id="effortDropdown" hidden>
+                <button type="button" data-effort="low">Low</button>
+                <button type="button" data-effort="mid">Mid</button>
+                <button type="button" data-effort="high">High</button>
+                <button type="button" data-effort="max">Max</button>
+              </div>
+            </div>
+            <span class="composer-spacer"></span>
+            <button type="button" class="listen-btn" id="listenBtn" title="Listen to last reply">🎧 Listen</button>
+            <button class="send-message-btn stop-message-btn" id="stopMessageBtn" type="button" title="Stop" style="display:none;">■</button>
+            <button class="send-message-btn" id="sendMessageBtn" type="button" title="Send">➤</button>
+          </div>
+        </form>
+        <div id="inputCounter" style="display:none; padding:0 12px 8px; font-size:10px; color:var(--color-text-muted); font-family:var(--font-family-mono); text-align:right;"></div>
+        <div class="studio-foot">UPLINKSTUDIO POWERED BY <span>NVIDIA NIM</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox"><button type="button" class="lightbox-close" id="lightboxClose">✕</button><img id="lightboxImg" alt="Preview" /></div>
+<div class="modal-backdrop" id="livePreviewModal">
+  <div class="modal-sheet" style="width:96vw; max-width:1100px; height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--color-border-subtle);">
+      <h3 style="margin:0;">▶ Live Preview</h3>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="tb-btn" id="livePreviewReload">↻ Reload</button>
+        <button type="button" class="tb-btn" id="livePreviewClose">✕ Close</button>
+      </div>
+    </div>
+    <iframe id="livePreviewFrame" style="flex:1; width:100%; border:none; background:#fff;" sandbox="allow-scripts allow-forms allow-popups allow-modals"></iframe>
+  </div>
+</div>
+<div class="modal-backdrop" id="shortcutsModal">
+  <div class="modal-sheet">
+    <h3>⌨️ Keyboard Shortcuts</h3>
+    <div class="session-list" style="max-height:none;">
+      <div class="session-item" style="cursor:default;"><span>Focus search</span><span class="ctx-pill">Ctrl/Cmd + K</span></div>
+      <div class="session-item" style="cursor:default;"><span>Open settings</span><span class="ctx-pill">Ctrl/Cmd + ,</span></div>
+      <div class="session-item" style="cursor:default;"><span>Show shortcuts</span><span class="ctx-pill">Ctrl/Cmd + /</span></div>
+      <div class="session-item" style="cursor:default;"><span>Clear chat</span><span class="ctx-pill">Ctrl/Cmd + N</span></div>
+      <div class="session-item" style="cursor:default;"><span>Close modal / lightbox</span><span class="ctx-pill">Esc</span></div>
+      <div class="session-item" style="cursor:default;"><span>Send message</span><span class="ctx-pill">Enter</span></div>
+      <div class="session-item" style="cursor:default;"><span>New line</span><span class="ctx-pill">Shift + Enter</span></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="tb-btn" id="shortcutsClose">Done</button>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-sheet">
+    <h3>⚙️ Studio Settings</h3>
+    <label>Custom system prompt</label>
+    <textarea id="sysPromptInput" placeholder="Optional instructions always sent to the model…"></textarea>
+    <label>Font size</label>
+    <select id="fontSizeSelect"><option value="sm">Small</option><option value="md" selected>Medium</option><option value="lg">Large</option></select>
+    <label>Accent theme</label>
+    <div id="themeSwatches" style="display:flex;gap:8px;margin-top:4px;"></div>
+    <label>Voice language (mic)</label>
+    <select id="voiceLangSelect">
+      <option value="auto">Auto (detect)</option>
+      <option value="bn-IN">বাংলা — ভারত (bn-IN)</option>
+      <option value="bn-BD">বাংলা — বাংলাদেশ (bn-BD)</option>
+      <option value="en-US">English (US)</option>
+      <option value="en-IN">English (India)</option>
+      <option value="hi-IN">हिन्दी (hi-IN)</option>
+    </select>
+    <div class="modal-actions">
+      <button type="button" class="tb-btn" id="settingsClose">Done</button>
+    </div>
+  </div>
+</div>
+
+  <script src="app.js" defer></script>
+</body>
+  </html>
