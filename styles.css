@@ -19,7 +19,7 @@
     --shadow-glow: 0 8px 32px rgba(50, 215, 75, 0.12);
     --glass: rgba(255, 255, 255, 0.06);
     --glass-strong: rgba(255, 255, 255, 0.1);
-    --glass-blur: blur(12px) saturate(130%);
+    --glass-blur: blur(8px) saturate(120%);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -394,11 +394,11 @@
                 opacity 0.22s ease;
   }
   .message-bubble {
-    animation: msg-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: msg-in 0.2s ease-out both;
   }
   @keyframes msg-in {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(2px); }
-    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .cat-panel {
     animation: panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -446,7 +446,7 @@
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(0,0,0,0.45), 0 0 12px rgba(118, 185, 0, 0.2);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(6px);
     -webkit-tap-highlight-color: transparent;
   }
   .scroll-bottom-btn.visible {
@@ -945,8 +945,8 @@
   .cat-tab {
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border-radius: 999px !important;
   }
   .cat-tab.active {
@@ -958,14 +958,14 @@
   .cat-chip, .header-action-btn, .clear-memory-btn, .tb-btn {
     background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   .control-item select, .control-item input {
     background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 14px !important;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
   }
   .message-bubble.user {
     background: linear-gradient(145deg, rgba(50, 215, 75, 0.85), rgba(40, 180, 60, 0.75)) !important;
@@ -975,7 +975,7 @@
     box-shadow:
       0 8px 24px rgba(50, 215, 75, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(6px);
   }
   .message-bubble.assistant {
     background: transparent !important;
@@ -1005,7 +1005,7 @@
   .attach-btn, .effort-trigger, .listen-btn {
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(6px);
     color: var(--color-text-primary) !important;
   }
   .effort-dropdown {
@@ -1037,12 +1037,12 @@
   .sources-toggle {
     background: rgba(50, 215, 75, 0.12) !important;
     border-color: rgba(50, 215, 75, 0.35) !important;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
   }
   .sources-panel {
     background: rgba(0, 0, 0, 0.35) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(6px);
   }
   .studio-foot {
     color: rgba(235, 235, 245, 0.35) !important;
@@ -1135,7 +1135,7 @@
     background:
       radial-gradient(circle at 20% 30%, rgba(100, 210, 255, 0.06), transparent 40%),
       radial-gradient(circle at 80% 70%, rgba(50, 215, 75, 0.08), transparent 40%);
-    filter: blur(60px);
+    filter: blur(40px);
     animation: liquid-drift 34s ease-in-out infinite reverse;
     pointer-events: none;
   }

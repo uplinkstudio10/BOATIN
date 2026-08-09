@@ -701,7 +701,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-12**
+        content: `**BOATIN UP-14**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2103,12 +2103,9 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       },
       { role: "user", content: `Request: ${request}\n\nPlan:\n${plan}\n\nNow write the full working code.` }
     ];
-    let buildText = "";
-    const buildResult = await powerHouseCall(buildMessages, (partial) => {
-      buildText = partial;
-      pendingEl.className = "message-bubble pending";
-      pendingEl.innerHTML = thinkingHTML("🚀 Power House", "Step 2/4 · Writing the code…") +
-        `<div class="message-bubble assistant" style="margin-top:10px;opacity:0.85;">${safeMarkdown(partial.slice(-1500))}</div>`;
+    const buildResult = await powerHouseCall(buildMessages, () => {
+      // status only — no live code preview (less lag)
+      setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing the code…");
     });
     if (!buildResult?.ok || !buildResult.reply) {
       return { ok: false, error: "Build step failed to get a response from the model." };
@@ -2153,10 +2150,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
               `Review notes:\n${reviewText}\n\nNow output the fixed, complete code.`
           }
         ];
-        const fixResult = await powerHouseCall(fixMessages, (partial) => {
-          pendingEl.className = "message-bubble pending";
-          pendingEl.innerHTML = thinkingHTML("🚀 Power House", "Step 4/4 · Fixing issues found in review…") +
-            `<div class="message-bubble assistant" style="margin-top:10px;opacity:0.85;">${safeMarkdown(partial.slice(-1500))}</div>`;
+        const fixResult = await powerHouseCall(fixMessages, () => {
+          setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fixing issues found in review…");
         });
         if (fixResult?.ok && fixResult.reply) {
           currentReply = fixResult.reply;
