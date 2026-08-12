@@ -19,7 +19,7 @@
     --shadow-glow: 0 8px 32px rgba(50, 215, 75, 0.12);
     --glass: rgba(255, 255, 255, 0.06);
     --glass-strong: rgba(255, 255, 255, 0.1);
-    --glass-blur: blur(6px) saturate(110%);
+    --glass-blur: none;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -446,7 +446,7 @@
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(0,0,0,0.45), 0 0 12px rgba(118, 185, 0, 0.2);
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
     -webkit-tap-highlight-color: transparent;
   }
   .scroll-bottom-btn.visible {
@@ -918,19 +918,15 @@
 
   /* ── iPhone Liquid Glass Theme ── */
   html, body {
-    background:
-      radial-gradient(ellipse 90% 60% at 10% -10%, rgba(50, 215, 75, 0.18), transparent 55%),
-      radial-gradient(ellipse 70% 50% at 100% 20%, rgba(100, 210, 255, 0.12), transparent 50%),
-      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(175, 82, 222, 0.1), transparent 50%),
-      #050608 !important;
+    background: #080a09 !important;
   }
   #app-root {
     background: transparent;
   }
   .app-header {
-    background: rgba(18, 18, 22, 0.45) !important;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: #10160f !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
   }
@@ -945,8 +941,8 @@
   .cat-tab {
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border-radius: 999px !important;
   }
   .cat-tab.active {
@@ -958,14 +954,14 @@
   .cat-chip, .header-action-btn, .clear-memory-btn, .tb-btn {
     background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .control-item select, .control-item input {
     background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 14px !important;
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
   }
   .message-bubble.user {
     background: linear-gradient(145deg, rgba(50, 215, 75, 0.85), rgba(40, 180, 60, 0.75)) !important;
@@ -975,7 +971,7 @@
     box-shadow:
       0 8px 24px rgba(50, 215, 75, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
   }
   .message-bubble.assistant {
     background: transparent !important;
@@ -985,19 +981,19 @@
     background: rgba(255, 255, 255, 0.06) !important;
     border: 1px solid rgba(50, 215, 75, 0.3) !important;
     border-radius: 20px !important;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25) !important;
   }
   .input-container {
     background: linear-gradient(180deg, transparent, rgba(5, 6, 8, 0.5) 40%) !important;
   }
   .chat-input-bar {
-    background: rgba(28, 28, 32, 0.55) !important;
+    background: #151a16 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 26px !important;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow:
       0 12px 40px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
@@ -1005,14 +1001,14 @@
   .attach-btn, .effort-trigger, .listen-btn {
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
     color: var(--color-text-primary) !important;
   }
   .effort-dropdown {
     background: rgba(22, 22, 26, 0.75) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border-radius: 16px !important;
   }
   .send-message-btn {
@@ -1023,26 +1019,26 @@
   .scroll-bottom-btn {
     background: rgba(22, 22, 26, 0.7) !important;
     border: 1px solid rgba(50, 215, 75, 0.4) !important;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .modal-sheet {
-    background: rgba(22, 22, 28, 0.72) !important;
+    background: #141814 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     border-radius: 24px !important;
     box-shadow: 0 24px 80px rgba(0,0,0,0.5) !important;
   }
   .sources-toggle {
     background: rgba(50, 215, 75, 0.12) !important;
     border-color: rgba(50, 215, 75, 0.35) !important;
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
   }
   .sources-panel {
     background: rgba(0, 0, 0, 0.35) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(6px);
+    backdrop-filter: none;
   }
   .studio-foot {
     color: rgba(235, 235, 245, 0.35) !important;
@@ -1059,13 +1055,12 @@
   }
 
   /* ── Liquid Glass: deeper specular refinement ──────────────────────── */
-  @keyframes liquid-drift {
-    0%, 100% { background-position: 0% 0%, 100% 20%, 50% 100%; }
+  
     50% { background-position: 8% -4%, 92% 28%, 46% 94%; }
   }
   html, body {
     background-size: 140% 140%, 140% 140%, 140% 140%;
-    animation: liquid-drift 26s ease-in-out infinite;
+    animation: none;
   }
 
   /* Glossy top-edge sheen — the signature Liquid Glass highlight, applied
@@ -1127,18 +1122,7 @@
   }
 
   /* Extra depth layer behind the whole app for a true "liquid pool" feel */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: -20%;
-    z-index: -1;
-    background:
-      radial-gradient(circle at 20% 30%, rgba(100, 210, 255, 0.06), transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(50, 215, 75, 0.08), transparent 40%);
-    filter: blur(40px);
-    animation: liquid-drift 34s ease-in-out infinite reverse;
-    pointer-events: none;
-  }
+  /* body::after removed for performance */
 
   .message-bubble.assistant, .message-bubble.user {
     content-visibility: auto;
@@ -1218,3 +1202,30 @@
     border-color: rgba(50, 215, 75, 0.45) !important;
     color: var(--color-accent-primary) !important;
   }
+
+/* Prompt Library */
+.prompt-lib-sheet { width: min(440px, 96vw); max-height: 85vh; display: flex; flex-direction: column; padding: 0 !important; overflow: hidden; }
+.prompt-lib-list { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.prompt-lib-item { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 1px solid var(--color-border-subtle); background: rgba(255,255,255,0.04); }
+.prompt-lib-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.prompt-lib-meta strong { font-size: 13px; color: var(--color-text-primary); }
+.prompt-lib-meta span { font-size: 11px; color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prompt-lib-add { padding: 12px; border-top: 1px solid var(--color-border-subtle); display: flex; flex-direction: column; gap: 8px; }
+.prompt-lib-add input, .prompt-lib-add textarea {
+  width: 100%; background: #0e120f; border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary); border-radius: 10px; padding: 8px 10px; font-size: 13px; font-family: inherit;
+}
+#promptLibModal { display: none; align-items: center; justify-content: center; z-index: 200; padding: 12px; }
+#promptLibModal.open, #promptLibModal[style*="flex"] { display: flex !important; }
+
+#sessionsModal, #healthModal {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 12px;
+}
+#sessionsModal.open, #sessionsModal[style*="flex"],
+#healthModal.open, #healthModal[style*="flex"] {
+  display: flex !important;
+}

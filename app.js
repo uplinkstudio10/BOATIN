@@ -223,7 +223,165 @@
     try { navigator.vibrate?.(12); } catch (_) {}
   }
 
-  function sessionKey() { return "nv_msgs"; }
+  // ── Multi-session chat ──────────────────────────────────────
+  function getActiveSessionId() {
+    let id = localStorage.getItem("nv_session_id");
+    if (!id) {
+      id = "s_" + Date.now();
+      localStorage.setItem("nv_session_id", id);
+    }
+    return id;
+  }
+
+  function loadSessionIndex() {
+    try {
+      const raw = localStorage.getItem("nv_sessions");
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (_) { return []; }
+  }
+
+  function saveSessionIndex(list) {
+    localStorage.setItem("nv_sessions", JSON.stringify(list || []));
+  }
+
+  function titleFromMessages(msgs) {
+    const u = (msgs || []).find(m => m.role === "user" && typeof m.content === "string");
+    if (!u) return "New chat";
+    const t = String(u.content).replace(/\s+/g, " ").trim();
+    return (t.slice(0, 42) || "New chat") + (t.length > 42 ? "…" : "");
+  }
+
+  function upsertSessionMeta() {
+    const id = getActiveSessionId();
+    const list = loadSessionIndex().filter(s => s.id !== id);
+    list.unshift({
+      id,
+      title: titleFromMessages(appState.messages),
+      updated: Date.now(),
+      count: (appState.messages || []).length
+    });
+    saveSessionIndex(list.slice(0, 40));
+  }
+
+  function switchSession(id) {
+    if (!id || id === getActiveSessionId()) return;
+    // save current first
+    persistMessages();
+    localStorage.setItem("nv_session_id", id);
+    try {
+      const raw = localStorage.getItem(sessionKey(id));
+      appState.messages = raw ? JSON.parse(raw) : [];
+    } catch (_) { appState.messages = []; }
+    if (!appState.messages.length) {
+      appState.messages = [{
+        role: "assistant",
+        ts: Date.now(),
+        content: "**New chat**\n\nModel · Effort · Actions — type and send."
+      }];
+    }
+    render();
+    toastAssist("Switched chat");
+  }
+
+  function newSession() {
+    persistMessages();
+    const id = "s_" + Date.now();
+    localStorage.setItem("nv_session_id", id);
+    appState.messages = [{
+      role: "assistant",
+      ts: Date.now(),
+      content: "**New chat**\n\nModel · Effort · Actions — type and send."
+    }];
+    persistMessages();
+    render();
+    toastAssist("New chat");
+  }
+
+  function deleteSession(id) {
+    const list = loadSessionIndex().filter(s => s.id !== id);
+    saveSessionIndex(list);
+    localStorage.removeItem(sessionKey(id));
+    if (id === getActiveSessionId()) {
+      if (list.length) switchSession(list[0].id);
+      else newSession();
+    } else {
+      renderSessionModalList();
+    }
+  }
+
+  function openSessionsModal() {
+    let modal = document.getElementById("sessionsModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "sessionsModal";
+      modal.className = "modal-backdrop";
+      modal.innerHTML = `
+        <div class="modal-sheet prompt-lib-sheet">
+          <div class="preview-toolbar">
+            <span class="preview-title">💬 Chats</span>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="tb-btn" id="sessionNewBtn">＋ New</button>
+              <button type="button" class="tb-btn" id="sessionCloseBtn">✕</button>
+            </div>
+          </div>
+          <div id="sessionsList" class="prompt-lib-list"></div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener("click", (e) => { if (e.target === modal) closeSessionsModal(); });
+      document.getElementById("sessionCloseBtn").onclick = closeSessionsModal;
+      document.getElementById("sessionNewBtn").onclick = () => { newSession(); closeSessionsModal(); };
+    }
+    modal.classList.add("open");
+    modal.style.display = "flex";
+    renderSessionModalList();
+  }
+
+  function closeSessionsModal() {
+    const modal = document.getElementById("sessionsModal");
+    if (modal) { modal.classList.remove("open"); modal.style.display = "none"; }
+  }
+
+  function renderSessionModalList() {
+    const box = document.getElementById("sessionsList");
+    if (!box) return;
+    upsertSessionMeta();
+    const active = getActiveSessionId();
+    const list = loadSessionIndex();
+    box.innerHTML = "";
+    if (!list.length) {
+      box.innerHTML = "<div class='prompt-lib-meta'><span>No saved chats yet</span></div>";
+      return;
+    }
+    list.forEach((s) => {
+      const row = document.createElement("div");
+      row.className = "prompt-lib-item";
+      if (s.id === active) row.style.borderColor = "var(--color-accent-primary)";
+      const meta = document.createElement("div");
+      meta.className = "prompt-lib-meta";
+      const when = s.updated ? new Date(s.updated).toLocaleString() : "";
+      meta.innerHTML = `<strong>${escapeHtml(s.title || "Chat")}</strong><span>${s.count || 0} msgs · ${escapeHtml(when)}</span>`;
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "tb-btn";
+      open.textContent = s.id === active ? "Open" : "Switch";
+      open.onclick = () => { switchSession(s.id); closeSessionsModal(); };
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "tb-btn";
+      del.textContent = "🗑";
+      del.onclick = () => {
+        if (confirm("Delete this chat?")) deleteSession(s.id);
+      };
+      row.append(meta, open, del);
+      box.appendChild(row);
+    });
+  }
+
+  function sessionKey(id) {
+    return "nv_msgs_" + (id || getActiveSessionId());
+  }
+
 
 
   const dom = {
@@ -269,9 +427,11 @@
       role: m.role,
       content: typeof m.content === "string" ? m.content : "[Attachment]",
       model: m.model || undefined,
-      ts: m.ts || undefined
+      ts: m.ts || undefined,
+      tokPerSec: m.tokPerSec || undefined
     }));
     localStorage.setItem(sessionKey(), JSON.stringify(payload));
+    try { upsertSessionMeta(); } catch (_) {}
     updateCtxPill();
   }
 
@@ -372,6 +532,385 @@
     });
     localStorage.setItem("nv_cat", cat);
   }
+
+
+  // ── Prompt Library ──────────────────────────────────────────
+  const DEFAULT_PROMPTS = [
+    { id: "explain", title: "Explain simply", text: "Explain this simply, like I'm smart but not an expert:\n\n" },
+    { id: "debug", title: "Debug code", text: "Find bugs and fix this code. Explain each change:\n\n```\n\n```" },
+    { id: "rewrite", title: "Rewrite better", text: "Rewrite this more clearly and professionally:\n\n" },
+    { id: "summarize", title: "Summarize", text: "Summarize the key points clearly:\n\n" },
+    { id: "htmlapp", title: "Single HTML app", text: "Build a complete single-file HTML app (inline CSS+JS) for: " },
+    { id: "api", title: "Design API", text: "Design a clean REST API for: " },
+    { id: "bangla", title: "বাংলায় লেখো", text: "নিচের বিষয়টা সহজ বাংলায় বুঝিয়ে দাও:\n\n" },
+    { id: "news", title: "Live tech news", text: "What are the top tech news headlines today?" }
+  ];
+
+  function loadPromptLibrary() {
+    try {
+      const raw = localStorage.getItem("nv_prompts");
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length) return arr;
+      }
+    } catch (_) {}
+    return DEFAULT_PROMPTS.map(p => ({ ...p }));
+  }
+
+  function savePromptLibrary(list) {
+    localStorage.setItem("nv_prompts", JSON.stringify(list || []));
+  }
+
+  function openPromptLibrary() {
+    let modal = document.getElementById("promptLibModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "promptLibModal";
+      modal.className = "modal-backdrop open";
+      modal.innerHTML = `
+        <div class="modal-sheet prompt-lib-sheet">
+          <div class="preview-toolbar">
+            <span class="preview-title">📚 Prompt Library</span>
+            <button type="button" class="tb-btn" id="promptLibClose">✕ Close</button>
+          </div>
+          <div id="promptLibList" class="prompt-lib-list"></div>
+          <div class="prompt-lib-add">
+            <input id="promptLibTitle" placeholder="Title" maxlength="40" />
+            <textarea id="promptLibText" placeholder="Prompt text…" rows="3"></textarea>
+            <button type="button" class="tb-btn" id="promptLibSave">+ Save prompt</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener("click", (e) => { if (e.target === modal) closePromptLibrary(); });
+      document.getElementById("promptLibClose").onclick = closePromptLibrary;
+      document.getElementById("promptLibSave").onclick = () => {
+        const title = (document.getElementById("promptLibTitle").value || "").trim();
+        const text = (document.getElementById("promptLibText").value || "").trim();
+        if (!title || !text) { toastAssist("Title + text needed"); return; }
+        const list = loadPromptLibrary();
+        list.unshift({ id: "c_" + Date.now(), title, text });
+        savePromptLibrary(list);
+        document.getElementById("promptLibTitle").value = "";
+        document.getElementById("promptLibText").value = "";
+        renderPromptLibList();
+        toastAssist("Prompt saved");
+      };
+    }
+    modal.classList.add("open");
+    modal.style.display = "flex";
+    renderPromptLibList();
+  }
+
+  function closePromptLibrary() {
+    const modal = document.getElementById("promptLibModal");
+    if (modal) { modal.classList.remove("open"); modal.style.display = "none"; }
+  }
+
+  function renderPromptLibList() {
+    const box = document.getElementById("promptLibList");
+    if (!box) return;
+    const list = loadPromptLibrary();
+    box.innerHTML = "";
+    list.forEach((p, idx) => {
+      const row = document.createElement("div");
+      row.className = "prompt-lib-item";
+      const use = document.createElement("button");
+      use.type = "button";
+      use.className = "tb-btn";
+      use.textContent = "Use";
+      use.onclick = () => {
+        dom.messageTextInput.value = p.text;
+        dom.messageTextInput.focus();
+        closePromptLibrary();
+        toastAssist("Prompt loaded");
+      };
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "tb-btn";
+      del.textContent = "🗑";
+      del.onclick = () => {
+        const next = loadPromptLibrary().filter((_, i) => i !== idx);
+        savePromptLibrary(next.length ? next : DEFAULT_PROMPTS.map(x => ({ ...x })));
+        renderPromptLibList();
+      };
+      const meta = document.createElement("div");
+      meta.className = "prompt-lib-meta";
+      meta.innerHTML = `<strong>${escapeHtml(p.title)}</strong><span>${escapeHtml(String(p.text).slice(0, 80))}</span>`;
+      row.append(meta, use, del);
+      box.appendChild(row);
+    });
+  }
+
+  // ── Friendly errors ─────────────────────────────────────────
+  function friendlyError(err, ctx) {
+    const raw = String(err?.message || err || "Unknown error");
+    const low = raw.toLowerCase();
+    let tip = "";
+    if (/404|not found|does not exist|unknown model/.test(low))
+      tip = "Model not available on this NVIDIA key. Pick Nemotron Super or Llama 8B, turn Fallback ON.";
+    else if (/401|403|unauthorized|forbidden|api.?key/.test(low))
+      tip = "API key / Worker auth issue. Check NVIDIA_API_KEY secret on Cloudflare Worker.";
+    else if (/429|rate limit|quota|too many/.test(low))
+      tip = "Rate limited. Wait a few seconds and retry, or switch to a smaller model.";
+    else if (/network|failed to fetch|cors|load failed|offline/.test(low))
+      tip = "Network problem. Check internet and Worker URL (boatin.uplinkstudio.workers.dev).";
+    else if (/timeout|aborted|signal/.test(low))
+      tip = "Request timed out or was stopped. Try again with lower Effort.";
+    else if (/empty|no assistant content|no content/.test(low))
+      tip = "Model returned empty text. Retry, or use Llama 3.1 8B.";
+    else if (/search|web pulse/.test(low))
+      tip = "Search failed. Redeploy Worker with POST /search, or use normal chat.";
+    const head = ctx ? `**${ctx}**` : "**Something went wrong**";
+    return `${head}\n\n${raw.slice(0, 500)}${tip ? `\n\n💡 **Tip:** ${tip}` : ""}`;
+  }
+
+  // ── Tokens / sec ────────────────────────────────────────────
+  function formatTokPerSec(chars, ms) {
+    if (!ms || ms < 1) return null;
+    const tok = Math.max(1, Math.round(chars / 4));
+    const tps = tok / (ms / 1000);
+    return tps >= 10 ? tps.toFixed(0) : tps.toFixed(1);
+  }
+
+  // ── Multi-file extract + ZIP (store method, no compression lib) ──
+  function extractAllCodeBlocks(text) {
+    const out = [];
+    const re = /```([\w.+-]*)\s*[\r\n]+([\s\S]*?)```/g;
+    let m, i = 0;
+    while ((m = re.exec(String(text || "")))) {
+      const lang = (m[1] || "").toLowerCase();
+      const code = m[2].replace(/\s+$/, "");
+      if (code.trim().length < 2) continue;
+      i++;
+      let name = guessFilename(code, lang) || ("file" + i + "." + (lang || "txt"));
+      let base = name, n = 2;
+      while (out.some(f => f.name === name)) {
+        const dot = base.lastIndexOf(".");
+        name = dot > 0 ? (base.slice(0, dot) + "_" + n + base.slice(dot)) : (base + "_" + n);
+        n++;
+      }
+      out.push({ name: name, lang: lang, code: code });
+    }
+    return out;
+  }
+
+  function guessFilename(code, lang) {
+    const map = {
+      html: "index.html", htm: "index.html", css: "styles.css",
+      js: "app.js", javascript: "app.js", ts: "app.ts", typescript: "app.ts",
+      py: "main.py", python: "main.py", json: "data.json", md: "README.md",
+      markdown: "README.md", java: "Main.java", c: "main.c", cpp: "main.cpp",
+      php: "index.php", sh: "script.sh", bash: "script.sh", sql: "query.sql"
+    };
+    if (map[lang]) return map[lang];
+    if (/<!doctype html/i.test(code) || /<html[\s>]/i.test(code)) return "index.html";
+    if (/function\s+\w+\s*\(/i.test(code) || /const\s+\w+\s*=/.test(code)) return "script.js";
+    return null;
+  }
+
+  function crc32(str) {
+    let c = ~0;
+    for (let i = 0; i < str.length; i++) {
+      c ^= str.charCodeAt(i) & 0xff;
+      for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
+    }
+    return ~c >>> 0;
+  }
+
+  function u16(n) { return new Uint8Array([n & 255, (n >>> 8) & 255]); }
+  function u32(n) { return new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]); }
+
+  function buildZip(files) {
+    // Store-only ZIP (no compression) — works offline, no CDN
+    const enc = new TextEncoder();
+    const locals = [];
+    const centrals = [];
+    let offset = 0;
+    const now = new Date();
+    const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xffff;
+    const dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xffff;
+
+    files.forEach((f) => {
+      const nameBytes = enc.encode(f.name);
+      const data = typeof f.code === "string" ? enc.encode(f.code) : f.code;
+      const crc = crc32(typeof f.code === "string" ? f.code : new TextDecoder().decode(data));
+      // local header
+      const local = new Uint8Array(30 + nameBytes.length + data.length);
+      local.set([0x50, 0x4b, 0x03, 0x04], 0);
+      local.set(u16(20), 4); // version
+      local.set(u16(0), 6); // flags
+      local.set(u16(0), 8); // method store
+      local.set(u16(dosTime), 10);
+      local.set(u16(dosDate), 12);
+      local.set(u32(crc), 14);
+      local.set(u32(data.length), 18);
+      local.set(u32(data.length), 22);
+      local.set(u16(nameBytes.length), 26);
+      local.set(u16(0), 28);
+      local.set(nameBytes, 30);
+      local.set(data, 30 + nameBytes.length);
+      locals.push(local);
+
+      const central = new Uint8Array(46 + nameBytes.length);
+      central.set([0x50, 0x4b, 0x01, 0x02], 0);
+      central.set(u16(20), 4);
+      central.set(u16(20), 6);
+      central.set(u16(0), 8);
+      central.set(u16(0), 10);
+      central.set(u16(dosTime), 12);
+      central.set(u16(dosDate), 14);
+      central.set(u32(crc), 16);
+      central.set(u32(data.length), 20);
+      central.set(u32(data.length), 24);
+      central.set(u16(nameBytes.length), 28);
+      central.set(u16(0), 30);
+      central.set(u16(0), 32);
+      central.set(u16(0), 34);
+      central.set(u16(0), 36);
+      central.set(u32(0), 38);
+      central.set(u32(offset), 42);
+      central.set(nameBytes, 46);
+      centrals.push(central);
+      offset += local.length;
+    });
+
+    const centralSize = centrals.reduce((s, a) => s + a.length, 0);
+    const end = new Uint8Array(22);
+    end.set([0x50, 0x4b, 0x05, 0x06], 0);
+    end.set(u16(0), 4);
+    end.set(u16(0), 6);
+    end.set(u16(files.length), 8);
+    end.set(u16(files.length), 10);
+    end.set(u32(centralSize), 12);
+    end.set(u32(offset), 16);
+    end.set(u16(0), 20);
+
+    const total = offset + centralSize + 22;
+    const out = new Uint8Array(total);
+    let p = 0;
+    locals.forEach(b => { out.set(b, p); p += b.length; });
+    centrals.forEach(b => { out.set(b, p); p += b.length; });
+    out.set(end, p);
+    return new Blob([out], { type: "application/zip" });
+  }
+
+  function downloadZipFromText(text, zipName) {
+    const files = extractAllCodeBlocks(text);
+    if (!files.length) {
+      toastAssist("No code blocks to zip");
+      return;
+    }
+    if (files.length === 1) {
+      // single file download
+      const f = files[0];
+      const blob = new Blob([f.code], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = f.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+      toastAssist("Downloaded " + f.name);
+      return;
+    }
+    const blob = buildZip(files);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = zipName || "powerhouse-build.zip";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    toastAssist(`ZIP · ${files.length} files`);
+  }
+
+
+
+  function exportChatMarkdown() {
+    const lines = ["# BOATIN chat export", "", "_Exported " + new Date().toLocaleString() + "_", ""];
+    (appState.messages || []).forEach((m) => {
+      const role = m.role === "user" ? "You" : "Assistant";
+      const body = typeof m.content === "string" ? m.content : "[attachment]";
+      lines.push("## " + role);
+      if (m.model) lines.push("_Model: " + m.model + "_");
+      if (m.tokPerSec) lines.push("_~" + m.tokPerSec + " tok/s_");
+      lines.push("");
+      lines.push(body);
+      lines.push("");
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "boatin-chat-" + new Date().toISOString().slice(0, 10) + ".md";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    toastAssist("Exported Markdown");
+  }
+
+  // ── Model health ──
+  async function checkModelHealth() {
+    const modalId = "healthModal";
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = modalId;
+      modal.className = "modal-backdrop";
+      modal.innerHTML = `
+        <div class="modal-sheet prompt-lib-sheet">
+          <div class="preview-toolbar">
+            <span class="preview-title">🩺 Model health</span>
+            <button type="button" class="tb-btn" id="healthCloseBtn">✕</button>
+          </div>
+          <div id="healthList" class="prompt-lib-list"><div class="prompt-lib-meta"><span>Checking Worker + models…</span></div></div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener("click", (e) => { if (e.target === modal) { modal.classList.remove("open"); modal.style.display = "none"; } });
+      document.getElementById("healthCloseBtn").onclick = () => { modal.classList.remove("open"); modal.style.display = "none"; };
+    }
+    modal.classList.add("open");
+    modal.style.display = "flex";
+    const box = document.getElementById("healthList");
+    box.innerHTML = "<div class='prompt-lib-meta'><span>Checking…</span></div>";
+
+    const rows = [];
+    // Worker health
+    try {
+      const res = await fetch(WORKER_PROXY_URL.replace(/\/+$/, "") + "/health", { method: "GET" });
+      const data = await res.json().catch(() => ({}));
+      rows.push({
+        name: "Worker",
+        ok: res.ok && data.status === "ok",
+        detail: res.ok ? ("OK · hasKey=" + !!data.hasKey) : ("HTTP " + res.status)
+      });
+    } catch (e) {
+      rows.push({ name: "Worker", ok: false, detail: e.message || "unreachable" });
+    }
+
+    const probe = [
+      "nvidia/nemotron-3-super-120b-a12b",
+      "meta/llama-3.1-8b-instruct",
+      "meta/llama-3.2-3b-instruct",
+      "mistralai/mistral-nemo-12b-instruct"
+    ];
+    for (const id of probe) {
+      try {
+        const attempt = await callModel(id, [{ role: "user", content: "Reply with OK only." }]);
+        rows.push({
+          name: getModelInfo(id)?.label || id,
+          ok: !!(attempt && attempt.ok),
+          detail: attempt?.ok ? "OK" : String(attempt?.error || "fail").slice(0, 80)
+        });
+      } catch (e) {
+        rows.push({ name: getModelInfo(id)?.label || id, ok: false, detail: e.message || "error" });
+      }
+    }
+
+    box.innerHTML = "";
+    rows.forEach((r) => {
+      const row = document.createElement("div");
+      row.className = "prompt-lib-item";
+      row.innerHTML = `<div class="prompt-lib-meta"><strong>${r.ok ? "🟢" : "🔴"} ${escapeHtml(r.name)}</strong><span>${escapeHtml(r.detail)}</span></div>`;
+      box.appendChild(row);
+    });
+  }
+
 
   function toastAssist(msg) {
     // Non-chat toast — never pollute message history
@@ -499,6 +1038,22 @@
       };
       const actions = [
         {
+          label: "💬 Chats",
+          run: () => openSessionsModal()
+        },
+        {
+          label: "📤 Export MD",
+          run: () => exportChatMarkdown()
+        },
+        {
+          label: "🩺 Model health",
+          run: () => checkModelHealth()
+        },
+        {
+          label: "📚 Prompt Library",
+          run: () => openPromptLibrary()
+        },
+        {
           label: "🌐 Web Pulse",
           run: () => pickModel("webpulse/nemotron-super", "Web Pulse ready — ask anything current")
         },
@@ -586,7 +1141,7 @@
             if (confirm("Clear chat history?")) {
               stopGeneration();
               appState.messages = [{ role: "assistant", content: "Memory cleared.", ts: Date.now() }];
-              localStorage.removeItem("nv_msgs");
+              localStorage.removeItem(sessionKey());
               setGenerating(false);
               render();
             }
@@ -718,6 +1273,11 @@
     if (dom.autoCallback) dom.autoCallback.value = localStorage.getItem("nv_autocallback") || "on";
     if (dom.autoMode) dom.autoMode.value = localStorage.getItem("nv_automode") || "on";
 
+    // Migrate legacy single-chat key once
+    if (localStorage.getItem("nv_msgs") && !localStorage.getItem(sessionKey())) {
+      localStorage.setItem(sessionKey(), localStorage.getItem("nv_msgs"));
+      localStorage.removeItem(sessionKey());
+    }
     const saved = localStorage.getItem(sessionKey());
     try {
       appState.messages = saved ? JSON.parse(saved) : null;
@@ -726,11 +1286,12 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-17**
+        content: `**BOATIN UP-18**
 
 Model · Effort · Actions — type and send.`
       }];
     }
+    try { upsertSessionMeta(); } catch (_) {}
 
     // Restore draft
     const draft = localStorage.getItem("nv_draft");
@@ -758,10 +1319,32 @@ Model · Effort · Actions — type and send.`
         stopGeneration();
         appState.messages = [{ role: "assistant", content: "Memory cleared.", ts: Date.now() }];
         localStorage.removeItem(sessionKey());
+        try { upsertSessionMeta(); } catch (_) {}
         setGenerating(false);
         render();
       }
     });
+
+    // Header: chats / export
+    const headerActions = document.querySelector(".header-actions");
+    if (headerActions && !document.getElementById("chatsHeaderBtn")) {
+      const chatsBtn = document.createElement("button");
+      chatsBtn.type = "button";
+      chatsBtn.className = "header-action-btn";
+      chatsBtn.id = "chatsHeaderBtn";
+      chatsBtn.textContent = "Chats";
+      chatsBtn.title = "Chat sessions";
+      chatsBtn.onclick = () => openSessionsModal();
+      const expBtn = document.createElement("button");
+      expBtn.type = "button";
+      expBtn.className = "header-action-btn";
+      expBtn.id = "exportHeaderBtn";
+      expBtn.textContent = "Export";
+      expBtn.title = "Export chat as Markdown";
+      expBtn.onclick = () => exportChatMarkdown();
+      headerActions.insertBefore(expBtn, headerActions.firstChild);
+      headerActions.insertBefore(chatsBtn, headerActions.firstChild);
+    }
 
     dom.stopMessageBtn?.addEventListener("click", stopGeneration);
     
@@ -1204,13 +1787,44 @@ ${html}
         previewBtn.type = "button";
         previewBtn.className = "code-action-btn preview-btn";
         previewBtn.textContent = "▶ Preview HTML";
-        previewBtn.title = "Open live preview (sandbox) — like an online HTML editor";
+        previewBtn.title = "Open live preview (sandbox)";
         previewBtn.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
           openLivePreview(raw);
         };
         bar.appendChild(previewBtn);
+      }
+
+      // Multi-file ZIP: if this pre is inside a message that has 2+ code blocks
+      const bubble = pre.closest(".message-bubble");
+      if (bubble && !bubble.dataset.zipBtn) {
+        const allCode = bubble.innerText || "";
+        const blocks = (typeof extractAllCodeBlocks === "function")
+          ? extractAllCodeBlocks(
+              // rebuild from pre/code elements for accuracy
+              Array.from(bubble.querySelectorAll("pre code")).map(c =>
+                "```\n" + (c.textContent || "") + "\n```"
+              ).join("\n")
+            )
+          : [];
+        if (blocks.length >= 2) {
+          bubble.dataset.zipBtn = "1";
+          const zipBtn = document.createElement("button");
+          zipBtn.type = "button";
+          zipBtn.className = "code-action-btn";
+          zipBtn.textContent = "📦 ZIP " + blocks.length + " files";
+          zipBtn.title = "Download all code blocks as a zip";
+          zipBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const payload = Array.from(bubble.querySelectorAll("pre code")).map(c =>
+              "```\n" + (c.textContent || "") + "\n```"
+            ).join("\n");
+            downloadZipFromText(payload, "powerhouse-build.zip");
+          };
+          bar.appendChild(zipBtn);
+        }
       }
 
       pre.appendChild(bar);
@@ -1377,6 +1991,13 @@ ${html}
           badge.title = m.model;
           badge.textContent = getModelInfo(m.model)?.label || m.model;
           footer.appendChild(badge);
+        }
+        if (m.tokPerSec) {
+          const tps = document.createElement("span");
+          tps.className = "msg-model-badge";
+          tps.title = "Approx tokens per second";
+          tps.textContent = "⚡ " + m.tokPerSec + " tok/s";
+          footer.appendChild(tps);
         }
 
         const spacer = document.createElement("span");
@@ -1633,6 +2254,13 @@ if (idx === lastAssistantIdx) {
   }
 
 async function callModelStreaming(modelId, messages, onChunk, signal) {
+    const streamStartedAt = Date.now();
+    let streamChars = 0;
+    const trackedChunk = (partial) => {
+      streamChars = String(partial || "").length;
+      if (emit) emit(partial);
+    };
+    const emit = onChunk ? trackedChunk : null;
     const effort = getEffortConfig();
     const msgs = applyEffortToMessages(messages);
     const payload = {
@@ -1718,7 +2346,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
         if (content) {
           fullText += content;
-          onChunk?.(fullText);
+          emit?.(fullText);
         } else if (reason) {
           reasoning += reason;
           // Show reasoning live only until real content arrives
@@ -1750,8 +2378,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     buffer += decoder.decode();
     if (buffer.trim()) processLine(buffer);
 
-    if (fullText) return { ok: true, reply: fullText };
-    if (reasoning) return { ok: true, reply: reasoning };
+    if (fullText) return { ok: true, reply: fullText, tokPerSec: formatTokPerSec(fullText.length, Date.now() - streamStartedAt), elapsedMs: Date.now() - streamStartedAt };
+    if (reasoning) return { ok: true, reply: reasoning, tokPerSec: formatTokPerSec(String(reasoning).length, Date.now() - streamStartedAt), elapsedMs: Date.now() - streamStartedAt };
 
     // Stream empty → one non-stream retry
     try {
@@ -2741,6 +3369,10 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           } else if (!/▶ Preview|Live Preview/i.test(reply)) {
             reply += "\n\n> Tap **▶ Preview** under the code block to run this in the built-in HTML editor.";
           }
+          const phFiles = extractAllCodeBlocks(reply);
+          if (phFiles.length >= 2) {
+            reply += "\n\n> 📦 **" + phFiles.length + " files** detected — tap **ZIP** under a code block to download all.";
+          }
           appState.messages.push({
             role: "assistant",
             content: reply,
@@ -2906,19 +3538,22 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         appState.messages.push({
           role: "assistant",
           content: result.reply + callbackNote,
-          model: usedModel
+          model: usedModel,
+          tokPerSec: result.tokPerSec || undefined,
+          ts: Date.now()
         });
       } else {
         const last = attempts[attempts.length - 1] || {};
         appState.messages.push({
           role: "assistant",
-          content: `⚠️ **Model failed**\n\n${last.error || "Unknown error"}\n\n**Tried:** ${attempts.map(a => getModelInfo(a.modelId)?.label || a.modelId).join(", ")}\n\n_Tip: pick another model from 🎯 Model, or turn **Fallback ON**._`
+          content: friendlyError(last.error || "Unknown error", "Model failed") +
+            "\n\n**Tried:** " + attempts.map(a => getModelInfo(a.modelId)?.label || a.modelId).join(", ")
         });
       }
     } catch (err) {
       document.getElementById(pid)?.remove();
       if (err?.name !== "AbortError") {
-        appState.messages.push({ role: "assistant", content: `[Network Exception]: ${err.message}` });
+        appState.messages.push({ role: "assistant", content: friendlyError(err, "Network error") });
       }
     } finally {
       appState.abortController = null;
