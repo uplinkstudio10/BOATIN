@@ -1078,9 +1078,16 @@
     pointer-events: none;
     mix-blend-mode: overlay;
   }
-  .app-header, .modal-sheet, .message-bubble.pending, .message-bubble.user {
+  .app-header, .modal-sheet, .message-bubble.pending {
     position: relative;
     overflow: hidden;
+  }
+  .message-bubble.user {
+    position: relative;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
   }
   .chat-input-bar {
     position: relative;

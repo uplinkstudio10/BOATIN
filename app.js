@@ -112,6 +112,17 @@
       ]
     },
     {
+      category: "🎨 Image",
+      models: [
+        { value: "black-forest-labs/flux.1-schnell", label: "FLUX.1 Schnell", tags: "image, fast" },
+        { value: "black-forest-labs/flux.1-dev", label: "FLUX.1 Dev", tags: "image, quality" },
+        { value: "stabilityai/stable-diffusion-3.5-large", label: "SD 3.5 Large", tags: "image" },
+        { value: "qwen/qwen-image", label: "Qwen Image", tags: "image" },
+        { value: "qwen/qwen-image-2512", label: "Qwen Image 2512", tags: "image" },
+        { value: "qwen/qwen-image-edit", label: "Qwen Image Edit", tags: "image edit" }
+      ]
+    },
+    {
       category: "⚡ Fast",
       models: [
         { value: "meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B", tags: "fast" },
@@ -487,7 +498,7 @@
     return (partial) => {
       pending = partial;
       const now = Date.now();
-      if (now - last >= 48 && !raf) {
+      if (now - last >= 28 && !raf) {
         paint();
         return;
       }
@@ -1066,6 +1077,10 @@
           }
         },
         {
+          label: "🎨 Image gen",
+          run: () => pickModel("black-forest-labs/flux.1-schnell", "Image model — describe a scene and Send")
+        },
+        {
           label: "🏆 Best Model",
           run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Nemotron 3 Super selected")
         },
@@ -1194,10 +1209,10 @@
 
   // Effort levels → temperature, max_tokens, reasoning system hint
   const EFFORT_PRESETS = {
-    low:  { temperature: 0.65, top_p: 0.92, max_tokens: 4096,   label: "Low",  systemHint: "Reply FAST and short. Prefer brevity unless the user asks for code or detail." },
-    mid:  { temperature: 0.55, top_p: 0.9,  max_tokens: 16384,  label: "Mid",  systemHint: "Clear answers. For code requests, output complete working code — do not truncate." },
-    high: { temperature: 0.35, top_p: 0.85, max_tokens: 32768,  label: "High", systemHint: "Thorough answers. For coding tasks, deliver full files/modules with no omitted sections." },
-    max:  { temperature: 0.25, top_p: 0.8,  max_tokens: 65536,  label: "Max",  systemHint: "Maximum output budget. Never truncate code, configs, or long answers. Complete every file fully. Prefer correctness and completeness over brevity." }
+    low:  { temperature: 0.6, top_p: 0.9,  max_tokens: 2048,  label: "Low",  systemHint: "Reply FAST and short. 2-8 sentences unless code is required." },
+    mid:  { temperature: 0.5, top_p: 0.9,  max_tokens: 6144,  label: "Mid",  systemHint: "Clear answers. For code, prefer complete working snippets. Be concise." },
+    high: { temperature: 0.35, top_p: 0.85, max_tokens: 12288, label: "High", systemHint: "Thorough but focused. Full code when asked — avoid padding." },
+    max:  { temperature: 0.25, top_p: 0.8,  max_tokens: 24576, label: "Max",  systemHint: "Full detail / full files when needed. Completeness over brevity for code." }
   };
 
   function getEffortConfig() {
@@ -1286,7 +1301,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-18**
+        content: `**BOATIN UP-19**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -3425,6 +3440,15 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     await runChatCompletion(text, hadFile);
   }
 
+
+  function trimMessagesForSpeed(messages, maxMsgs) {
+    const arr = (messages || []).map(m => ({ role: m.role, content: m.content }));
+    const limit = maxMsgs || 16;
+    if (arr.length <= limit) return arr;
+    // keep system-ish first assistant + last N
+    return arr.slice(-limit);
+  }
+
   async function runChatCompletion(text, hadFile = false) {
     // Never run pure image models through /chat
     if (isImageModel(getSelectedModelId()) || isImageModel(appState.selectedModelId)) {
@@ -3450,10 +3474,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     setGenerating(true);
 
     try {
-      const apiMessages = appState.messages.map(m => ({
-        role: m.role,
-        content: m.content
-      }));
+      const apiMessages = trimMessagesForSpeed(appState.messages, 14);
 
       let primary = dom.autoMode.value === "on"
         ? chooseAutoModel(text, hadFile)
