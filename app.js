@@ -156,9 +156,18 @@
     if (typeof marked !== "undefined" && marked) {
       const mdRenderer = new marked.Renderer();
       mdRenderer.html = () => "";
+      // marked v5+ passes a token object as the first arg; older marked passed (code, lang)
       mdRenderer.code = (code, infostring) => {
-        const lang = String(infostring || "").trim().split(/\s+/)[0] || "";
-        const esc = String(code)
+        let text = code;
+        let lang = "";
+        if (code && typeof code === "object") {
+          text = code.text != null ? code.text : (code.raw || "");
+          lang = String(code.lang || infostring || "").trim().split(/\s+/)[0] || "";
+        } else {
+          text = code == null ? "" : String(code);
+          lang = String(infostring || "").trim().split(/\s+/)[0] || "";
+        }
+        const esc = String(text)
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
@@ -1330,7 +1339,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-25**
+        content: `**BOATIN UP-26**
 
 Model · Effort · Actions — type and send.`
       }];
