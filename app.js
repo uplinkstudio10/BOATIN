@@ -501,8 +501,13 @@
       if (!el) return;
       const scroller = box();
       const stick = !scroller || isNearBottom(scroller, 160);
-      el.className = "message-bubble assistant";
-      el.innerHTML = safeMarkdown(pending) + '<span class="streaming-cursor"></span>';
+      // Keep a real bubble while streaming so it never collapses to a thin bar
+      el.className = "message-bubble assistant streaming";
+      if (!pending || !String(pending).trim()) {
+        el.innerHTML = thinkingHTML("Writing", "Generating reply…");
+      } else {
+        el.innerHTML = safeMarkdown(pending) + '<span class="streaming-cursor"></span>';
+      }
       if (stick && scroller) {
         scroller.scrollTop = scroller.scrollHeight;
       }
@@ -1405,7 +1410,10 @@ Model · Effort · Actions — type and send.`
 
     dom.messageTextInput.addEventListener("input", function() {
       this.style.height = "auto";
-      this.style.height = this.scrollHeight + "px";
+      const maxH = 88;
+      const h = Math.min(this.scrollHeight, maxH);
+      this.style.height = (this.value.trim() ? h : 22) + "px";
+      this.style.overflowY = this.scrollHeight > maxH ? "auto" : "hidden";
       localStorage.setItem("nv_draft", this.value);
       const counter = document.getElementById("inputCounter");
       if (counter) {
@@ -3074,6 +3082,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   function setThinking(el, title, sub = "") {
     if (!el) return;
     el.className = "message-bubble pending";
+    el.style.cssText = "align-self:flex-start;max-width:min(420px,92%);padding:14px 16px;border-radius:18px;background:#141a16;border:1px solid rgba(118,185,0,0.28);color:var(--color-text-secondary);min-height:52px;width:auto;";
     el.innerHTML = thinkingHTML(title, sub);
   }
 
@@ -3455,7 +3464,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     appState.messages.push({ role: "user", content: apiContent, ui: uiContent, ts: Date.now() });
     localStorage.removeItem("nv_draft");
     dom.messageTextInput.value = "";
-    dom.messageTextInput.style.height = "auto";
+    dom.messageTextInput.style.height = "22px";
     clearFile();
     render();
 

@@ -503,11 +503,11 @@
     border: none !important;
     box-shadow: none !important;
     color: var(--color-text-primary);
-    padding: 10px 8px !important;
+    padding: 2px 4px !important;
     border-radius: 0 !important;
     font-family: inherit; font-size: 15px;
-    max-height: 140px; min-height: 24px;
-    line-height: 1.45;
+    max-height: 88px; min-height: 22px;
+    line-height: 1.35;
   }
   .chat-input-bar textarea:focus {
     outline: none; border: none !important; box-shadow: none !important;
@@ -732,20 +732,21 @@
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 4px !important;
-    padding: 12px 14px 10px !important;
+    gap: 2px !important;
+    padding: 8px 12px 8px !important;
     background: #1a1f1c;
     border: 1px solid #2a322c;
-    border-radius: 24px !important;
+    border-radius: 22px !important;
     box-shadow: 0 8px 28px rgba(0,0,0,0.35);
   }
   .chat-input-bar textarea {
     width: 100%;
     flex: none !important;
-    min-height: 28px;
-    max-height: 160px;
-    padding: 4px 4px 8px !important;
-    font-size: 15.5px !important;
+    min-height: 22px !important;
+    max-height: 88px !important;
+    padding: 2px 4px 4px !important;
+    font-size: 15px !important;
+    line-height: 1.35 !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -1235,4 +1236,31 @@
 #sessionsModal.open, #sessionsModal[style*="flex"],
 #healthModal.open, #healthModal[style*="flex"] {
   display: flex !important;
+}
+
+/* Pending / streaming must never collapse to a thin bar */
+.message-bubble.pending,
+.message-bubble.streaming {
+  align-self: flex-start !important;
+  max-width: min(420px, 92%) !important;
+  min-width: min(220px, 80vw) !important;
+  min-height: 52px !important;
+  padding: 14px 16px !important;
+  border-radius: 18px !important;
+  background: #141a16 !important;
+  border: 1px solid rgba(118, 185, 0, 0.28) !important;
+  color: var(--color-text-secondary) !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25) !important;
+}
+.message-bubble.streaming {
+  max-width: min(720px, 96%) !important;
+  color: var(--color-text-primary) !important;
+}
+.message-bubble.assistant:not(.pending):not(.streaming) {
+  align-self: flex-start;
+  max-width: min(720px, 96%);
+  padding: 10px 14px !important;
+  border-radius: 16px 16px 16px 6px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
 }
