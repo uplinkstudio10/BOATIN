@@ -503,9 +503,12 @@
       const stick = !scroller || isNearBottom(scroller, 160);
       // Keep a real bubble while streaming so it never collapses to a thin bar
       el.className = "message-bubble assistant streaming";
-      if (!pending || !String(pending).trim()) {
-        el.innerHTML = thinkingHTML("Writing", "Generating reply…");
+      const raw = String(pending || "");
+      if (!raw.trim() || /^_?\(thinking/i.test(raw.trim()) || /^_thinking/i.test(raw.trim())) {
+        el.className = "message-bubble pending";
+        el.innerHTML = thinkingHTML("Thinking", "Model is reasoning — reply starts soon…");
       } else {
+        el.className = "message-bubble assistant streaming";
         el.innerHTML = safeMarkdown(pending) + '<span class="streaming-cursor"></span>';
       }
       if (stick && scroller) {
@@ -1318,7 +1321,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-21**
+        content: `**BOATIN UP-23**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2397,12 +2400,13 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           "";
 
         if (content) {
-          fullText += content;
-          emit?.(fullText);
+          if (!/^\s*\(?thinking\.\.\.\)?\s*$/i.test(content)) {
+            fullText += content;
+            emit?.(fullText);
+          }
         } else if (reason) {
+          // Accumulate internal reasoning but never paint it as the reply bubble
           reasoning += reason;
-          // Show reasoning live only until real content arrives
-          if (!fullText) onChunk?.("_(thinking...)_\n" + reasoning.slice(-2000));
         }
       } catch (_) {}
     };
@@ -2411,7 +2415,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       while (true) {
         if (signal?.aborted) {
           try { await reader.cancel(); } catch (_) {}
-          return { ok: true, reply: fullText || reasoning || "_(generation stopped)_", stopped: true };
+          return { ok: true, reply: fullText || (reasoning ? "_(Model only produced internal reasoning. Try again or lower Effort.)_" : "_(generation stopped)_"), stopped: true };
         }
         const { done, value } = await reader.read();
         if (done) break;
@@ -2422,7 +2426,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       }
     } catch (err) {
       if (err?.name === "AbortError" || signal?.aborted) {
-        return { ok: true, reply: fullText || reasoning || "_(generation stopped)_", stopped: true };
+        return { ok: true, reply: fullText || (reasoning ? "_(Model only produced internal reasoning. Try again or lower Effort.)_" : "_(generation stopped)_"), stopped: true };
       }
       throw err;
     }
@@ -2430,7 +2434,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     buffer += decoder.decode();
     if (buffer.trim()) processLine(buffer);
 
-    if (fullText) return { ok: true, reply: fullText, tokPerSec: formatTokPerSec(fullText.length, Date.now() - streamStartedAt), elapsedMs: Date.now() - streamStartedAt };
+    if (fullText) return { ok: true, reply: fullText || (reasoning ? "The model spent its budget on internal reasoning and returned no final answer. Try **Effort Mid** or another model." : ""), tokPerSec: formatTokPerSec((fullText||reasoning).length, Date.now() - streamStartedAt), elapsedMs: Date.now() - streamStartedAt };
     if (reasoning) return { ok: true, reply: reasoning, tokPerSec: formatTokPerSec(String(reasoning).length, Date.now() - streamStartedAt), elapsedMs: Date.now() - streamStartedAt };
 
     // Stream empty → one non-stream retry
