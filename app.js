@@ -64,24 +64,27 @@
   // Refreshed 2026 NVIDIA/NIM chat model catalog.
   // Specialized NIMs (embeddings, rerankers, OCR-only, TTS, moderation, etc.)
   // are intentionally excluded because this UI sends /chat/completions requests.
+  // Catalog verified against live Worker (Aug 2026).
+  // OK = returned chat content · TO = slow/timeout under load · XX = 404/410/EOL
   const NVIDIA_MODEL_GROUPS = [
     {
       category: "🏆 Recommended",
       models: [
-        { value: "nvidia/nemotron-3-super-120b-a12b", label: "(DEFAULT) Nemotron 3 Super 120B", tags: "best overall" },
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "stable, fast" },
-        { value: "meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B Instruct", tags: "fast" },
-        { value: "mistralai/mistral-nemo-12b-instruct", label: "Mistral Nemo 12B", tags: "chat" }
+        { value: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "(DEFAULT) Nemotron Super 49B v1.5", tags: "verified, strong" },
+        { value: "nvidia/llama-3.3-nemotron-super-49b-v1", label: "Nemotron Super 49B v1", tags: "verified" },
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "verified, fast" },
+        { value: "meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B Instruct", tags: "verified, quality" },
+        { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", tags: "verified" },
+        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "quality, may be slow" }
       ]
     },
     {
       category: "🌐 Web Pulse",
       models: [
-        { value: "webpulse/nemotron-super", label: "Research • Nemotron Super", tags: "live search, reliable" },
+        { value: "webpulse/nemotron-super", label: "Research • Nemotron Super 49B", tags: "live search" },
         { value: "webpulse/llama8b", label: "Research • Llama 3.1 8B", tags: "live search, fast" },
-        { value: "webpulse/llama3b", label: "Research • Llama 3.2 3B", tags: "live search, light" },
-        { value: "webpulse/mistral", label: "Research • Mistral Nemo 12B", tags: "live search, balanced" },
-        { value: "webpulse/nemotron-fast", label: "Research • Nemotron (quick)", tags: "live search, same engine" }
+        { value: "webpulse/llama70", label: "Research • Llama 3.1 70B", tags: "live search, deep" },
+        { value: "webpulse/gptoss", label: "Research • GPT-OSS 20B", tags: "live search" }
       ]
     },
     {
@@ -93,22 +96,25 @@
     {
       category: "🧠 Reasoning",
       models: [
-        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "reasoning" },
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "reasoning" }
+        { value: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "Nemotron Super 49B v1.5", tags: "reasoning" },
+        { value: "meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B", tags: "reasoning" },
+        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "deep" }
       ]
     },
     {
       category: "💻 Coding",
       models: [
-        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "coding" },
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "coding" }
+        { value: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "Nemotron Super 49B v1.5", tags: "coding" },
+        { value: "meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B", tags: "coding" },
+        { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", tags: "coding" },
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "coding, fast" }
       ]
     },
     {
       category: "👁️ Vision",
       models: [
-        { value: "nvidia/nemotron-nano-12b-v2-vl", label: "Nemotron Nano 12B VL", tags: "vision QA" },
-        { value: "meta/llama-3.2-11b-vision-instruct", label: "Llama 3.2 11B Vision", tags: "vision" }
+        { value: "nvidia/nemotron-nano-12b-v2-vl", label: "Nemotron Nano 12B VL", tags: "verified vision" },
+        { value: "meta/llama-3.2-11b-vision-instruct", label: "Llama 3.2 11B Vision", tags: "verified vision" }
       ]
     },
     {
@@ -125,9 +131,9 @@
     {
       category: "⚡ Fast",
       models: [
-        { value: "meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B", tags: "fast" },
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "fast" },
-        { value: "mistralai/mistral-nemo-12b-instruct", label: "Mistral Nemo 12B", tags: "fast" }
+        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "verified, fast" },
+        { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", tags: "verified" },
+        { value: "nvidia/llama-3.3-nemotron-super-49b-v1", label: "Nemotron Super 49B", tags: "verified" }
       ]
     }
   ];
@@ -165,7 +171,7 @@
 
   const appState = {
     messages: [],
-    selectedModelId: "nvidia/nemotron-3-super-120b-a12b",
+    selectedModelId: "nvidia/llama-3.3-nemotron-super-49b-v1.5",
     isGenerating: false,
     abortController: null,
     searchQuery: ""
@@ -488,12 +494,18 @@
     let pending = "";
     let raf = 0;
     let last = 0;
+    const box = () => dom.messagesContainer || document.getElementById("messagesContainer");
     const paint = () => {
       raf = 0;
       last = Date.now();
       if (!el) return;
+      const scroller = box();
+      const stick = !scroller || isNearBottom(scroller, 160);
       el.className = "message-bubble assistant";
       el.innerHTML = safeMarkdown(pending) + '<span class="streaming-cursor"></span>';
+      if (stick && scroller) {
+        scroller.scrollTop = scroller.scrollHeight;
+      }
     };
     return (partial) => {
       pending = partial;
@@ -1082,7 +1094,7 @@
         },
         {
           label: "🏆 Best Model",
-          run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Nemotron 3 Super selected")
+          run: () => pickModel("nvidia/llama-3.3-nemotron-super-49b-v1.5", "Nemotron 3 Super selected")
         },
         {
           label: "🚀 Power House",
@@ -1090,11 +1102,11 @@
         },
         {
           label: "💻 Coding",
-          run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Qwen3 Coder selected")
+          run: () => pickModel("nvidia/llama-3.3-nemotron-super-49b-v1.5", "Qwen3 Coder selected")
         },
         {
           label: "🧠 Reasoning",
-          run: () => pickModel("nvidia/nemotron-3-super-120b-a12b", "Reasoning model selected")
+          run: () => pickModel("nvidia/llama-3.3-nemotron-super-49b-v1.5", "Reasoning model selected")
         },
         {
           label: "👁️ Vision",
@@ -1270,7 +1282,7 @@
     populateModelSelect();
     setupViewportLock();
 
-    const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b";
+    const DEFAULT_MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
     let savedModel = localStorage.getItem("nv_model") || DEFAULT_MODEL;
     // Default must be a normal chat model — never Research / webpulse
     if (/^webpulse\//i.test(savedModel) || isLiveSearchModel(savedModel)) {
@@ -1301,7 +1313,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-19**
+        content: `**BOATIN UP-20**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -1953,6 +1965,13 @@ ${html}
   }
 
   function render() {
+    const _sc = dom.messagesContainer;
+    // Stick to bottom unless user clearly scrolled up to read history
+    if (_sc) {
+      window.__boatinStickBottom = isNearBottom(_sc, 180) || !!appState.isGenerating || _sc.scrollHeight <= _sc.clientHeight + 40;
+    } else {
+      window.__boatinStickBottom = true;
+    }
     dom.messagesContainer.innerHTML = "";
     const q = (appState.searchQuery || "").trim().toLowerCase();
     const lastAssistantIdx = (() => {
@@ -2068,7 +2087,17 @@ if (idx === lastAssistantIdx) {
       });
     }
     ensureCodeActions(dom.messagesContainer);
-    requestAnimationFrame(() => { bindScrollUi(); updateScrollBottomBtn(); });
+    requestAnimationFrame(() => {
+      bindScrollUi();
+      const el = dom.messagesContainer;
+      if (el && (window.__boatinStickBottom || isNearBottom(el, 200) || appState.isGenerating)) {
+        el.scrollTop = el.scrollHeight;
+        requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; updateScrollBottomBtn(); });
+      } else {
+        updateScrollBottomBtn();
+      }
+      window.__boatinStickBottom = false;
+    });
     updateCtxPill();
   }
 
@@ -2487,18 +2516,14 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   const LIVE_SEARCH_MODEL_IDS = new Set([
     "webpulse/nemotron-super",
     "webpulse/llama8b",
+    "webpulse/llama70",
+    "webpulse/gptoss",
+    // legacy aliases still accepted
     "webpulse/llama3b",
     "webpulse/mistral",
     "webpulse/nemotron-fast",
-    // legacy
     "webpulse/deepseek",
-    "webpulse/llama70",
-    "webpulse/llama405",
-    "moonshotai/kimi-k2.6",
-    "webpulse/glm-5.1",
-    "webpulse/deepseek-v3.2",
-    "webpulse/qwen3.5-122b",
-    "webpulse/llama-3.3-70b"
+    "webpulse/llama405"
   ]);
 
   function isLiveSearchModel(modelId) {
@@ -2516,10 +2541,10 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   /** Map UI / research aliases → real NVIDIA chat model IDs */
   function resolveChatModelId(modelId) {
     const id = String(modelId || "");
-    if (!id) return "nvidia/nemotron-3-super-120b-a12b";
+    if (!id) return "nvidia/llama-3.3-nemotron-super-49b-v1.5";
     if (WEB_PULSE_SYNTH_MAP[id]) return WEB_PULSE_SYNTH_MAP[id];
-    if (/^webpulse\//i.test(id)) return "nvidia/nemotron-3-super-120b-a12b";
-    if (isLiveSearchModel(id)) return "nvidia/nemotron-3-super-120b-a12b";
+    if (/^webpulse\//i.test(id)) return "nvidia/llama-3.3-nemotron-super-49b-v1.5";
+    if (isLiveSearchModel(id)) return "nvidia/llama-3.3-nemotron-super-49b-v1.5";
     return id;
   }
 
@@ -2527,19 +2552,15 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // synthesize its answer, so picking e.g. "GLM-5.1 • Web Pulse" actually
   // prefers GLM-5.1 rather than always defaulting to the same model.
   const WEB_PULSE_SYNTH_MAP = {
-    "webpulse/nemotron-super": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/nemotron-fast": "nvidia/nemotron-3-super-120b-a12b",
+    "webpulse/nemotron-super": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+    "webpulse/nemotron-fast": "nvidia/llama-3.3-nemotron-super-49b-v1",
     "webpulse/llama8b": "meta/llama-3.1-8b-instruct",
-    "webpulse/llama3b": "meta/llama-3.2-3b-instruct",
-    "webpulse/mistral": "mistralai/mistral-nemo-12b-instruct",
-    "webpulse/deepseek": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/llama70": "meta/llama-3.1-8b-instruct",
-    "webpulse/llama405": "nvidia/nemotron-3-super-120b-a12b",
-    "moonshotai/kimi-k2.6": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/glm-5.1": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/deepseek-v3.2": "nvidia/nemotron-3-super-120b-a12b",
-    "webpulse/qwen3.5-122b": "meta/llama-3.1-8b-instruct",
-    "webpulse/llama-3.3-70b": "meta/llama-3.1-8b-instruct"
+    "webpulse/llama70": "meta/llama-3.1-70b-instruct",
+    "webpulse/gptoss": "openai/gpt-oss-20b",
+    "webpulse/llama3b": "meta/llama-3.1-8b-instruct",
+    "webpulse/mistral": "openai/gpt-oss-20b",
+    "webpulse/deepseek": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+    "webpulse/llama405": "meta/llama-3.1-70b-instruct"
   };
 
   // Only models verified on this NVIDIA key (others return 404)
@@ -2940,7 +2961,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       .map((s, i) => `${i + 1}. ${s.title} — ${s.url}`)
       .join("\n");
 
-    const realPreferred = WEB_PULSE_SYNTH_MAP[preferredModelId] || "nvidia/nemotron-3-super-120b-a12b";
+    const realPreferred = WEB_PULSE_SYNTH_MAP[preferredModelId] || "nvidia/llama-3.3-nemotron-super-49b-v1.5";
     const tryOrder = [realPreferred, ...LIVE_SYNTH_MODELS.filter(m => m !== realPreferred)];
 
     // Shorter evidence → fewer timeouts / empty streams
@@ -3335,7 +3356,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           livePending.remove();
           toastAssist("Web Pulse failed — switching to normal chat…");
           // Auto fallback: answer with Nemotron without web
-          appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+          appState.selectedModelId = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
           if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
           setGenerating(false);
           await runChatCompletion(text, false);
@@ -3344,7 +3365,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       } catch (err) {
         livePending.remove();
         toastAssist("Web Pulse error — falling back to chat…");
-        appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+        appState.selectedModelId = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
         if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
         setGenerating(false);
         await runChatCompletion(text, false);
@@ -3430,6 +3451,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     }
 
     const hadFile = !!currentFile;
+    window.__boatinStickBottom = true;
     appState.messages.push({ role: "user", content: apiContent, ui: uiContent, ts: Date.now() });
     localStorage.removeItem("nv_draft");
     dom.messageTextInput.value = "";
@@ -3485,7 +3507,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       }
       primary = resolveChatModelId(primary);
       if (isImageModel(primary)) {
-        primary = "nvidia/nemotron-3-super-120b-a12b";
+        primary = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
       }
       const autoCallback = dom.autoCallback.value === "on";
       const candidates = (autoCallback
@@ -3496,15 +3518,16 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         .filter(id => id && !isImageModel(id) && !isLiveSearchModel(id) && !/^webpulse\//i.test(id));
       // Always keep proven free-tier models in the retry chain
       const STABLE = [
-        "nvidia/nemotron-3-super-120b-a12b",
+        "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+        "nvidia/llama-3.3-nemotron-super-49b-v1",
         "meta/llama-3.1-8b-instruct",
-        "meta/llama-3.2-3b-instruct",
-        "mistralai/mistral-nemo-12b-instruct"
+        "meta/llama-3.1-70b-instruct",
+        "openai/gpt-oss-20b"
       ];
       for (const s of STABLE) {
         if (!candidates.includes(s)) candidates.push(s);
       }
-      if (!candidates.length) candidates.push("nvidia/nemotron-3-super-120b-a12b");
+      if (!candidates.length) candidates.push("nvidia/llama-3.3-nemotron-super-49b-v1.5");
 
       let result = null;
       let usedModel = primary;
@@ -3579,18 +3602,20 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     } finally {
       appState.abortController = null;
       setGenerating(false);
+      window.__boatinStickBottom = true;
       persistMessages();
       render();
+      requestAnimationFrame(() => scrollToBottom(false));
     }
   }
 
   // Remove any stale model stored from an older version of the app.
   function sanitizeSavedModel() {
     const saved = localStorage.getItem("nv_model");
-    const dead = /405b|deepseek-v3|kimi-k2|glm-5|qwen3-coder-480|gpt-oss|qwq-32|minimax|devstral/i;
+    const dead = /405b|deepseek-v3|kimi-k2|glm-5|qwen3-coder-480|qwq-32|minimax|devstral|mistral-nemo|gemma-2|phi-3|mixtral|seed-oss/i;
     if (saved && (!getModelInfo(saved) || isImageModel(saved) || dead.test(saved) || /^webpulse\//i.test(saved))) {
-      localStorage.setItem("nv_model", "nvidia/nemotron-3-super-120b-a12b");
-      appState.selectedModelId = "nvidia/nemotron-3-super-120b-a12b";
+      localStorage.setItem("nv_model", "nvidia/llama-3.3-nemotron-super-49b-v1.5");
+      appState.selectedModelId = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
       if (dom.modelSelect) dom.modelSelect.value = appState.selectedModelId;
     }
   }
