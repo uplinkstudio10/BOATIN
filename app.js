@@ -1318,7 +1318,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-20**
+        content: `**BOATIN UP-21**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2573,10 +2573,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
   // Only models verified on this NVIDIA key (others return 404)
   const LIVE_SYNTH_MODELS = [
-    "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+    "meta/llama-3.1-70b-instruct",
+    "nvidia/llama-3.3-nemotron-super-49b-v1",
     "meta/llama-3.1-8b-instruct",
-    "meta/llama-3.2-3b-instruct",
-    "mistralai/mistral-nemo-12b-instruct"
+    "openai/gpt-oss-20b"
   ];
 
 
@@ -2954,9 +2955,17 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   async function answerWithLiveSearch(query, conversation, onChunk, preferredModelId) {
+    // Rewrite query for better current-fact retrieval
+    const year = new Date().getFullYear();
+    let searchQuery = String(query || "").trim();
+    if (/\b(current|now|today|latest|who is|cm of|prime minister|president|chief minister|বর্তমান|এখন)\b/i.test(searchQuery)
+        && !/\b20\d{2}\b/.test(searchQuery)) {
+      searchQuery = searchQuery + " " + year;
+    }
+
     let searchResult;
     try {
-      searchResult = await liveWebSearch(query);
+      searchResult = await liveWebSearch(searchQuery);
     } catch (e) {
       searchResult = {
         text: `(Search error: ${e.message || e}. Answer carefully and mark uncertainty.)\nQuestion: ${query}`,
@@ -2965,7 +2974,18 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       };
     }
     const searchText = String(searchResult?.text || "");
-    const sourceList = (searchResult.sources || [])
+    // Prefer Wikipedia / official-looking sources first
+    const rankedSources = [...(searchResult.sources || [])].sort((a, b) => {
+      const score = (s) => {
+        const h = String(s.domain || s.url || "").toLowerCase();
+        if (/wikipedia\.org/.test(h)) return 0;
+        if (/gov|nic\.in|gov\.in|\.edu/.test(h)) return 1;
+        if (/bbc|reuters|apnews|thehindu|indianexpress|aljazeera/.test(h)) return 2;
+        return 5;
+      };
+      return score(a) - score(b);
+    });
+    const sourceList = rankedSources
       .map((s, i) => `${i + 1}. ${s.title} — ${s.url}`)
       .join("\n");
 
@@ -2973,18 +2993,25 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     const tryOrder = [realPreferred, ...LIVE_SYNTH_MODELS.filter(m => m !== realPreferred)];
 
     // Shorter evidence → fewer timeouts / empty streams
-    const shortEvidence = String(searchText || "").slice(0, 12000);
+    const shortEvidence = String(searchText || "").slice(0, 14000);
     const compactMessages = [
       {
         role: "system",
         content:
-          "You are WEB PULSE. Answer from the web evidence only. " +
-          "Be direct. Use bullets. Match user language. Never invent URLs."
+          "You are WEB PULSE — a careful live researcher.\n" +
+          "Rules:\n" +
+          "1) Use ONLY the provided EVIDENCE/SOURCES. If evidence is weak or conflicting, say so.\n" +
+          "2) Prefer Wikipedia and official/gov/news wire sources over random pages or user claims.\n" +
+          "3) If the user states a fact that conflicts with evidence, CORRECT them politely with the evidence-backed answer.\n" +
+          "4) For 'current / who is' questions, give the best-supported answer and note the year if known.\n" +
+          "5) Never invent people, titles, dates, or URLs.\n" +
+          "6) Be direct. Short paragraphs or bullets. Match the user's language (Bangla/English).\n" +
+          "7) End with 2–5 source titles if available (no fake links)."
       },
       {
         role: "user",
         content:
-          `QUESTION:\n${query}\n\nSOURCES:\n${sourceList || "(none)"}\n\nEVIDENCE:\n${shortEvidence}\n\nAnswer now.`
+          `QUESTION:\n${query}\n\nSEARCH QUERY USED:\n${searchQuery}\n\nSOURCES (priority order):\n${sourceList || "(none)"}\n\nEVIDENCE:\n${shortEvidence}\n\nWrite the accurate answer now.`
       }
     ];
 
@@ -3053,7 +3080,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     }
 
     if (result?.ok) {
-      result.sources = searchResult.sources;
+      result.sources = rankedSources.length ? rankedSources : searchResult.sources;
       result.model = used;
       result.providerCount = searchResult.providerCount;
     }
