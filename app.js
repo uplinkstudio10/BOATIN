@@ -79,6 +79,15 @@
       ]
     },
     {
+      category: "⚡ Groq (Fast)",
+      models: [
+        { value: "groq/llama-3.1-8b-instant", label: "Groq • Llama 3.1 8B Instant", tags: "groq, free, very fast" },
+        { value: "groq/llama-3.3-70b-versatile", label: "Groq • Llama 3.3 70B", tags: "groq, free, quality+fast" },
+        { value: "groq/gemma2-9b-it", label: "Groq • Gemma 2 9B", tags: "groq, free, fast" },
+        { value: "groq/mixtral-8x7b-32768", label: "Groq • Mixtral 8x7B", tags: "groq, free" }
+      ]
+    },
+    {
       category: "🌐 Web Pulse",
       models: [
         { value: "webpulse/nemotron-super", label: "Research • Nemotron Super 49B", tags: "live search" },
@@ -680,7 +689,7 @@
     if (/404|not found|does not exist|unknown model/.test(low))
       tip = "Model not available on this NVIDIA key. Pick Nemotron Super or Llama 8B, turn Fallback ON.";
     else if (/401|403|unauthorized|forbidden|api.?key/.test(low))
-      tip = "API key / Worker auth issue. Check NVIDIA_API_KEY secret on Cloudflare Worker.";
+      tip = "API key / Worker auth issue. Check NVIDIA_API_KEY or GROQ_API_KEY secret on Cloudflare Worker.";
     else if (/429|rate limit|quota|too many/.test(low))
       tip = "Rate limited. Wait a few seconds and retry, or switch to a smaller model.";
     else if (/network|failed to fetch|cors|load failed|offline/.test(low))
@@ -1321,7 +1330,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-23**
+        content: `**BOATIN UP-25**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2006,7 +2015,7 @@ ${html}
 
       const div = document.createElement("div");
       div.className = "message-bubble " + m.role;
-      const body = m.ui || (typeof m.content === "string" ? safeMarkdown(m.content) : "");
+      const body = m.ui || safeMarkdown(typeof m.content === "string" ? m.content : coerceText(m.content));
       div.innerHTML = body;
 
       // Timestamps
@@ -2450,6 +2459,26 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     }
   }
 
+
+  function coerceText(v) {
+    if (v == null) return "";
+    if (typeof v === "string") return v;
+    if (typeof v === "number" || typeof v === "boolean") return String(v);
+    if (Array.isArray(v)) {
+      return v.map(part => {
+        if (typeof part === "string") return part;
+        if (part && typeof part === "object") {
+          return part.text || part.content || part.value || "";
+        }
+        return "";
+      }).join("");
+    }
+    if (typeof v === "object") {
+      return coerceText(v.text || v.content || v.message || v.value || "");
+    }
+    return String(v);
+  }
+
   async function callModel(modelId, messages, signal) {
     const effort = getEffortConfig();
     const msgs = applyEffortToMessages(messages);
@@ -2489,11 +2518,8 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     }
 
     const msg = data?.choices?.[0]?.message || {};
-    let reply = msg.content || msg.text || data?.output_text || "";
-    if (!reply && msg.reasoning_content) reply = msg.reasoning_content;
-    if (!reply && Array.isArray(msg.content)) {
-      reply = msg.content.map(b => (typeof b === "string" ? b : (b?.text || ""))).join("");
-    }
+    let reply = coerceText(msg.content);
+    if (!reply) reply = coerceText(msg.text || data?.output_text || msg.reasoning_content || "");
     if (!reply) {
       return {
         ok: false,
@@ -2843,7 +2869,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // write the full solution, review your own output for bugs, then patch
   // before handing it back. Ends with a runnable live-preview button for
   // HTML/CSS/JS output.
-  const POWER_HOUSE_MODEL = "nvidia/nemotron-3-super-120b-a12b";
+  const POWER_HOUSE_MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
 
   async function powerHouseCall(messages, onChunk) {
     try {
@@ -2854,8 +2880,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   function extractFirstCodeBlock(text) {
-    const m = String(text || "").match(/```(?:[a-zA-Z0-9_+-]*)\n([\s\S]*?)```/);
-    return m ? m[1] : null;
+    const m = coerceText(text).match(/```(?:[a-zA-Z0-9_+-]*)\n([\s\S]*?)```/);
+    if (!m) return null;
+    const code = m[1];
+    if (!code || code.trim() === "[object Object]") return null;
+    return code;
   }
 
   async function runPowerHouseAgent(request, pendingEl) {
@@ -2903,7 +2932,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     if (!buildResult?.ok || !buildResult.reply) {
       return { ok: false, error: "Build step failed to get a response from the model." };
     }
-    let currentReply = buildResult.reply;
+    let currentReply = coerceText(buildResult.reply);
     let code = extractFirstCodeBlock(currentReply);
 
     // STEP 3 — Self-review
@@ -2947,7 +2976,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fixing issues found in review…");
         });
         if (fixResult?.ok && fixResult.reply) {
-          currentReply = fixResult.reply;
+          currentReply = coerceText(fixResult.reply);
           code = extractFirstCodeBlock(currentReply) || code;
         }
       }
@@ -3438,10 +3467,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         agentPending.remove();
 
         if (result?.ok) {
-          let reply = result.reply || "";
+          let reply = coerceText(result.reply);
+          const codeStr = coerceText(result.code);
           // Ensure HTML/JS is in a fence so chat never auto-runs it
-          if (result.code && !/```/.test(reply)) {
-            reply = "Here's the build:\n\n```html\n" + result.code + "\n```\n\n> Tap **▶ Preview** under the code to run it.";
+          if (codeStr && !/```/.test(reply)) {
+            reply = "Here's the build:\n\n```html\n" + codeStr + "\n```\n\n> Tap **▶ Preview** under the code to run it.";
           } else if (!/▶ Preview|Live Preview/i.test(reply)) {
             reply += "\n\n> Tap **▶ Preview** under the code block to run this in the built-in HTML editor.";
           }
