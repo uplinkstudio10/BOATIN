@@ -568,11 +568,11 @@
   .send-message-btn:hover:not(:disabled) { filter: brightness(1.08); transform: scale(1.03); }
   .send-message-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
   .chat-input-bar textarea {
-    flex: 1; resize: none; background: var(--color-bg-card);
-    border: 1px solid var(--color-border-subtle); color: var(--color-text-primary);
-    padding: 11px 12px; border-radius: var(--border-radius-md);
-    font-family: inherit; font-size: 13.5px; max-height: 120px; min-height: 42px;
-    line-height: 1.45; transition: border-color 0.15s, box-shadow 0.15s;
+    flex: 1; resize: none; background: transparent;
+    border: none; color: var(--color-text-primary);
+    padding: 2px 4px; border-radius: 0;
+    font-family: inherit; font-size: 15px; max-height: 72px; min-height: 20px;
+    line-height: 1.35;
   }
   .chat-input-bar textarea:focus {
     outline: none; border-color: var(--color-accent-primary);
@@ -1248,4 +1248,227 @@
   border-radius: 16px 16px 16px 6px !important;
   background: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+
+/* ── Compact composer (force) ── */
+.chat-input-bar {
+  padding: 6px 10px 6px !important;
+  gap: 2px !important;
+  border-radius: 18px !important;
+  min-height: 0 !important;
+}
+.chat-input-bar textarea,
+#messageTextInput {
+  min-height: 20px !important;
+  max-height: 72px !important;
+  height: 20px;
+  padding: 2px 4px !important;
+  margin: 0 !important;
+  line-height: 1.35 !important;
+  font-size: 15px !important;
+  overflow-y: hidden;
+}
+.composer-toolbar {
+  min-height: 32px !important;
+  gap: 4px !important;
+}
+.attach-btn, .send-message-btn, .stop-message-btn {
+  width: 32px !important;
+  height: 32px !important;
+}
+.effort-trigger, .listen-btn {
+  height: 32px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+}
+.input-container {
+  padding: 4px 10px 8px !important;
+}
+
+
+/* ── UP-28 SAMSUNG EDITION polish ── */
+:root {
+  --color-bg-base: #000000;
+  --se-blue: #1482ff;
+  --se-silver: #c5c9ce;
+}
+html, body {
+  background: #000000 !important;
+}
+#app-root { background: #000000; }
+.app-header {
+  background: #000000 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.brand-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: var(--font-family-mono);
+  letter-spacing: 0.04em;
+}
+.brand-name {
+  color: var(--color-accent-primary);
+  font-weight: 800;
+  font-size: 11px;
+}
+.brand-ver {
+  color: #e8eaed;
+  font-weight: 700;
+  font-size: 11px;
+}
+.brand-edition {
+  color: var(--se-blue);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.header-collapse-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--se-silver);
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+.header-collapse-btn:hover { color: #fff; border-color: var(--se-blue); }
+body.header-collapsed .header-controls { display: none !important; }
+body.header-collapsed .header-collapse-btn { transform: rotate(-90deg); }
+body.header-collapsed .app-header { padding-bottom: 8px; }
+.studio-foot .se-tag { color: var(--se-blue); }
+.ph-timeline {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 8px; font-size: 10px;
+  font-family: var(--font-family-mono);
+}
+.ph-step {
+  padding: 3px 8px; border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--color-text-muted);
+  background: rgba(255,255,255,0.04);
+}
+.ph-step.on {
+  border-color: rgba(20,130,255,0.5);
+  color: #7eb6ff;
+  background: rgba(20,130,255,0.12);
+}
+.ph-step.done {
+  border-color: rgba(50,215,75,0.45);
+  color: #32d74b;
+  background: rgba(50,215,75,0.1);
+}
+.message-bubble.user {
+  background: linear-gradient(145deg, #1a73e8, #0d47a1) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  box-shadow: 0 6px 20px rgba(13,71,161,0.35) !important;
+}
+
+
+/* ── Samsung One UI ── */
+:root {
+  --oneui-radius: 26px;
+  --oneui-radius-sm: 18px;
+  --oneui-blue: #1482ff;
+  --oneui-surface: #1c1c1e;
+  --oneui-elevated: #2c2c2e;
+}
+html, body, #app-root {
+  background: #000000 !important;
+  font-family: "SamsungOne", "sec-roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif !important;
+}
+.app-header {
+  background: rgba(0,0,0,0.92) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  padding: 14px 16px 12px !important;
+}
+.cat-tab {
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  font-weight: 600 !important;
+  background: var(--oneui-surface) !important;
+}
+.cat-tab.active {
+  background: rgba(20,130,255,0.18) !important;
+  border-color: rgba(20,130,255,0.45) !important;
+  color: #7eb6ff !important;
+  box-shadow: none !important;
+}
+.control-item select {
+  border-radius: var(--oneui-radius-sm) !important;
+  background: var(--oneui-surface) !important;
+  min-height: 44px !important;
+  font-size: 14px !important;
+}
+.message-bubble.assistant:not(.pending):not(.streaming) {
+  background: var(--oneui-surface) !important;
+  border: none !important;
+  border-radius: 22px 22px 22px 8px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important;
+}
+.message-bubble.user {
+  background: var(--oneui-blue) !important;
+  border: none !important;
+  border-radius: 22px 22px 8px 22px !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(20,130,255,0.28) !important;
+}
+.message-bubble.pending {
+  background: var(--oneui-surface) !important;
+  border: 1px solid rgba(20,130,255,0.25) !important;
+  border-radius: 22px !important;
+}
+.chat-input-bar {
+  background: var(--oneui-surface) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45) !important;
+}
+.send-message-btn {
+  background: var(--oneui-blue) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(20,130,255,0.4) !important;
+}
+.msg-footer {
+  gap: 8px !important;
+  margin-top: 12px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+}
+.code-action-btn, .listen-msg-btn {
+  border-radius: 999px !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background: var(--oneui-elevated) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #e5e5ea !important;
+}
+.listen-msg-btn.speaking,
+#listenBtn.speaking {
+  color: var(--oneui-blue) !important;
+  border-color: rgba(20,130,255,0.5) !important;
+  background: rgba(20,130,255,0.15) !important;
+}
+.msg-model-badge {
+  border-radius: 999px !important;
+  background: rgba(20,130,255,0.12) !important;
+  border-color: rgba(20,130,255,0.28) !important;
+  color: #7eb6ff !important;
+}
+.brand-edition { color: var(--oneui-blue) !important; }
+.modal-sheet {
+  border-radius: 28px !important;
+  background: var(--oneui-surface) !important;
+}
+.scroll-bottom-btn {
+  border-radius: 50% !important;
+  background: var(--oneui-elevated) !important;
+  border-color: rgba(20,130,255,0.35) !important;
 }

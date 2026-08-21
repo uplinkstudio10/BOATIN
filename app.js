@@ -1168,11 +1168,39 @@
 
   // Effort levels → temperature, max_tokens, reasoning system hint
   const EFFORT_PRESETS = {
-    low:  { temperature: 0.6, top_p: 0.9,  max_tokens: 2048,  label: "Low",  systemHint: "Reply FAST and short. 2-8 sentences unless code is required." },
-    mid:  { temperature: 0.5, top_p: 0.9,  max_tokens: 6144,  label: "Mid",  systemHint: "Clear answers. For code, prefer complete working snippets. Be concise." },
-    high: { temperature: 0.35, top_p: 0.85, max_tokens: 12288, label: "High", systemHint: "Thorough but focused. Full code when asked — avoid padding." },
-    max:  { temperature: 0.25, top_p: 0.8,  max_tokens: 24576, label: "Max",  systemHint: "Full detail / full files when needed. Completeness over brevity for code." }
+    low:  { temperature: 0.55, top_p: 0.9,  max_tokens: 3072,  label: "Low",  systemHint: "Fast, correct, useful. Short unless code is needed. Prefer working answers over fluff." },
+    mid:  { temperature: 0.4,  top_p: 0.9,  max_tokens: 8192,  label: "Mid",  systemHint: "High-quality answers. Complete working code when asked. Explain only what matters. Prefer correctness over length." },
+    high: { temperature: 0.28, top_p: 0.85, max_tokens: 16384, label: "High", systemHint: "Expert-level depth. Full files, edge cases, and clear structure. No placeholders. Solve the whole problem." },
+    max:  { temperature: 0.2,  top_p: 0.8,  max_tokens: 32768, label: "Max",  systemHint: "Maximum capability. Deliver production-ready complete solutions, multi-file when needed, rigorous reasoning compressed into the final answer only (never show chain-of-thought)." }
   };
+
+
+  function smartPickEffort(text) {
+    const t = String(text || "");
+    const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+    const isCode = /```|function |def |class |import |<\/?[a-z]|console\.|SELECT /i.test(t);
+    const isLong = words > 80 || t.length > 1200;
+    const isTiny = words > 0 && words <= 12 && !isCode;
+    const el = dom.effortMode;
+    if (!el) return;
+    // Only auto-nudge when user left default-ish; still respect explicit Max if they set it via UI recently — use soft rules
+    if (isCode || isLong) {
+      if (el.value === "low" || el.value === "mid") {
+        el.value = isCode ? "high" : "high";
+        localStorage.setItem("nv_effort", el.value);
+        const lab = document.getElementById("effortTriggerLabel");
+        if (lab) lab.textContent = el.value === "high" ? "High" : el.value;
+      }
+    } else if (isTiny && el.value === "max") {
+      el.value = "mid";
+      if (typeof setEffort === "function") setEffort("mid");
+      else localStorage.setItem("nv_effort", "mid");
+    }
+  }
+
+  function isBanglaText(s) {
+    return /[\u0980-\u09FF]/.test(String(s || ""));
+  }
 
   function getEffortConfig() {
     const key = (dom.effortMode?.value || "mid").toLowerCase();
@@ -1227,6 +1255,24 @@
   function init() {
     applyPrefs();
     populateModelSelect();
+
+    const collapseBtn = document.getElementById("headerCollapseBtn");
+    if (collapseBtn && !collapseBtn.dataset.bound) {
+      collapseBtn.dataset.bound = "1";
+      const applyCollapse = () => {
+        const on = localStorage.getItem("nv_header_collapsed") === "1";
+        document.body.classList.toggle("header-collapsed", on);
+        collapseBtn.textContent = on ? "▸" : "▾";
+      };
+      applyCollapse();
+      collapseBtn.addEventListener("click", () => {
+        const next = localStorage.getItem("nv_header_collapsed") === "1" ? "0" : "1";
+        localStorage.setItem("nv_header_collapsed", next);
+        applyCollapse();
+      });
+    }
+
+    if (dom.messageTextInput) { dom.messageTextInput.rows = 1; dom.messageTextInput.style.height = "20px"; }
     setupViewportLock();
 
     const DEFAULT_MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
@@ -1260,7 +1306,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-27**
+        content: `**BOATIN UP▪︎28 《SAMSUNG EDITION》**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -1351,10 +1397,10 @@ Model · Effort · Actions — type and send.`
     initStudioFeatures();
 
     dom.messageTextInput.addEventListener("input", function() {
-      this.style.height = "auto";
-      const maxH = 88;
-      const h = Math.min(this.scrollHeight, maxH);
-      this.style.height = (this.value.trim() ? h : 22) + "px";
+      this.style.height = "20px";
+      const maxH = 72;
+      const h = Math.min(Math.max(this.scrollHeight, 20), maxH);
+      this.style.height = (this.value.trim() ? h : 20) + "px";
       this.style.overflowY = this.scrollHeight > maxH ? "auto" : "hidden";
       localStorage.setItem("nv_draft", this.value);
       const counter = document.getElementById("inputCounter");
@@ -1849,30 +1895,38 @@ ${html}
     return "en-US";
   }
 
-  function listenLastReply() {
+  function resetAllListenButtons() {
+    document.querySelectorAll(".listen-msg-btn.speaking, #listenBtn.speaking").forEach(b => {
+      b.classList.remove("speaking");
+      if (b.id === "listenBtn") b.textContent = "🎧 Listen";
+      else b.textContent = "🎧 Listen";
+    });
+  }
+
+  function speakTextContent(text, btn) {
     if (!window.speechSynthesis) {
       toastAssist("Listen not supported in this browser");
       return;
     }
-    const btn = document.getElementById("listenBtn");
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
-      if (btn) { btn.classList.remove("speaking"); btn.textContent = "🎧 Listen"; }
-      return;
+      resetAllListenButtons();
+      // If same button was speaking, just stop
+      if (btn && btn.dataset.speaking === "1") {
+        btn.dataset.speaking = "0";
+        return;
+      }
     }
-    const last = [...(appState.messages || [])].reverse().find(
-      m => m.role === "assistant" && typeof m.content === "string" && m.content.trim()
-    );
-    if (!last) {
-      toastAssist("Listen করার মতো কোনো রিপ্লাই নেই");
-      return;
-    }
-    const clean = String(last.content)
+    const clean = String(text || "")
       .replace(/```[\s\S]*?```/g, " code block ")
       .replace(/[`*_#>\[\]\(\)]/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 4000);
+    if (!clean) {
+      toastAssist("Listen করার মতো টেক্সট নেই");
+      return;
+    }
     const u = new SpeechSynthesisUtterance(clean);
     u.rate = 1.02;
     u.pitch = 1;
@@ -1884,11 +1938,40 @@ ${html}
       if (pick) u.voice = pick;
       u.lang = want;
     } catch (_) {}
-    if (btn) { btn.classList.add("speaking"); btn.textContent = "⏹ Stop"; }
+    resetAllListenButtons();
+    if (btn) {
+      btn.classList.add("speaking");
+      btn.textContent = "⏹ Stop";
+      btn.dataset.speaking = "1";
+    }
+    const composer = document.getElementById("listenBtn");
+    if (composer && btn !== composer) {
+      composer.classList.add("speaking");
+      composer.textContent = "⏹ Stop";
+    }
     u.onend = u.onerror = () => {
-      if (btn) { btn.classList.remove("speaking"); btn.textContent = "🎧 Listen"; }
+      if (btn) {
+        btn.classList.remove("speaking");
+        btn.textContent = "🎧 Listen";
+        btn.dataset.speaking = "0";
+      }
+      if (composer) {
+        composer.classList.remove("speaking");
+        composer.textContent = "🎧 Listen";
+      }
     };
     window.speechSynthesis.speak(u);
+  }
+
+  function listenLastReply() {
+    const last = [...(appState.messages || [])].reverse().find(
+      m => m.role === "assistant" && typeof m.content === "string" && m.content.trim()
+    );
+    if (!last) {
+      toastAssist("Listen করার মতো কোনো রিপ্লাই নেই");
+      return;
+    }
+    speakTextContent(last.content, document.getElementById("listenBtn"));
   }
 
   function bindScrollUi() {
@@ -2003,7 +2086,16 @@ ${html}
           }
         };
         footer.appendChild(copyBtn);
-if (idx === lastAssistantIdx) {
+
+        const listenMsgBtn = document.createElement("button");
+        listenMsgBtn.type = "button";
+        listenMsgBtn.className = "code-action-btn listen-msg-btn";
+        listenMsgBtn.textContent = "🎧 Listen";
+        listenMsgBtn.title = "Speak this reply";
+        listenMsgBtn.onclick = () => speakTextContent(m.content, listenMsgBtn);
+        footer.appendChild(listenMsgBtn);
+
+        if (idx === lastAssistantIdx) {
           const regen = document.createElement("button");
           regen.type = "button";
           regen.className = "code-action-btn";
@@ -2101,8 +2193,10 @@ if (idx === lastAssistantIdx) {
     const trimmed = (text || "").trim();
     const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
     const DEFAULT = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
-    const FAST = "meta/llama-3.1-8b-instruct";
+    const STRONG = "meta/llama-3.1-70b-instruct";
+    const FAST = "groq/llama-3.1-8b-instant";
     const GROQ_FAST = "groq/llama-3.1-8b-instant";
+    const FAST_FALLBACK = "meta/llama-3.1-8b-instruct";
     const pick = (category, fallback) => {
       const found = NVIDIA_MODELS.find(m => m.category === category && !isImageModel(m.value) && m.value !== "power/agent");
       return found?.value || fallback || DEFAULT;
@@ -2121,11 +2215,11 @@ if (idx === lastAssistantIdx) {
       return "webpulse/nemotron-super";
     }
     if (/fast|quick|simple|সহজ|দ্রুত/.test(t)) {
-      return pick("⚡ Fast", FAST) || GROQ_FAST;
+      return FAST;
     }
     const effortKey = (dom.effortMode?.value || "mid").toLowerCase();
     if (effortKey === "max" || effortKey === "high") {
-      return DEFAULT;
+      return wordCount > 40 || /code|কোড|debug|architect/i.test(t) ? DEFAULT : STRONG;
     }
     if (effortKey === "low") {
       return FAST;
@@ -2171,7 +2265,14 @@ if (idx === lastAssistantIdx) {
   function applyEffortToMessages(messages) {
     const effort = getEffortConfig();
     const custom = (prefs.systemPrompt || "").trim();
-    const base = `[Effort: ${effort.label}] ${effort.systemHint}` + (custom ? "\n\nUser instructions:\n" + custom : "");
+    const lastUser = [...(messages || [])].reverse().find(m => m.role === "user");
+    const bangla = lastUser && isBanglaText(typeof lastUser.content === "string" ? lastUser.content : "");
+    const langHint = bangla ? " Reply in clear বাংলা (Bangla) unless the user asked for another language." : "";
+    const powerBoost =
+      "You are BOATIN — a high-capability assistant. Be accurate, concrete, and useful. " +
+      "For coding: full runnable code, no TODOs/placeholders. For facts: be careful; say when unsure. " +
+      "Never dump internal monologue (no 'Okay/Hmm/Let's think'). Final answer only.";
+    const base = powerBoost + "\n\n[Effort: " + effort.label + "] " + effort.systemHint + langHint + (custom ? "\n\nUser instructions:\n" + custom : "");
     const hasSystem = messages.some(m => m.role === "system");
     if (hasSystem) {
       return messages.map((m, i) => {
@@ -2789,36 +2890,78 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // Power House: best model per stage (plan / write / review / fix)
   // Groq = speed; Nemotron/Llama = deeper reasoning. Falls back if a call fails.
   const POWER_HOUSE_MODELS = {
-    plan:   ["nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.3-70b-versatile"],
-    write:  ["groq/llama-3.3-70b-versatile", "nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.1-8b-instant"],
-    review: ["nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.3-70b-versatile"],
-    fix:    ["groq/llama-3.3-70b-versatile", "nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.1-8b-instant"]
+    // Plan/Review = deeper NVIDIA; Write/Fix = Groq 70B first (fast+strong), then Nemotron
+    plan:   ["nvidia/llama-3.3-nemotron-super-49b-v1.5", "nvidia/nemotron-3-super-120b-a12b", "meta/llama-3.1-70b-instruct", "groq/llama-3.3-70b-versatile"],
+    write:  ["groq/llama-3.3-70b-versatile", "nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "nvidia/nemotron-3-super-120b-a12b"],
+    review: ["nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "nvidia/nemotron-3-super-120b-a12b", "groq/llama-3.3-70b-versatile"],
+    fix:    ["groq/llama-3.3-70b-versatile", "nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "nvidia/nemotron-3-super-120b-a12b"]
   };
 
   async function powerHouseCall(messages, onChunk, stage) {
     const list = POWER_HOUSE_MODELS[stage] || POWER_HOUSE_MODELS.write;
     const errors = [];
-    for (const modelId of list) {
-      try {
-        const streamed = await callModelStreaming(modelId, messages, onChunk || (() => {}), undefined);
-        if (streamed?.ok && streamed.reply && String(streamed.reply).trim().length > 8) {
-          return { ...streamed, model: modelId, stage };
-        }
-        errors.push((modelId.split("/").pop() || modelId) + ": empty/stream fail");
-      } catch (e) {
-        errors.push((modelId.split("/").pop() || modelId) + ": " + (e.message || "err"));
+    const needsCode = stage === "write" || stage === "fix";
+
+    const accept = (reply) => {
+      const t = coerceText(reply).trim();
+      if (t.length < 12) return false;
+      if (needsCode) {
+        // Must contain a real fenced code block — reject pure chain-of-thought
+        if (!/```[\s\S]*?```/.test(t)) return false;
+        const code = extractFirstCodeBlock(t);
+        if (!code || code.trim().length < 30) return false;
+        if (/^\s*\[object Object\]\s*$/i.test(code)) return false;
       }
-      try {
-        const non = await callModel(modelId, messages, undefined);
-        if (non?.ok && non.reply && String(non.reply).trim().length > 8) {
-          return { ...non, model: modelId, stage };
+      // Reject obvious thinking-only monologues even if long
+      if (!needsCode) return true;
+      const before = t.split("```")[0] || "";
+      if (before.length > 800 && /^(okay|ok,|hmm|let's|first,|wait,|i need to)/i.test(before.trim())) {
+        // still OK if code block exists — we'll polish later
+        return true;
+      }
+      return true;
+    };
+
+    for (const modelId of list) {
+      // Prefer non-stream for write/fix so UI stays on Thinking card (no monologue leak)
+      const tryNonStreamFirst = needsCode;
+      const attempts = tryNonStreamFirst
+        ? ["non", "stream"]
+        : ["stream", "non"];
+
+      for (const mode of attempts) {
+        try {
+          let res;
+          if (mode === "stream") {
+            // Don't stream partials to UI for write/fix — only final
+            const silent = needsCode ? (() => {}) : (onChunk || (() => {}));
+            res = await callModelStreaming(modelId, messages, silent, undefined);
+          } else {
+            res = await callModel(modelId, messages, undefined);
+          }
+          if (res?.ok && accept(res.reply)) {
+            return { ...res, reply: coerceText(res.reply), model: modelId, stage };
+          }
+          errors.push((modelId.split("/").pop() || modelId) + " " + mode + ": " + (res?.ok ? "no-code/thinking" : String(res?.error || "fail").slice(0, 40)));
+        } catch (e) {
+          errors.push((modelId.split("/").pop() || modelId) + " " + mode + ": " + (e.message || "err"));
         }
-        errors.push((modelId.split("/").pop() || modelId) + ": " + String(non?.error || "empty").slice(0, 40));
-      } catch (e) {
-        errors.push((modelId.split("/").pop() || modelId) + ": " + (e.message || "err"));
       }
     }
-    return { ok: false, error: "All models failed for " + stage + "\n• " + errors.slice(0, 6).join("\n• "), stage };
+    return { ok: false, error: "All models failed for " + stage + "\n• " + errors.slice(0, 8).join("\n• "), stage };
+  }
+
+  function polishPowerHouseCodeReply(raw) {
+    const text = coerceText(raw);
+    const code = extractFirstCodeBlock(text);
+    if (!code || code.trim().length < 20) return text;
+    let lang = "text";
+    const m = text.match(/```([a-zA-Z0-9_+-]*)\n/);
+    if (m && m[1]) lang = m[1];
+    else if (/require\(|module\.exports|process\.|async function/.test(code)) lang = "javascript";
+    else if (/def |import |print\(|if __name__/.test(code)) lang = "python";
+    else if (/<html[\s>]|<!DOCTYPE/i.test(code)) lang = "html";
+    return "### Deliverable\n\n```" + lang + "\n" + code.trim() + "\n```\n";
   }
 
   function extractFirstCodeBlock(text) {
@@ -2835,18 +2978,38 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     return String(id || "").split("/").pop() || id;
   }
 
+
+  function setPowerHouseTimeline(el, step /* 1-4 */) {
+    if (!el) return;
+    const labels = ["Plan", "Write", "Review", "Fix"];
+    const parts = labels.map((lab, i) => {
+      const n = i + 1;
+      let cls = "ph-step";
+      if (n < step) cls += " done";
+      else if (n === step) cls += " on";
+      return `<span class="${cls}">${n}. ${lab}</span>`;
+    }).join("");
+    const sub = el.querySelector(".thinking-sub");
+    let host = el.querySelector(".ph-timeline");
+    if (!host) {
+      host = document.createElement("div");
+      host.className = "ph-timeline";
+      el.appendChild(host);
+    }
+    host.innerHTML = parts;
+  }
+
   async function runPowerHouseAgent(request, pendingEl) {
     // STEP 1 — Plan
     setThinking(pendingEl, "🚀 Power House", "Step 1/4 · Planning · " + shortModelName(POWER_HOUSE_MODELS.plan[0]));
+    setPowerHouseTimeline(pendingEl, 1);
     const planMessages = [
       {
         role: "system",
         content:
-          "You are a senior software architect. Given a build request, output a short, " +
-          "concrete plan: what the deliverable is (usually a single self-contained HTML " +
-          "file unless the user clearly asked for something else), the key features to " +
-          "include, and any tricky parts to get right. Keep it to 5-8 bullet points. " +
-          "No code yet — plan only."
+          "Senior architect. Output ONLY 5–8 short bullet points for the build plan. " +
+          "Pick the right stack (Node/Python for bots/servers, HTML only for web UIs). " +
+          "No code. No chain-of-thought. No 'Okay/Hmm/Let's'."
       },
       { role: "user", content: request }
     ];
@@ -2859,33 +3022,35 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
 
     // STEP 2 — Build
     setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing · " + shortModelName(POWER_HOUSE_MODELS.write[0]));
+    setPowerHouseTimeline(pendingEl, 2);
     const buildMessages = [
       {
         role: "system",
         content:
-          "You are an elite senior engineer, sharper and more careful than a typical " +
-          "coding agent. Write complete, production-quality, working code for the " +
-          "request below, following the plan. Prefer a single self-contained HTML file " +
-          "(inline CSS + JS) unless the user clearly asked for something else, so it can " +
-          "run immediately with no build step. No placeholders, no TODOs, no omitted " +
-          "sections — every function must be fully implemented. Output the code in ONE " +
-          "fenced code block. Add at most 2-3 sentences of explanation before the code, " +
-          "nothing after it."
+          "You are a coding engine. OUTPUT RULES (strict):\n" +
+          "1) Do NOT think out loud. No 'Okay', 'Hmm', 'Let's', 'I need to', 'First'.\n" +
+          "2) At most ONE short sentence, then ONE fenced code block.\n" +
+          "3) Full working code only — no placeholders, no TODOs.\n" +
+          "4) Use Node.js or Python if the task needs a long-running bot/server; " +
+          "use a single HTML file only when the user asked for a webpage/UI.\n" +
+          "5) Nothing after the code block."
       },
       { role: "user", content: `Request: ${request}\n\nPlan:\n${plan}\n\nNow write the full working code.` }
     ];
     const buildResult = await powerHouseCall(buildMessages, () => {
       setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing · " + shortModelName(POWER_HOUSE_MODELS.write[0]));
+    setPowerHouseTimeline(pendingEl, 2);
     }, "write");
     if (!buildResult?.ok || !buildResult.reply) {
       return { ok: false, error: "Write failed.\n" + (buildResult?.error || "No response") };
     }
-    let currentReply = coerceText(buildResult.reply);
-    let code = extractFirstCodeBlock(currentReply);
+    let currentReply = polishPowerHouseCodeReply(buildResult.reply);
+    let code = extractFirstCodeBlock(currentReply) || extractFirstCodeBlock(buildResult.reply);
     usedModels.write = buildResult.model;
 
     // STEP 3 — Self-review
     setThinking(pendingEl, "🚀 Power House", "Step 3/4 · Review · " + shortModelName(POWER_HOUSE_MODELS.review[0]));
+    setPowerHouseTimeline(pendingEl, 3);
     if (code) {
       const reviewMessages = [
         {
@@ -2906,14 +3071,13 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       // STEP 4 — Fix (only if review found issues)
       if (reviewResult?.ok && /^ISSUES/i.test(reviewText.trim())) {
         setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fix · " + shortModelName(POWER_HOUSE_MODELS.fix[0]));
+        setPowerHouseTimeline(pendingEl, 4);
         const fixMessages = [
           {
             role: "system",
             content:
-              "You are an elite senior engineer. Fix the code below according to the " +
-              "review notes. Output the complete corrected code in ONE fenced code " +
-              "block, fully implemented, no placeholders. At most 2 sentences before " +
-              "the code, nothing after."
+              "Fix the code per the review. OUTPUT RULES: no thinking aloud; " +
+              "at most one short sentence; then ONE complete fenced code block; nothing after."
           },
           {
             role: "user",
@@ -2924,9 +3088,10 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         ];
         const fixResult = await powerHouseCall(fixMessages, () => {
           setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fix · " + shortModelName(POWER_HOUSE_MODELS.fix[0]));
+        setPowerHouseTimeline(pendingEl, 4);
         }, "fix");
         if (fixResult?.ok && fixResult.reply) {
-          currentReply = coerceText(fixResult.reply);
+          currentReply = polishPowerHouseCodeReply(fixResult.reply);
           code = extractFirstCodeBlock(currentReply) || code;
           usedModels.fix = fixResult.model;
         }
@@ -3483,17 +3648,23 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     appState.messages.push({ role: "user", content: apiContent, ui: uiContent, ts: Date.now() });
     localStorage.removeItem("nv_draft");
     dom.messageTextInput.value = "";
-    dom.messageTextInput.style.height = "22px";
+    dom.messageTextInput.style.height = "20px";
     clearFile();
     render();
 
+    smartPickEffort(text);
     await runChatCompletion(text, hadFile);
   }
 
 
   function trimMessagesForSpeed(messages, maxMsgs) {
-    const arr = (messages || []).map(m => ({ role: m.role, content: m.content }));
-    const limit = maxMsgs || 16;
+    const arr = (messages || []).map(m => {
+      let c = m.content;
+      // Cap huge single messages so context fits without killing quality
+      if (typeof c === "string" && c.length > 12000) c = c.slice(0, 12000) + "\n…[truncated]";
+      return { role: m.role, content: c };
+    });
+    const limit = maxMsgs || 28;
     if (arr.length <= limit) return arr;
     // keep system-ish first assistant + last N
     return arr.slice(-limit);
@@ -3565,7 +3736,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     setGenerating(true);
 
     try {
-      const apiMessages = trimMessagesForSpeed(appState.messages, 14);
+      const apiMessages = trimMessagesForSpeed(appState.messages, 28);
 
       let primary = dom.autoMode.value === "on"
         ? chooseAutoModel(text, hadFile)
@@ -3588,9 +3759,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       // Always keep proven free-tier models in the retry chain
       const STABLE = [
         "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-        "nvidia/llama-3.3-nemotron-super-49b-v1",
-        "meta/llama-3.1-8b-instruct",
+        "groq/llama-3.3-70b-versatile",
         "meta/llama-3.1-70b-instruct",
+        "nvidia/llama-3.3-nemotron-super-49b-v1",
+        "groq/llama-3.1-8b-instant",
+        "meta/llama-3.1-8b-instruct",
         "openai/gpt-oss-20b"
       ];
       for (const s of STABLE) {
