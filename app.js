@@ -491,7 +491,8 @@
   }
 
   function safeMarkdown(text) {
-    if (typeof text !== "string") return "";
+    text = typeof coerceText === "function" ? coerceText(text) : (typeof text === "string" ? text : String(text || ""));
+    if (!text) return "";
     // Escape HTML outside fenced code blocks so previews never render inside chat
     const parts = String(text).split(/(```[\s\S]*?```)/g);
     const safe = parts.map((part) => {
@@ -926,17 +927,17 @@
       rows.push({
         name: "Worker",
         ok: res.ok && data.status === "ok",
-        detail: res.ok ? ("OK · hasKey=" + !!data.hasKey) : ("HTTP " + res.status)
+        detail: res.ok ? ("OK · NVIDIA=" + !!data.hasKey + " · Groq=" + !!data.hasGroq) : ("HTTP " + res.status)
       });
     } catch (e) {
       rows.push({ name: "Worker", ok: false, detail: e.message || "unreachable" });
     }
 
     const probe = [
-      "nvidia/nemotron-3-super-120b-a12b",
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
       "meta/llama-3.1-8b-instruct",
-      "meta/llama-3.2-3b-instruct",
-      "mistralai/mistral-nemo-12b-instruct"
+      "groq/llama-3.1-8b-instant",
+      "meta/llama-3.1-70b-instruct"
     ];
     for (const id of probe) {
       try {
@@ -1071,7 +1072,7 @@
     if (dom.actionChips) {
       dom.actionChips.innerHTML = "";
       const pickModel = (id, note) => {
-        if (!NVIDIA_MODELS.some(m => m.value === id)) {
+        if (!NVIDIA_MODELS.some(m => m.value === id) && id !== "power/agent" && !/^webpulse\//i.test(id)) {
           toastAssist("Model not in list");
           return;
         }
@@ -1087,120 +1088,40 @@
       };
       const actions = [
         {
-          label: "💬 Chats",
-          run: () => openSessionsModal()
-        },
-        {
-          label: "📤 Export MD",
-          run: () => exportChatMarkdown()
-        },
-        {
-          label: "🩺 Model health",
-          run: () => checkModelHealth()
-        },
-        {
-          label: "📚 Prompt Library",
-          run: () => openPromptLibrary()
-        },
-        {
           label: "🌐 Web Pulse",
-          run: () => pickModel("webpulse/nemotron-super", "Web Pulse ready — ask anything current")
-        },
-        {
-          label: "🌤️ Weather",
-          run: () => {
-            dom.messageTextInput.value = "Weather in Dhaka";
-            dom.messageTextInput.focus();
-            toastAssist("Edit city, then Send");
-          }
-        },
-        {
-          label: "🎨 Image gen",
-          run: () => pickModel("black-forest-labs/flux.1-schnell", "Image model — describe a scene and Send")
-        },
-        {
-          label: "🏆 Best Model",
-          run: () => pickModel("nvidia/llama-3.3-nemotron-super-49b-v1.5", "Nemotron 3 Super selected")
+          run: () => pickModel("webpulse/nemotron-super", "Web Pulse ready")
         },
         {
           label: "🚀 Power House",
-          run: () => pickModel("power/agent", "Power House ready — describe what to build")
+          run: () => pickModel("power/agent", "Power House — describe what to build")
         },
         {
-          label: "💻 Coding",
-          run: () => pickModel("nvidia/llama-3.3-nemotron-super-49b-v1.5", "Qwen3 Coder selected")
+          label: "⚡ Groq Fast",
+          run: () => pickModel("groq/llama-3.1-8b-instant", "Groq 8B Instant")
         },
         {
-          label: "🧠 Reasoning",
-          run: () => pickModel("nvidia/llama-3.3-nemotron-super-49b-v1.5", "Reasoning model selected")
+          label: "🎨 Image",
+          run: () => pickModel("black-forest-labs/flux.1-schnell", "Describe a scene and Send")
         },
         {
-          label: "👁️ Vision",
-          run: () => pickModel("nvidia/nemotron-nano-12b-v2-vl", "Vision model selected")
-        },
-        {
-          label: "⚡ Fast",
-          run: () => pickModel("meta/llama-3.2-3b-instruct", "Fast model selected")
-        },
-        {
-          label: "📋 Copy last",
-          run: async () => {
-            const last = [...appState.messages].reverse().find(m => m.role === "assistant" && typeof m.content === "string");
-            if (!last) { toastAssist("Nothing to copy"); return; }
-            try {
-              await navigator.clipboard.writeText(last.content);
-              toastAssist("Last reply copied");
-            } catch {
-              toastAssist("Copy failed");
-            }
-          }
-        },
-        {
-          label: "📝 Summarize",
+          label: "✨ Improve last",
           run: () => {
-            dom.messageTextInput.value = "Summarize the conversation so far in clear bullet points.";
-            dom.messageTextInput.focus();
+            const last = [...(appState.messages || [])].reverse().find(m => m.role === "assistant" && typeof m.content === "string");
+            if (!last) { toastAssist("No reply to improve"); return; }
+            dom.messageTextInput.value = "Improve this answer — clearer, more correct:\n\n" + String(last.content).slice(0, 6000);
             dom.messageTextInput.dispatchEvent(new Event("input"));
-          }
-        },
-        {
-          label: "✍️ Rewrite",
-          run: () => {
-            dom.messageTextInput.value = "Rewrite the last answer more clearly and concisely:\n\n";
             dom.messageTextInput.focus();
-            dom.messageTextInput.dispatchEvent(new Event("input"));
           }
         },
         {
-          label: "🐛 Debug code",
+          label: "🔁 Regen",
           run: () => {
-            dom.messageTextInput.value = "Find bugs and fix this code. Explain each change:\n\n```\n\n```";
-            dom.messageTextInput.focus();
-            dom.messageTextInput.dispatchEvent(new Event("input"));
-          }
-        },
-        {
-          label: "💡 Explain simply",
-          run: () => {
-            dom.messageTextInput.value = "Explain this simply, like I'm smart but not an expert:\n\n";
-            dom.messageTextInput.focus();
-            dom.messageTextInput.dispatchEvent(new Event("input"));
-          }
-        },
-        {
-          label: "🗑️ Clear chat",
-          danger: true,
-          run: () => {
-            if (confirm("Clear chat history?")) {
-              stopGeneration();
-              appState.messages = [{ role: "assistant", content: "Memory cleared.", ts: Date.now() }];
-              localStorage.removeItem(sessionKey());
-              setGenerating(false);
-              render();
-            }
+            if (typeof regenerateLast === "function") regenerateLast();
+            else toastAssist("Regen not available");
           }
         }
       ];
+
       actions.forEach(a => {
         const b = document.createElement("button");
         b.type = "button";
@@ -1339,7 +1260,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP-26**
+        content: `**BOATIN UP-27**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2179,59 +2100,41 @@ if (idx === lastAssistantIdx) {
     const t = (text || "").toLowerCase();
     const trimmed = (text || "").trim();
     const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
-
+    const DEFAULT = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
+    const FAST = "meta/llama-3.1-8b-instruct";
+    const GROQ_FAST = "groq/llama-3.1-8b-instant";
     const pick = (category, fallback) => {
-      const found = NVIDIA_MODELS.find(m => m.category === category);
-      return found?.value || fallback;
+      const found = NVIDIA_MODELS.find(m => m.category === category && !isImageModel(m.value) && m.value !== "power/agent");
+      return found?.value || fallback || DEFAULT;
     };
 
-    if (
-      hasImage ||
-      /image|photo|picture|screenshot|vision|ছবি|ইমেজ|স্ক্রিনশট/.test(t)
-    ) {
-      return pick("👁️ Vision / Multimodal", appState.selectedModelId);
+    if (hasImage || /image|photo|picture|screenshot|vision|ছবি|ইমেজ|স্ক্রিনশট/.test(t)) {
+      return pick("👁️ Vision", "nvidia/nemotron-nano-12b-v2-vl");
     }
-
-    if (
-      /code|coding|program|javascript|python|html|css|debug|কোড|প্রোগ্রাম/.test(t)
-    ) {
-      return pick("💻 Coding", appState.selectedModelId);
+    if (/code|coding|program|javascript|python|html|css|debug|কোড|প্রোগ্রাম/.test(t)) {
+      return pick("💻 Coding", DEFAULT);
     }
-
-    if (
-      /reason|math|solve|proof|logic|hard|complex|গণিত|সমাধান|যুক্তি|কঠিন/.test(t)
-    ) {
-      return pick("🧠 Reasoning / Deep Thinking", appState.selectedModelId);
+    if (/reason|math|solve|proof|logic|hard|complex|গণিত|সমাধান|যুক্তি|কঠিন/.test(t)) {
+      return pick("🧠 Reasoning", DEFAULT);
     }
-
     if (/live search|web search|search the web|search online|latest|today|current|news|recent|internet|source|sources|cite|citation|ওয়েবে খোঁজ|ওয়েবে খোঁজ|লাইভ সার্চ|সাম্প্রতিক|আজকের খবর|বর্তমান|উৎস|সোর্স/.test(t)) {
-      return "moonshotai/kimi-k2.6";
+      return "webpulse/nemotron-super";
     }
-
     if (/fast|quick|simple|সহজ|দ্রুত/.test(t)) {
-      return pick("⚡ Fast / Lightweight", appState.selectedModelId);
+      return pick("⚡ Fast", FAST) || GROQ_FAST;
     }
-
-    // Effort bias: High/Max prefer reasoning/frontier; Low prefers fast models.
     const effortKey = (dom.effortMode?.value || "mid").toLowerCase();
     if (effortKey === "max" || effortKey === "high") {
-      return pick("🏆 Frontier / Best Overall", "nvidia/nemotron-3-super-120b-a12b");
+      return DEFAULT;
     }
     if (effortKey === "low") {
-      return pick("⚡ Fast / Lightweight", appState.selectedModelId);
+      return FAST;
     }
-
-    // General/default traffic uses Nemotron 3 Super.
-    // Short, simple messages (greetings, quick facts, one-liners) get a fast,
-    // lightweight model for a snappier reply. Longer or multi-sentence messages
-    // likely need more capability, so they go to the Frontier model.
     const looksComplex = wordCount > 30 || /[.?!].*[.?!]/.test(trimmed);
-    // Prefer fast models for short/casual traffic
     if (!looksComplex && wordCount > 0 && wordCount <= 20) {
-      return pick("⚡ Fast / Lightweight", appState.selectedModelId);
+      return FAST;
     }
-
-    return "nvidia/nemotron-3-super-120b-a12b";
+    return DEFAULT;
   }
 
   function getModelInfo(id) {
@@ -2244,7 +2147,12 @@ if (idx === lastAssistantIdx) {
     // Image-generation/editing models never enter chat fallback.
     if (isImageModel(primaryId)) return [];
 
-    const chatModels = NVIDIA_MODELS.filter(m => !isImageModel(m.value));
+    const chatModels = NVIDIA_MODELS.filter(m =>
+      !isImageModel(m.value) &&
+      !isLiveSearchModel(m.value) &&
+      m.value !== "power/agent" &&
+      !/^webpulse\//i.test(m.value)
+    );
 
     if (!primary) return chatModels.slice(0, 6);
 
@@ -2878,14 +2786,39 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   // write the full solution, review your own output for bugs, then patch
   // before handing it back. Ends with a runnable live-preview button for
   // HTML/CSS/JS output.
-  const POWER_HOUSE_MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
+  // Power House: best model per stage (plan / write / review / fix)
+  // Groq = speed; Nemotron/Llama = deeper reasoning. Falls back if a call fails.
+  const POWER_HOUSE_MODELS = {
+    plan:   ["nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.3-70b-versatile"],
+    write:  ["groq/llama-3.3-70b-versatile", "nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.1-8b-instant"],
+    review: ["nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.3-70b-versatile"],
+    fix:    ["groq/llama-3.3-70b-versatile", "nvidia/llama-3.3-nemotron-super-49b-v1.5", "meta/llama-3.1-70b-instruct", "groq/llama-3.1-8b-instant"]
+  };
 
-  async function powerHouseCall(messages, onChunk) {
-    try {
-      const streamed = await callModelStreaming(POWER_HOUSE_MODEL, messages, onChunk, undefined);
-      if (streamed?.ok && streamed.reply) return streamed;
-    } catch (_) {}
-    return await callModel(POWER_HOUSE_MODEL, messages, undefined);
+  async function powerHouseCall(messages, onChunk, stage) {
+    const list = POWER_HOUSE_MODELS[stage] || POWER_HOUSE_MODELS.write;
+    const errors = [];
+    for (const modelId of list) {
+      try {
+        const streamed = await callModelStreaming(modelId, messages, onChunk || (() => {}), undefined);
+        if (streamed?.ok && streamed.reply && String(streamed.reply).trim().length > 8) {
+          return { ...streamed, model: modelId, stage };
+        }
+        errors.push((modelId.split("/").pop() || modelId) + ": empty/stream fail");
+      } catch (e) {
+        errors.push((modelId.split("/").pop() || modelId) + ": " + (e.message || "err"));
+      }
+      try {
+        const non = await callModel(modelId, messages, undefined);
+        if (non?.ok && non.reply && String(non.reply).trim().length > 8) {
+          return { ...non, model: modelId, stage };
+        }
+        errors.push((modelId.split("/").pop() || modelId) + ": " + String(non?.error || "empty").slice(0, 40));
+      } catch (e) {
+        errors.push((modelId.split("/").pop() || modelId) + ": " + (e.message || "err"));
+      }
+    }
+    return { ok: false, error: "All models failed for " + stage + "\n• " + errors.slice(0, 6).join("\n• "), stage };
   }
 
   function extractFirstCodeBlock(text) {
@@ -2896,9 +2829,15 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     return code;
   }
 
+  function shortModelName(id) {
+    const info = getModelInfo(id);
+    if (info?.label) return info.label.replace(/^\(DEFAULT\)\s*/, "").slice(0, 28);
+    return String(id || "").split("/").pop() || id;
+  }
+
   async function runPowerHouseAgent(request, pendingEl) {
     // STEP 1 — Plan
-    setThinking(pendingEl, "🚀 Power House", "Step 1/4 · Planning the build…");
+    setThinking(pendingEl, "🚀 Power House", "Step 1/4 · Planning · " + shortModelName(POWER_HOUSE_MODELS.plan[0]));
     const planMessages = [
       {
         role: "system",
@@ -2911,14 +2850,15 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       },
       { role: "user", content: request }
     ];
-    const planResult = await powerHouseCall(planMessages);
+    const planResult = await powerHouseCall(planMessages, undefined, "plan");
     if (!planResult?.ok || !planResult.reply) {
-      return { ok: false, error: "Planning step failed to get a response from the model." };
+      return { ok: false, error: "Planning failed.\n" + (planResult?.error || "No response") };
     }
-    const plan = planResult.reply;
+    const plan = coerceText(planResult.reply);
+    const usedModels = { plan: planResult.model };
 
     // STEP 2 — Build
-    setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing the code…");
+    setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing · " + shortModelName(POWER_HOUSE_MODELS.write[0]));
     const buildMessages = [
       {
         role: "system",
@@ -2935,17 +2875,17 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       { role: "user", content: `Request: ${request}\n\nPlan:\n${plan}\n\nNow write the full working code.` }
     ];
     const buildResult = await powerHouseCall(buildMessages, () => {
-      // status only — no live code preview (less lag)
-      setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing the code…");
-    });
+      setThinking(pendingEl, "🚀 Power House", "Step 2/4 · Writing · " + shortModelName(POWER_HOUSE_MODELS.write[0]));
+    }, "write");
     if (!buildResult?.ok || !buildResult.reply) {
-      return { ok: false, error: "Build step failed to get a response from the model." };
+      return { ok: false, error: "Write failed.\n" + (buildResult?.error || "No response") };
     }
     let currentReply = coerceText(buildResult.reply);
     let code = extractFirstCodeBlock(currentReply);
+    usedModels.write = buildResult.model;
 
     // STEP 3 — Self-review
-    setThinking(pendingEl, "🚀 Power House", "Step 3/4 · Reviewing its own code…");
+    setThinking(pendingEl, "🚀 Power House", "Step 3/4 · Review · " + shortModelName(POWER_HOUSE_MODELS.review[0]));
     if (code) {
       const reviewMessages = [
         {
@@ -2959,12 +2899,13 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         },
         { role: "user", content: `Original request: ${request}\n\nCode to review:\n\`\`\`\n${code}\n\`\`\`` }
       ];
-      const reviewResult = await powerHouseCall(reviewMessages);
-      const reviewText = reviewResult?.reply || "";
+      const reviewResult = await powerHouseCall(reviewMessages, undefined, "review");
+      const reviewText = coerceText(reviewResult?.reply || "");
+      usedModels.review = reviewResult?.model;
 
       // STEP 4 — Fix (only if review found issues)
       if (reviewResult?.ok && /^ISSUES/i.test(reviewText.trim())) {
-        setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fixing issues found in review…");
+        setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fix · " + shortModelName(POWER_HOUSE_MODELS.fix[0]));
         const fixMessages = [
           {
             role: "system",
@@ -2982,18 +2923,26 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
           }
         ];
         const fixResult = await powerHouseCall(fixMessages, () => {
-          setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fixing issues found in review…");
-        });
+          setThinking(pendingEl, "🚀 Power House", "Step 4/4 · Fix · " + shortModelName(POWER_HOUSE_MODELS.fix[0]));
+        }, "fix");
         if (fixResult?.ok && fixResult.reply) {
           currentReply = coerceText(fixResult.reply);
           code = extractFirstCodeBlock(currentReply) || code;
+          usedModels.fix = fixResult.model;
         }
       }
     }
 
-    const footer = "\n\n> 🚀 **Power House** — planned, built, self-reviewed" +
-      (code ? ", and fixed where needed." : ".");
-    return { ok: true, reply: currentReply + footer, code };
+    const pipeline = [
+      usedModels.plan && ("Plan: " + shortModelName(usedModels.plan)),
+      usedModels.write && ("Write: " + shortModelName(usedModels.write)),
+      usedModels.review && ("Review: " + shortModelName(usedModels.review)),
+      usedModels.fix && ("Fix: " + shortModelName(usedModels.fix))
+    ].filter(Boolean).join(" · ");
+    const footer = "\n\n> 🚀 **Power House** — multi-model pipeline" +
+      (code ? " · code ready" : "") +
+      (pipeline ? "\n> " + pipeline : "");
+    return { ok: true, reply: currentReply + footer, code, usedModels };
   }
 
   async function answerWithLiveSearch(query, conversation, onChunk, preferredModelId) {
@@ -3551,6 +3500,47 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   async function runChatCompletion(text, hadFile = false) {
+    // Auto-mode may request live search — honor it
+    const autoOn = dom.autoMode && dom.autoMode.value === "on";
+    if (autoOn && text && !hadFile) {
+      const autoPick = chooseAutoModel(text, hadFile);
+      if (isLiveSearchModel(autoPick) || /^webpulse\//i.test(String(autoPick))) {
+        setGenerating(true);
+        const livePending = document.createElement("div");
+        setThinking(livePending, "Web Pulse", "Auto · researching…");
+        dom.messagesContainer.appendChild(livePending);
+        try {
+          const apiMessages = appState.messages.map(m => ({ role: m.role, content: m.content }));
+          const result = await answerWithLiveSearch(text, apiMessages, createStreamRenderer(livePending), autoPick);
+          livePending.remove();
+          if (result?.ok) {
+            let reply = coerceText(result.reply);
+            if (!/Web Pulse/i.test(reply)) reply += "\n\n> ⚡ **Web Pulse** (auto)";
+            appState.messages.push({
+              role: "assistant",
+              content: reply,
+              ui: safeMarkdown(reply) + (typeof renderSources === "function" ? renderSources(result.sources) : ""),
+              model: result.model || "web-pulse",
+              ts: Date.now()
+            });
+          } else {
+            // fall through to normal chat with default model
+            livePending.remove();
+            toastAssist("Live search missed — normal chat");
+          }
+          if (result?.ok) {
+            persistMessages();
+            setGenerating(false);
+            render();
+            return;
+          }
+        } catch (e) {
+          livePending.remove();
+        }
+        setGenerating(false);
+      }
+    }
+
     // Never run pure image models through /chat
     if (isImageModel(getSelectedModelId()) || isImageModel(appState.selectedModelId)) {
       appState.messages.push({

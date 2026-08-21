@@ -70,8 +70,8 @@
     animation: pulse-dot 4.5s ease-in-out infinite;
   }
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--color-accent-primary); }
-    50% { opacity: 0.55; box-shadow: 0 0 14px var(--color-accent-primary); }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
   .header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .header-action-btn {
@@ -1071,13 +1071,8 @@
   .modal-sheet::before,
   .message-bubble.pending::before,
   .message-bubble.user::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 18%, transparent 40%);
-    pointer-events: none;
-    mix-blend-mode: overlay;
+    content: none !important;
+    display: none !important;
   }
   .app-header, .modal-sheet, .message-bubble.pending {
     position: relative;
@@ -1094,17 +1089,7 @@
     position: relative;
     overflow: visible; /* .effort-dropdown opens upward from inside here — must not clip */
   }
-  .chat-input-bar::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 18%, transparent 40%);
-    pointer-events: none;
-    mix-blend-mode: overlay;
-    z-index: 0;
-  }
-  .chat-input-bar > * { position: relative; z-index: 1; }
+  .chat-input-bar::before { content: none !important; display: none !important; }
 
   .cat-tab, .cat-chip, .header-action-btn, .clear-memory-btn, .tb-btn,
   .attach-btn, .effort-trigger, .listen-btn, .send-message-btn,
