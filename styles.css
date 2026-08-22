@@ -1287,7 +1287,7 @@
 }
 
 
-/* ── UP-28 SAMSUNG EDITION polish ── */
+/* ── UP-29 SAMSUNG EDITION polish ── */
 :root {
   --color-bg-base: #000000;
   --se-blue: #1482ff;
@@ -1471,4 +1471,269 @@ html, body, #app-root {
   border-radius: 50% !important;
   background: var(--oneui-elevated) !important;
   border-color: rgba(20,130,255,0.35) !important;
+}
+
+
+/* ========== UP-29 FIX: clean One UI + Bixby think ========== */
+:root {
+  --color-bg-base: #000000;
+  --color-accent-primary: #1482ff;
+  --color-accent-secondary: #5ac8fa;
+  --color-accent-danger: #ff453a;
+  --oneui-surface: #1c1c1e;
+  --oneui-elevated: #2c2c2e;
+  --oneui-blue: #1482ff;
+}
+
+html, body, #app-root {
+  background: #000 !important;
+  color: #f2f2f7 !important;
+}
+
+.app-header {
+  background: #000 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  padding: 12px 14px !important;
+  gap: 10px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.app-header::before { display: none !important; content: none !important; }
+
+.header-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: inherit !important;
+}
+.header-top-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  flex-wrap: nowrap !important;
+}
+.brand-line {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 1px !important;
+  line-height: 1.15 !important;
+}
+.brand-name {
+  color: #32d74b !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+}
+.brand-ver {
+  display: none !important; /* shown inline via edition row */
+}
+.brand-line::after {
+  content: none;
+}
+.brand-edition {
+  color: #1482ff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+}
+/* Show UP▪︎29 before edition via brand-name line */
+.brand-name::after {
+  content: "  UP▪︎29";
+  color: #e5e5ea !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+}
+.status-dot {
+  background: #32d74b !important;
+  box-shadow: 0 0 8px rgba(50,215,75,0.6) !important;
+  flex-shrink: 0 !important;
+}
+.header-collapse-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  background: #1c1c1e !important;
+  color: #d1d1d6 !important;
+  margin: 0 !important;
+}
+.clear-memory-btn {
+  border-radius: 10px !important;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+}
+
+.cat-tab {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #aeaeb2 !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+.cat-tab.active {
+  background: rgba(20,130,255,0.18) !important;
+  border-color: rgba(20,130,255,0.45) !important;
+  color: #7eb6ff !important;
+  box-shadow: none !important;
+}
+.control-item label {
+  color: #8e8e93 !important;
+}
+.control-item select {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 14px !important;
+  color: #f2f2f7 !important;
+  min-height: 42px !important;
+}
+
+.message-bubble.user {
+  background: #1482ff !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 20px 20px 6px 20px !important;
+  box-shadow: 0 4px 14px rgba(20,130,255,0.25) !important;
+  backdrop-filter: none !important;
+}
+.message-bubble.user::before { display: none !important; content: none !important; }
+
+.message-bubble.assistant:not(.pending):not(.streaming) {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 20px 20px 20px 6px !important;
+  padding: 14px 16px !important;
+  box-shadow: none !important;
+}
+
+.message-bubble.pending,
+.message-bubble.streaming {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(20,130,255,0.22) !important;
+  border-radius: 20px !important;
+  padding: 14px 16px !important;
+  min-height: 56px !important;
+  max-width: min(420px, 92%) !important;
+  box-shadow: none !important;
+  color: #aeaeb2 !important;
+}
+.message-bubble.pending::before { display: none !important; content: none !important; }
+
+/* Bixby-style thinking orb */
+.bixby-think {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+.bixby-orb {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.bixby-core {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #5ac8fa, #1482ff 55%, #0a5fd4);
+  box-shadow: 0 0 12px rgba(20,130,255,0.55);
+  animation: bixby-core 1.6s ease-in-out infinite;
+}
+.bixby-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(20,130,255,0.35);
+  animation: bixby-ring 1.8s ease-out infinite;
+}
+.bixby-ring.r2 { animation-delay: 0.35s; border-color: rgba(90,200,250,0.3); }
+.bixby-ring.r3 { animation-delay: 0.7s; border-color: rgba(20,130,255,0.2); }
+@keyframes bixby-core {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.88); opacity: 0.85; }
+}
+@keyframes bixby-ring {
+  0% { transform: scale(0.55); opacity: 0.7; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+.thinking-title {
+  color: #7eb6ff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+.thinking-sub {
+  color: #8e8e93 !important;
+  font-size: 12px !important;
+}
+.thinking-bars, .thinking-track { display: none !important; }
+
+.chat-input-bar {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+  padding: 6px 10px !important;
+}
+.chat-input-bar::before { display: none !important; content: none !important; }
+.chat-input-bar textarea,
+#messageTextInput {
+  min-height: 20px !important;
+  max-height: 72px !important;
+  background: transparent !important;
+  border: none !important;
+  color: #f2f2f7 !important;
+  font-size: 15px !important;
+}
+.send-message-btn {
+  background: #1482ff !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(20,130,255,0.35) !important;
+  width: 34px !important;
+  height: 34px !important;
+}
+.attach-btn, .effort-trigger, .listen-btn {
+  background: #2c2c2e !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #e5e5ea !important;
+  height: 34px !important;
+}
+.code-action-btn, .listen-msg-btn {
+  background: #2c2c2e !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 999px !important;
+  color: #e5e5ea !important;
+}
+.msg-model-badge {
+  background: rgba(20,130,255,0.12) !important;
+  border-color: rgba(20,130,255,0.3) !important;
+  color: #7eb6ff !important;
+}
+.studio-foot {
+  color: #636366 !important;
+}
+.studio-foot span, .studio-foot .se-tag {
+  color: #1482ff !important;
+}
+.modal-sheet {
+  background: #1c1c1e !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.scroll-bottom-btn {
+  background: #1c1c1e !important;
+  border: 1px solid rgba(20,130,255,0.35) !important;
+  color: #7eb6ff !important;
 }

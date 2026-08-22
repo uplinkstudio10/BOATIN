@@ -1306,7 +1306,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP▪︎28 《SAMSUNG EDITION》**
+        content: `**BOATIN UP▪︎29 《SAMSUNG EDITION》**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -3252,20 +3252,24 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   function thinkingHTML(title, sub = "") {
-    return `<div class="thinking-row">
-      <div class="thinking-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    return `<div class="thinking-row bixby-think">
+      <div class="bixby-orb" aria-hidden="true">
+        <span class="bixby-ring r1"></span>
+        <span class="bixby-ring r2"></span>
+        <span class="bixby-ring r3"></span>
+        <span class="bixby-core"></span>
+      </div>
       <div class="thinking-meta">
-        <div class="thinking-title"><span class="pulse-dot"></span>${escapeHtml(title)}</div>
+        <div class="thinking-title">${escapeHtml(title)}</div>
         ${sub ? `<div class="thinking-sub">${escapeHtml(sub)}</div>` : ""}
       </div>
-    </div>
-    <div class="thinking-track"><span></span></div>`;
+    </div>`;
   }
 
   function setThinking(el, title, sub = "") {
     if (!el) return;
     el.className = "message-bubble pending";
-    el.style.cssText = "align-self:flex-start;max-width:min(420px,92%);padding:14px 16px;border-radius:18px;background:#141a16;border:1px solid rgba(118,185,0,0.28);color:var(--color-text-secondary);min-height:52px;width:auto;";
+    el.style.cssText = "";
     el.innerHTML = thinkingHTML(title, sub);
   }
 
