@@ -1938,6 +1938,7 @@ html, body, #app-root {
   gap: 4px !important;
   flex-shrink: 0 !important;
   min-height: auto !important;
+  width: auto !important; /* undo stale `width: 100%` from the old stacked-composer layout — it was forcing this row to claim the full pill width and crushing the textarea down to ~1 visible character */
 }
 /* Hide effort + listen from main bar for cleaner ox look — still in header/actions if needed */
 .effort-menu, #listenBtn {

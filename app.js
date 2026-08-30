@@ -1926,6 +1926,7 @@ ${html}
     }
     const clean = String(text || "")
       .replace(/```[\s\S]*?```/g, " code block ")
+      .replace(/^[ \t]*>.*$/gm, " ")
       .replace(/[`*_#>\[\]\(\)]/g, " ")
       .replace(/\s+/g, " ")
       .trim()
