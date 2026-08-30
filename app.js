@@ -1310,7 +1310,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN // UP - 30**
+        content: `**BOATIN // UP - 32**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -2130,7 +2130,7 @@ ${html}
       appState.messages.push({ role: "user", content: text, ts: Date.now() });
       persistMessages();
       render();
-      await runChatCompletion(text, false);
+      await runChatCompletion(text, false, "openai/gpt-oss-20b");
       const last = [...(appState.messages || [])].reverse().find(
         m => m.role === "assistant" && typeof m.content === "string" && m.content.trim()
       );
@@ -3864,9 +3864,9 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     return arr.slice(-limit);
   }
 
-  async function runChatCompletion(text, hadFile = false) {
-    // Auto-mode may request live search — honor it
-    const autoOn = dom.autoMode && dom.autoMode.value === "on";
+  async function runChatCompletion(text, hadFile = false, forcedModelId = null) {
+    // Auto-mode may request live search — honor it (skipped when a model is forced, e.g. Live Voice)
+    const autoOn = !forcedModelId && dom.autoMode && dom.autoMode.value === "on";
     if (autoOn && text && !hadFile) {
       const autoPick = chooseAutoModel(text, hadFile);
       if (isLiveSearchModel(autoPick) || /^webpulse\//i.test(String(autoPick))) {
@@ -3932,9 +3932,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     try {
       const apiMessages = trimMessagesForSpeed(appState.messages, 28);
 
-      let primary = dom.autoMode.value === "on"
-        ? chooseAutoModel(text, hadFile)
-        : appState.selectedModelId;
+      let primary = forcedModelId
+        ? forcedModelId
+        : (dom.autoMode.value === "on"
+          ? chooseAutoModel(text, hadFile)
+          : appState.selectedModelId);
       // Never send research aliases or image models to /chat
       if (isImageModel(primary) || isLiveSearchModel(primary) || /^webpulse\//i.test(String(primary))) {
         primary = resolveChatModelId(primary);
