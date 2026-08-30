@@ -1940,8 +1940,11 @@ html, body, #app-root {
   min-height: auto !important;
   width: auto !important; /* undo stale `width: 100%` from the old stacked-composer layout — it was forcing this row to claim the full pill width and crushing the textarea down to ~1 visible character */
 }
-/* Hide effort + listen from main bar for cleaner ox look — still in header/actions if needed */
-.effort-menu, #listenBtn {
+/* Keep the effort/token selector visible in the composer; still hide the redundant top Listen button */
+.effort-menu {
+  display: inline-flex !important;
+}
+#listenBtn {
   display: none !important;
 }
 .attach-btn {
@@ -2111,3 +2114,262 @@ html, body, #app-root {
   text-align: center;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   UP-32 — iOS 18 style pass (latest iOS look: frosted materials,
+   SF Pro, iOS system blue, Messages-style bubbles, segmented
+   control tabs, action-sheet modals). Appended last so it wins
+   the cascade over every earlier redesign block above.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --ios-blue: #0a84ff;
+  --ios-blue-active: #0060df;
+  --ios-bg: #000000;
+  --ios-bg-elevated: rgba(28,28,30,0.78);
+  --ios-bg-elevated-solid: #1c1c1e;
+  --ios-grouped: rgba(118,118,128,0.24);
+  --ios-separator: rgba(84,84,88,0.6);
+  --ios-label: #f5f5f7;
+  --ios-label-secondary: rgba(235,235,245,0.6);
+  --ios-label-tertiary: rgba(235,235,245,0.3);
+  --ios-bubble-them: #262628;
+  --ios-radius: 20px;
+  --ios-radius-lg: 28px;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Helvetica Neue", sans-serif !important;
+}
+html, body {
+  background: var(--ios-bg) !important;
+  font-family: var(--font-family-sans) !important;
+  -webkit-font-smoothing: antialiased;
+}
+#app-root { background: var(--ios-bg) !important; }
+
+/* Nav bar */
+.app-header {
+  background: var(--ios-bg-elevated) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(24px) !important;
+  backdrop-filter: saturate(180%) blur(24px) !important;
+  border-bottom: 0.5px solid var(--ios-separator) !important;
+  box-shadow: none !important;
+  border-radius: 0 0 var(--ios-radius) var(--ios-radius) !important;
+}
+.app-header::before { display: none !important; content: none !important; }
+.status-dot {
+  background: var(--ios-blue) !important;
+  box-shadow: 0 0 0 3px rgba(10,132,255,0.18) !important;
+}
+.brand-name {
+  font-family: var(--font-family-sans) !important;
+  font-weight: 700 !important;
+  font-size: 17px !important;
+  letter-spacing: -0.02em !important;
+  color: var(--ios-label) !important;
+}
+.brand-name::after { content: none !important; }
+.header-action-btn, .clear-memory-btn, .header-collapse-btn {
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: var(--ios-blue) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 6px 10px !important;
+  border-radius: 12px !important;
+  letter-spacing: 0 !important;
+}
+.header-action-btn:active, .clear-memory-btn:active, .header-collapse-btn:active {
+  background: rgba(10,132,255,0.14) !important;
+  transform: none !important;
+}
+.clear-memory-btn { color: #ff453a !important; }
+
+/* Segmented control (Model / Auto / Fallback / Actions) */
+.cat-tabs {
+  background: var(--ios-grouped) !important;
+  border-radius: 12px !important;
+  padding: 3px !important;
+  gap: 2px !important;
+  border: none !important;
+}
+.cat-tab {
+  font-family: var(--font-family-sans) !important;
+  font-weight: 590 !important;
+  font-size: 13px !important;
+  color: var(--ios-label-secondary) !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 9px !important;
+  padding: 7px 10px !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+.cat-tab.active {
+  background: var(--ios-bg-elevated-solid) !important;
+  color: var(--ios-label) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+}
+
+/* Model select / grouped list rows */
+#modelSelect, .control-item select {
+  background: var(--ios-grouped) !important;
+  border: none !important;
+  border-radius: 14px !important;
+  color: var(--ios-label) !important;
+  font-family: var(--font-family-sans) !important;
+  font-size: 15px !important;
+  padding: 12px 14px !important;
+}
+.cat-panel-grid .cat-chip {
+  background: var(--ios-grouped) !important;
+  border: none !important;
+  border-radius: 14px !important;
+  color: var(--ios-label) !important;
+  font-family: var(--font-family-sans) !important;
+}
+.cat-chip.active, .cat-chip:hover {
+  background: var(--ios-blue) !important;
+  color: #fff !important;
+}
+
+/* Messages — iOS Messages-app bubbles */
+.message-bubble {
+  font-family: var(--font-family-sans) !important;
+  border-radius: 20px !important;
+  font-size: 16px !important;
+  line-height: 1.35 !important;
+  box-shadow: none !important;
+}
+.message-bubble.user {
+  background: var(--ios-blue) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border: none !important;
+  border-bottom-right-radius: 6px !important;
+}
+.message-bubble.user::before { display: none !important; content: none !important; }
+.message-bubble.user a { color: #d7ecff !important; }
+.message-bubble.assistant:not(.pending):not(.streaming) {
+  background: var(--ios-bubble-them) !important;
+  color: var(--ios-label) !important;
+  border: none !important;
+  border-bottom-left-radius: 6px !important;
+}
+.message-bubble.assistant .msg-footer { color: var(--ios-label-tertiary) !important; }
+.message-bubble pre {
+  background: #0e0e10 !important;
+  border: 0.5px solid var(--ios-separator) !important;
+  border-radius: 14px !important;
+}
+.message-bubble a { color: var(--ios-blue) !important; }
+
+/* Composer — iOS Messages input bar */
+.chat-input-bar {
+  background: var(--ios-bg-elevated-solid) !important;
+  border: 0.5px solid var(--ios-separator) !important;
+  border-radius: 24px !important;
+  box-shadow: none !important;
+}
+.chat-input-bar textarea, #messageTextInput {
+  font-family: var(--font-family-sans) !important;
+  color: var(--ios-label) !important;
+}
+.chat-input-bar textarea::placeholder { color: var(--ios-label-tertiary) !important; }
+.attach-btn {
+  background: transparent !important;
+  color: var(--ios-blue) !important;
+  font-size: 22px !important;
+}
+.effort-trigger {
+  background: var(--ios-grouped) !important;
+  border: none !important;
+  color: var(--ios-label) !important;
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+}
+.effort-dropdown {
+  background: var(--ios-bg-elevated) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(24px) !important;
+  backdrop-filter: saturate(180%) blur(24px) !important;
+  border: 0.5px solid var(--ios-separator) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5) !important;
+}
+.effort-dropdown button {
+  font-family: var(--font-family-sans) !important;
+  color: var(--ios-label) !important;
+}
+.effort-dropdown button.active, .effort-dropdown button:hover {
+  background: var(--ios-blue) !important;
+  color: #fff !important;
+}
+.send-message-btn {
+  background: var(--ios-blue) !important;
+  box-shadow: none !important;
+}
+.send-message-btn:not(:disabled) { background: var(--ios-blue) !important; }
+.send-message-btn:disabled { background: var(--ios-grouped) !important; }
+
+/* Live — Apple-Intelligence style glow pill, kept distinct from iOS blue system actions */
+.live-btn {
+  background: linear-gradient(120deg, #0a84ff, #bf5af2 55%, #ff375f) !important;
+  font-family: var(--font-family-sans) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: 0 2px 10px rgba(191,90,242,0.35) !important;
+}
+.live-voice-overlay {
+  background: radial-gradient(80% 60% at 50% 40%, #1a1030 0%, #000 70%) !important;
+}
+.lo-core {
+  background: radial-gradient(circle at 32% 28%, #f5e6ff, #bf5af2 45%, #0a84ff) !important;
+  box-shadow: 0 0 44px rgba(191,90,242,0.5) !important;
+}
+.lo-r { border-color: rgba(191,90,242,0.3) !important; }
+.live-voice-status, .live-voice-hint, .live-voice-caption { font-family: var(--font-family-sans) !important; }
+
+/* Modals — iOS action sheet, with grabber */
+.modal-sheet {
+  background: var(--ios-bg-elevated) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(24px) !important;
+  backdrop-filter: saturate(180%) blur(24px) !important;
+  border: none !important;
+  border-radius: var(--ios-radius-lg) var(--ios-radius-lg) 0 0 !important;
+  font-family: var(--font-family-sans) !important;
+}
+.modal-sheet::before {
+  content: "" !important;
+  display: block !important;
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--ios-separator);
+  margin: 8px auto 4px;
+}
+.modal-sheet h3 { color: var(--ios-label) !important; font-weight: 700 !important; }
+.modal-sheet label { color: var(--ios-label-secondary) !important; }
+.modal-sheet textarea, .modal-sheet select, .modal-sheet input[type="text"] {
+  background: var(--ios-grouped) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: var(--ios-label) !important;
+  font-family: var(--font-family-sans) !important;
+}
+.tb-btn {
+  background: var(--ios-grouped) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: var(--ios-blue) !important;
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+}
+.tb-btn.on, .tb-btn:hover { background: var(--ios-blue) !important; color: #fff !important; }
+
+.scroll-bottom-btn {
+  background: var(--ios-bg-elevated) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 0.5px solid var(--ios-separator) !important;
+  color: var(--ios-blue) !important;
+}
+.studio-foot { color: var(--ios-label-tertiary) !important; font-family: var(--font-family-sans) !important; }
+.input-container::after { color: var(--ios-label-tertiary) !important; font-family: var(--font-family-sans) !important; }
