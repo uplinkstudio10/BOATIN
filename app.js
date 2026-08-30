@@ -1088,6 +1088,10 @@
       };
       const actions = [
         {
+          label: "🎙 Live Voice",
+          run: () => { if (typeof openLiveVoice === "function") openLiveVoice(); }
+        },
+        {
           label: "🌐 Web Pulse",
           run: () => pickModel("webpulse/nemotron-super", "Web Pulse ready")
         },
@@ -1306,7 +1310,7 @@
       appState.messages = [{
         role: "assistant",
         ts: Date.now(),
-        content: `**BOATIN UP▪︎29 《SAMSUNG EDITION》**
+        content: `**BOATIN // UP - 30**
 
 Model · Effort · Actions — type and send.`
       }];
@@ -1371,6 +1375,9 @@ Model · Effort · Actions — type and send.`
     dom.attachBtn.addEventListener("click", () => dom.fileInput.click());
     bindScrollUi();
     document.getElementById("listenBtn")?.addEventListener("click", listenLastReply);
+    document.getElementById("liveVoiceBtn")?.addEventListener("click", openLiveVoice);
+    document.getElementById("liveVoiceClose")?.addEventListener("click", closeLiveVoice);
+    document.getElementById("liveVoiceOrb")?.addEventListener("click", onLiveOrbTap);
     const effortTrigger = document.getElementById("effortTrigger");
     const effortDropdown = document.getElementById("effortDropdown");
     effortTrigger?.addEventListener("click", (e) => {
@@ -1959,8 +1966,23 @@ ${html}
         composer.classList.remove("speaking");
         composer.textContent = "🎧 Listen";
       }
+      if (typeof u._boatinDone === "function") u._boatinDone();
     };
     window.speechSynthesis.speak(u);
+    return u;
+  }
+
+  function speakAndWait(text) {
+    return new Promise((resolve) => {
+      if (!window.speechSynthesis) { resolve(); return; }
+      try { window.speechSynthesis.cancel(); } catch (_) {}
+      const u = speakTextContent(text, null);
+      if (!u) { resolve(); return; }
+      let done = false;
+      const finish = () => { if (done) return; done = true; resolve(); };
+      u._boatinDone = finish;
+      setTimeout(finish, Math.min(120000, 800 + String(text || "").length * 60));
+    });
   }
 
   function listenLastReply() {
@@ -1972,6 +1994,158 @@ ${html}
       return;
     }
     speakTextContent(last.content, document.getElementById("listenBtn"));
+  }
+
+  const liveVoice = {
+    on: false,
+    rec: null,
+    busy: false,
+    speaking: false,
+    lastFinal: ""
+  };
+
+  function setLiveUi(state, caption) {
+    const overlay = document.getElementById("liveVoiceOverlay");
+    const status = document.getElementById("liveVoiceStatus");
+    const cap = document.getElementById("liveVoiceCaption");
+    if (overlay) overlay.dataset.state = state || "idle";
+    const labels = {
+      idle: "Tap the orb to speak",
+      listening: "Listening…",
+      thinking: "Thinking…",
+      speaking: "Speaking… tap to interrupt"
+    };
+    if (status) status.textContent = labels[state] || labels.idle;
+    if (cap && caption !== undefined) cap.textContent = caption || "";
+  }
+
+  function stopLiveRec() {
+    try { liveVoice.rec && liveVoice.rec.stop(); } catch (_) {}
+    liveVoice.rec = null;
+  }
+
+  function closeLiveVoice() {
+    liveVoice.on = false;
+    liveVoice.busy = false;
+    liveVoice.speaking = false;
+    stopLiveRec();
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+    const overlay = document.getElementById("liveVoiceOverlay");
+    if (overlay) overlay.hidden = true;
+    document.body.classList.remove("live-voice-open");
+  }
+
+  function openLiveVoice() {
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Rec) {
+      toastAssist("Live Voice needs Chrome / Samsung Internet (Web Speech).");
+      return;
+    }
+    const overlay = document.getElementById("liveVoiceOverlay");
+    if (!overlay) return;
+    overlay.hidden = false;
+    document.body.classList.add("live-voice-open");
+    liveVoice.on = true;
+    liveVoice.lastFinal = "";
+    setLiveUi("idle", "");
+    startLiveListen();
+  }
+
+  function onLiveOrbTap() {
+    if (!liveVoice.on) { openLiveVoice(); return; }
+    if (liveVoice.speaking || (window.speechSynthesis && window.speechSynthesis.speaking)) {
+      try { window.speechSynthesis.cancel(); } catch (_) {}
+      liveVoice.speaking = false;
+      liveVoice.busy = false;
+      startLiveListen();
+      return;
+    }
+    if (liveVoice.busy) return;
+    if (liveVoice.rec) {
+      stopLiveRec();
+      setLiveUi("idle", "");
+    } else {
+      startLiveListen();
+    }
+  }
+
+  function startLiveListen() {
+    if (!liveVoice.on || liveVoice.busy) return;
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Rec) return;
+    stopLiveRec();
+    const rec = new Rec();
+    rec.lang = resolveVoiceLang();
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+    liveVoice.rec = rec;
+    liveVoice.lastFinal = "";
+    setLiveUi("listening", "");
+    rec.onresult = (ev) => {
+      let interim = "";
+      let finalTxt = "";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const t = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) finalTxt += t;
+        else interim += t;
+      }
+      if (finalTxt) liveVoice.lastFinal = (liveVoice.lastFinal + " " + finalTxt).trim();
+      setLiveUi("listening", liveVoice.lastFinal || interim);
+    };
+    rec.onerror = (ev) => {
+      if (ev.error === "not-allowed") {
+        setLiveUi("idle", "Mic permission denied");
+        toastAssist("Allow microphone for Live Voice");
+        return;
+      }
+      if (ev.error === "no-speech" && liveVoice.on && !liveVoice.busy) {
+        setTimeout(() => { if (liveVoice.on && !liveVoice.busy) startLiveListen(); }, 250);
+      }
+    };
+    rec.onend = () => {
+      liveVoice.rec = null;
+      const said = (liveVoice.lastFinal || "").trim();
+      if (!liveVoice.on || liveVoice.busy) return;
+      if (said.length >= 2) {
+        sendVoiceFromLive(said);
+      } else if (liveVoice.on) {
+        setTimeout(() => { if (liveVoice.on && !liveVoice.busy) startLiveListen(); }, 280);
+      }
+    };
+    try { rec.start(); }
+    catch (e) {
+      setLiveUi("idle", "Mic busy — tap again");
+    }
+  }
+
+  async function sendVoiceFromLive(text) {
+    if (!text || liveVoice.busy) return;
+    liveVoice.busy = true;
+    stopLiveRec();
+    setLiveUi("thinking", text);
+    try {
+      window.__boatinStickBottom = true;
+      appState.messages.push({ role: "user", content: text, ts: Date.now() });
+      persistMessages();
+      render();
+      await runChatCompletion(text, false);
+      const last = [...(appState.messages || [])].reverse().find(
+        m => m.role === "assistant" && typeof m.content === "string" && m.content.trim()
+      );
+      const reply = last ? String(last.content) : "";
+      if (liveVoice.on && reply && !/generation stopped/i.test(reply)) {
+        liveVoice.speaking = true;
+        setLiveUi("speaking", reply.slice(0, 180));
+        await speakAndWait(reply);
+        liveVoice.speaking = false;
+      }
+    } catch (e) {
+      setLiveUi("idle", e.message || "Failed");
+    } finally {
+      liveVoice.busy = false;
+      if (liveVoice.on) startLiveListen();
+    }
   }
 
   function bindScrollUi() {
@@ -2006,6 +2180,18 @@ ${html}
       window.__boatinStickBottom = true;
     }
     dom.messagesContainer.innerHTML = "";
+    const msgs = appState.messages || [];
+    const onlyWelcome = msgs.length === 0 || (
+      msgs.length === 1 && msgs[0].role === "assistant" &&
+      /New chat|Model · Effort|BOATIN UP|type and send/i.test(String(msgs[0].content || ""))
+    );
+    if (onlyWelcome && !appState.isGenerating) {
+      const empty = document.createElement("div");
+      empty.className = "ox-empty";
+      empty.innerHTML = `<div class="ox-empty-title">What can I help you with?</div>`;
+      dom.messagesContainer.appendChild(empty);
+    }
+
     const q = (appState.searchQuery || "").trim().toLowerCase();
     const lastAssistantIdx = (() => {
       for (let i = appState.messages.length - 1; i >= 0; i--) {
@@ -2021,6 +2207,9 @@ ${html}
     })();
 
     appState.messages.forEach((m, idx) => {
+      if (onlyWelcome && m.role === "assistant" && /New chat|Model · Effort|BOATIN UP|type and send/i.test(String(m.content || ""))) {
+        return; // empty state already shown
+      }
       if (q) {
         const hay = (typeof m.content === "string" ? m.content : "").toLowerCase();
         if (!hay.includes(q)) return;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>BOATIN // UP-29 SAMSUNG EDITION</title>
+<title>BOATIN // UP - 30</title>
 <meta name="theme-color" content="#000000" />
 <meta name="description" content="BOATIN — Samsung Edition" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=30b" />
 </head>
 <body>
 
@@ -29,9 +29,7 @@
       <div class="header-top-left">
         <div class="status-dot"></div>
         <div class="brand-line">
-          <span class="brand-name">BOATIN</span>
-          <span class="brand-ver">UP▪︎29</span>
-          <span class="brand-edition">《SAMSUNG EDITION》</span>
+          <span class="brand-name">BOATIN // UP - 30</span>
         </div>
       </div>
       <div class="header-actions">
@@ -97,7 +95,7 @@
         </div>
         <form class="chat-input-bar" id="chatForm" onsubmit="return false;">
           <input type="file" id="fileInput" accept="image/*,.txt,.csv,.md,.json,.html,.js,.py" style="display: none;" />
-          <textarea id="messageTextInput" rows="1" placeholder="Ask anything..."></textarea>
+          <textarea id="messageTextInput" rows="1" placeholder="Send a message..."></textarea>
           <div class="composer-toolbar">
             <button class="attach-btn" id="attachBtn" type="button" title="Attach">+</button>
             <div class="effort-menu" id="effortMenu">
@@ -114,6 +112,7 @@
               </div>
             </div>
             <span class="composer-spacer"></span>
+            <button type="button" class="live-btn" id="liveVoiceBtn" title="Live voice (Gemini-style)">Live</button>
             <button type="button" class="listen-btn" id="listenBtn" title="Listen to last reply">🎧 Listen</button>
             <button class="send-message-btn stop-message-btn" id="stopMessageBtn" type="button" title="Stop" style="display:none;">■</button>
             <button class="send-message-btn" id="sendMessageBtn" type="button" title="Send">➤</button>
@@ -180,6 +179,21 @@
   </div>
 </div>
 
-  <script src="app.js?v=29" defer></script>
+<div id="liveVoiceOverlay" class="live-voice-overlay" hidden>
+  <button type="button" class="live-voice-close" id="liveVoiceClose" aria-label="Close live">✕</button>
+  <div class="live-voice-orb-wrap" id="liveVoiceOrb" role="button" tabindex="0" aria-label="Tap to speak or interrupt">
+    <div class="live-orb">
+      <span class="lo-r r1"></span>
+      <span class="lo-r r2"></span>
+      <span class="lo-r r3"></span>
+      <span class="lo-core"></span>
+    </div>
+  </div>
+  <div class="live-voice-status" id="liveVoiceStatus">Tap the orb to speak</div>
+  <div class="live-voice-caption" id="liveVoiceCaption"></div>
+  <p class="live-voice-hint">Talk like Gemini Live — mic in the browser, answers from your selected model. Worker unchanged.</p>
+</div>
+
+  <script src="app.js?v=30b" defer></script>
 </body>
   </html>
