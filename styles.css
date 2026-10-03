@@ -468,7 +468,159 @@
     from { opacity: 0; transform: translateY(24px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
-  @media (prefers-reduced-motion: reduce) {
+  
+/* ═══ LIQUID THEME ═══════════════════════════════════════════════ */
+
+:root {
+  --liquid-primary: #76b900;
+  --liquid-secondary: #1482ff;
+  --liquid-dark: #0a0b0a;
+  --liquid-surface: rgba(36, 38, 44, 0.6);
+  --liquid-glow: rgba(118, 185, 0, 0.2);
+}
+
+/* Liquid background with animated gradients */
+html, body {
+  background: linear-gradient(135deg, #0a0b0a 0%, #1a1c1a 50%, #0f1410 100%);
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+
+html::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(118, 185, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(20, 130, 255, 0.08) 0%, transparent 50%);
+  animation: liquidShift 15s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes liquidShift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, -50px) scale(1.1); }
+}
+
+/* Glassmorphism containers */
+.message-bubble, .app-header, .chat-input-bar, .modal-sheet {
+  backdrop-filter: blur(8px);
+  background: rgba(36, 38, 44, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.message-bubble {
+  background: linear-gradient(135deg, 
+    rgba(36, 38, 44, 0.4) 0%,
+    rgba(36, 38, 44, 0.6) 50%,
+    rgba(36, 38, 44, 0.5) 100%);
+  border-left: 3px solid var(--liquid-primary);
+  transition: all 0.3s ease;
+}
+
+.message-bubble:hover {
+  background: rgba(36, 38, 44, 0.7);
+  border-left-color: var(--liquid-secondary);
+  transform: translateX(4px);
+}
+
+.message-bubble.user {
+  background: linear-gradient(135deg,
+    rgba(118, 185, 0, 0.2) 0%,
+    rgba(118, 185, 0, 0.3) 50%,
+    rgba(118, 185, 0, 0.2) 100%);
+  border-left-color: var(--liquid-primary);
+}
+
+/* Liquid glow on buttons */
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+button:hover::before {
+  left: 100%;
+}
+
+.code-action-btn:hover {
+  background: rgba(118, 185, 0, 0.2);
+  border-color: var(--liquid-primary);
+  box-shadow: 0 0 20px rgba(118, 185, 0, 0.3);
+}
+
+/* Liquid input focus */
+#userInput:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--liquid-primary);
+  box-shadow: 0 0 20px rgba(118, 185, 0, 0.2);
+}
+
+/* Scroll button with liquid glow */
+#scrollToBottomBtn {
+  background: linear-gradient(135deg, var(--liquid-primary), var(--liquid-secondary));
+  box-shadow: 0 0 30px rgba(118, 185, 0, 0.4);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+#scrollToBottomBtn:hover {
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 0 0 40px rgba(118, 185, 0, 0.6);
+}
+
+/* Liquid thinking indicator */
+.bixby-think {
+  background: rgba(118, 185, 0, 0.05);
+  border: 1px solid rgba(118, 185, 0, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.bixby-orb {
+  background: radial-gradient(circle at 30% 30%, rgba(118, 185, 0, 0.3), transparent);
+  box-shadow: 0 0 20px rgba(118, 185, 0, 0.3);
+}
+
+/* Liquid droplet animation */
+@keyframes liquidDrop {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.pulse-dot {
+  animation: liquidDrop 2s ease-in-out infinite;
+}
+
+/* Smooth transitions */
+* {
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Liquid modal overlay */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
@@ -2375,7 +2527,7 @@ html, body {
 .input-container::after { color: var(--ios-label-tertiary) !important; font-family: var(--font-family-sans) !important; }
 
 /* ══════════════════════════════════════════════════════════════
-   UP▪︎COMPLETE — Liquid Glass pass (Apple's iOS 26-era material: floating
+   UP▪︎FINAL — Liquid Glass pass (Apple's iOS 26-era material: floating
    detached panels, refractive specular highlights, deeper blur+
    saturation, bright edge-lit borders, continuous "superellipse"
    corners). Appended last so it wins over the UP-32 flat-frosted
@@ -2523,4 +2675,53 @@ html, body {
     radial-gradient(60% 40% at 15% 0%, rgba(10,132,255,0.10), transparent 60%),
     radial-gradient(50% 35% at 100% 15%, rgba(191,90,242,0.08), transparent 60%),
     #000 !important;
+}
+
+/* Chat message gradient effect (grows per line) */
+.message-bubble {
+  background: linear-gradient(135deg, 
+    rgba(36, 38, 44, 0.4) 0%,
+    rgba(36, 38, 44, 0.6) 50%,
+    rgba(36, 38, 44, 0.8) 100%);
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin: 8px 0;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.message-bubble.user {
+  background: linear-gradient(135deg,
+    rgba(118, 185, 0, 0.3) 0%,
+    rgba(118, 185, 0, 0.5) 50%,
+    rgba(118, 185, 0, 0.7) 100%);
+}
+
+/* Scroll button on right side */
+#scrollToBottomBtn {
+  position: fixed;
+  bottom: 120px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-accent-primary);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(118, 185, 0, 0.3);
+}
+
+#scrollToBottomBtn.visible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#scrollToBottomBtn:hover {
+  background: var(--color-accent-primary);
+  transform: scale(1.1);
 }

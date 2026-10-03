@@ -1423,6 +1423,7 @@ Model · Effort · Actions — type and send.`
 
     render();
   }
+    initScrollButton();
 
   function openModal(id) {
     document.getElementById(id)?.classList.add("open");
@@ -2098,7 +2099,31 @@ ${html}
     try {
       window.__boatinStickBottom = true;
       appState.messages.push({ role: "user", content: text, ts: Date.now() });
-      persistMessages();
+      
+    // Auto-enable Live Search when Power House selected
+    dom.modelSelect?.addEventListener("change", (e) => {
+      const selected = e.target.value;
+      if (selected.includes("power") || selected === "power/agent") {
+        // Auto-switch to Tavily Search for Power House
+        const wasModel = dom.modelSelect.value;
+        dom.modelSelect.value = "tavily/search";
+        toastAssist("Power House + Live Search enabled");
+        setTimeout(() => { dom.modelSelect.value = wasModel; }, 2000);
+      }
+    });
+    
+    // Live Search toggle in Actions
+    document.getElementById("liveSearchBtn")?.addEventListener("click", () => {
+      const isTavily = dom.modelSelect.value.includes("search");
+      if (isTavily) {
+        dom.modelSelect.value = "nvidia/nemotron-3-super-120b-a12b";
+        toastAssist("Chat mode");
+      } else {
+        dom.modelSelect.value = "tavily/search";
+        toastAssist("Live search activated");
+      }
+    });
+persistMessages();
       render();
       await runChatCompletion(text, false, "openai/gpt-oss-20b");
       const last = [...(appState.messages || [])].reverse().find(
