@@ -2,76 +2,158 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>BOATIN</title>
-  <meta name="description" content="AI Chat + Real-Time Search">
-  <link rel="manifest" id="pwaManifestLink" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <title>BOATIN — AI Chat + Live Search</title>
+  <meta name="description" content="BOATIN — Fast AI chat with real-time web search">
+  <meta name="theme-color" content="#050608">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=final" />
+  <link rel="stylesheet" href="styles.css?v=best">
 </head>
 <body>
+  <div id="app-root">
 
-<div id="app-root">
-  <header class="app-header">
-    <div class="header-top">
-      <div class="header-top-left">
-        <h1>BOATIN</h1>
+    <!-- HEADER -->
+    <header class="app-header" id="appHeader">
+      <div class="header-top">
+        <div class="brand">
+          <span class="status-dot" id="statusDot" title="Online"></span>
+          <h1>BOATIN</h1>
+        </div>
+        <div class="header-actions">
+          <button class="h-btn" id="sessionsBtn" title="Sessions">📁</button>
+          <button class="h-btn danger" id="clearBtn" title="Clear chat">Clear</button>
+        </div>
       </div>
-      <div class="header-actions">
-        <button class="header-btn" id="clearMemoryBtn" title="Clear chat">Clear 🗑️</button>
+
+      <div class="seg-control" id="segControl">
+        <button class="seg-btn active" data-panel="model">🎯 Model</button>
+        <button class="seg-btn" data-panel="auto">⚙️ Auto</button>
+        <button class="seg-btn" data-panel="fallback">🔄 Fallback</button>
+        <button class="seg-btn" data-panel="actions">🚀 Actions</button>
       </div>
-    </div>
-    <div class="header-bar">
-      <button class="tab-btn active" data-tab="model">🎯 Model</button>
-      <button class="tab-btn" data-tab="auto">⚙️ Auto</button>
-      <button class="tab-btn" data-tab="fallback">🔄 Fallback</button>
-      <button class="tab-btn" data-tab="actions">🚀 Actions</button>
-    </div>
-  </header>
 
-  <div id="messagesContainer" class="messages-container"></div>
+      <div class="panel-area">
+        <div class="panel active" id="panel-model">
+          <div class="panel-row">
+            <label>Model</label>
+            <select id="modelSelect">
+              <optgroup label="Text">
+                <option value="nvidia/nemotron-3-super-120b-a12b" selected>Nemotron 3 Super 120B</option>
+                <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+                <option value="meta/llama-3.1-405b-instruct">Llama 3.1 405B</option>
+                <option value="mistralai/mistral-large-2-instruct">Mistral Large 2</option>
+                <option value="google/gemma-2-27b-it">Gemma 2 27B</option>
+                <option value="microsoft/phi-3.5-moe-instruct">Phi-3.5 MoE</option>
+              </optgroup>
+              <optgroup label="Vision (image)">
+                <option value="meta/llama-3.2-90b-vision-instruct">Llama 3.2 90B Vision</option>
+                <option value="meta/llama-3.2-11b-vision-instruct">Llama 3.2 11B Vision</option>
+                <option value="nvidia/llama-3.1-nemotron-nano-vl-8b-v1">Nemotron Nano VL 8B</option>
+                <option value="nvidia/nemotron-nano-12b-v2-vl">Nemotron Nano 12B VL</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="panel-row">
+            <label>Effort</label>
+            <div class="chip-row" id="effortChips">
+              <button class="chip" data-effort="low" title="4K tokens">Low 4K</button>
+              <button class="chip active" data-effort="mid" title="16K tokens">Mid 16K</button>
+              <button class="chip" data-effort="high" title="32K tokens">High 32K</button>
+              <button class="chip" data-effort="max" title="65K tokens">Max 65K</button>
+            </div>
+          </div>
+        </div>
 
-  <div class="chat-input-area">
-    <div class="input-controls">
-      <button id="attachBtn" class="icon-btn" title="Attach file">📎</button>
-      <select id="effortMode" class="effort-select">
-        <option value="low">Low (4K)</option>
-        <option value="mid" selected>Mid (16K)</option>
-        <option value="high">High (32K)</option>
-        <option value="max">Max (65K)</option>
-      </select>
-      <button id="liveSearchBtn" class="action-btn" title="Toggle Live Search" style="display:none;">⚡ Live</button>
-      <button id="sendMessageBtn" class="send-btn">Send ➜</button>
+        <div class="panel" id="panel-auto">
+          <div class="panel-row toggle-row">
+            <label>Auto-search keywords</label>
+            <button class="toggle on" id="autoSearchToggle" aria-pressed="true"></button>
+          </div>
+          <div class="panel-row toggle-row">
+            <label>Stream replies</label>
+            <button class="toggle on" id="streamToggle" aria-pressed="true"></button>
+          </div>
+          <div class="panel-row toggle-row">
+            <label>Remember context</label>
+            <button class="toggle on" id="contextToggle" aria-pressed="true"></button>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-fallback">
+          <div class="panel-row">
+            <label>If primary fails</label>
+            <select id="fallbackSelect">
+              <option value="retry" selected>Retry same model</option>
+              <option value="llama">Switch to Llama 3.3 70B</option>
+              <option value="mistral">Switch to Mistral Large</option>
+              <option value="search">Force web search</option>
+            </select>
+          </div>
+          <div class="panel-row">
+            <label>Max retries</label>
+            <select id="retrySelect">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-actions">
+          <div class="action-grid">
+            <button class="act-btn" id="actExport">📤 Export chat</button>
+            <button class="act-btn" id="actCopyLast">📋 Copy last</button>
+            <button class="act-btn" id="actRegen">♻️ Regenerate</button>
+            <button class="act-btn" id="actStop" disabled>⏹ Stop</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MESSAGES -->
+    <div class="messages-wrap">
+      <div id="messages" class="messages"></div>
+      <button id="scrollBottomBtn" class="scroll-fab" title="Scroll to bottom">↓</button>
     </div>
-    
-    <div id="attachmentPreviewBar" style="display:none;">
-      <span id="attachmentNameText"></span>
-      <button id="removeFileBtn">✕</button>
+
+    <!-- COMPOSER -->
+    <div class="composer" id="composer">
+      <div id="attachBar" class="attach-bar" hidden>
+        <span id="attachName"></span>
+        <button id="attachRemove" type="button">✕</button>
+      </div>
+      <div class="composer-row">
+        <button id="attachBtn" class="icon-round" title="Attach file">📎</button>
+        <textarea id="input" class="composer-input" placeholder="Message BOATIN…" rows="1"></textarea>
+        <button id="liveBtn" class="live-pill" title="Live web search">⚡ Live</button>
+        <button id="sendBtn" class="send-round" title="Send">➤</button>
+      </div>
+      <input type="file" id="fileInput" hidden accept=".txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.pdf,image/*">
     </div>
-    
-    <textarea id="messageTextInput" class="message-input" placeholder="Type message..." rows="3"></textarea>
-    <input id="fileInput" type="file" style="display:none;" />
+
   </div>
 
-  <div id="modelSelect" style="display:none;"></div>
-  <div id="autoMode" style="display:none;"></div>
-  <div id="autoCallback" style="display:none;"></div>
-  <button id="stopMessageBtn" style="display:none;"></button>
-  <div id="effortChips" style="display:none;"></div>
-  <div id="modeChips" style="display:none;"></div>
-  <div id="sessionsModal" style="display:none;"></div>
-  <div id="sessionsList" style="display:none;"></div>
-  <button id="sessionCloseBtn" style="display:none;"></button>
-  <button id="sessionNewBtn" style="display:none;"></button>
+  <!-- Sessions modal -->
+  <div id="sessionsModal" class="modal" hidden>
+    <div class="modal-backdrop" id="sessionsBackdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-grabber"></div>
+      <h3>Sessions</h3>
+      <div id="sessionsList" class="sessions-list"></div>
+      <div class="modal-actions">
+        <button id="sessionNew" class="act-btn primary">＋ New session</button>
+        <button id="sessionClose" class="act-btn">Close</button>
+      </div>
+    </div>
+  </div>
 
-</div>
-
-<script src="app.js?v=final" defer></script>
-
+  <script src="app.js?v=best" defer></script>
 </body>
 </html>
