@@ -2725,3 +2725,110 @@ html, body {
   background: var(--color-accent-primary);
   transform: scale(1.1);
 }
+
+
+/* ═══ GLOWING NEON THEME ═══════════════════════════════════════ */
+
+:root {
+  --glow-primary: #76b900;
+  --glow-secondary: #1482ff;
+  --glow-danger: #ff453a;
+  --glow-intensity: 0.8;
+}
+
+/* Glowing containers */
+.message-bubble, 
+.chat-input-area, 
+.app-header,
+select, 
+textarea,
+input[type="text"],
+input[type="file"],
+button {
+  border-radius: 16px !important;
+  box-shadow: 0 0 20px rgba(118, 185, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Glowing on hover/focus */
+.message-bubble:hover {
+  box-shadow: 0 0 30px rgba(118, 185, 0, 0.5), inset 0 0 20px rgba(118, 185, 0, 0.1);
+}
+
+textarea:focus, input:focus, select:focus {
+  box-shadow: 0 0 30px rgba(20, 130, 255, 0.4), inset 0 0 20px rgba(20, 130, 255, 0.05);
+  border-color: var(--glow-secondary);
+}
+
+button:hover {
+  box-shadow: 0 0 25px rgba(118, 185, 0, 0.5);
+}
+
+#sendMessageBtn:hover {
+  box-shadow: 0 0 30px rgba(20, 130, 255, 0.6);
+}
+
+/* Glowing text glow */
+h1 {
+  text-shadow: 0 0 20px rgba(118, 185, 0, 0.4);
+}
+
+/* User message glow */
+.message-bubble.user {
+  box-shadow: 0 0 25px rgba(118, 185, 0, 0.4), inset 0 0 15px rgba(118, 185, 0, 0.1);
+}
+
+/* Assistant message glow */
+.message-bubble.assistant {
+  box-shadow: 0 0 20px rgba(20, 130, 255, 0.25), inset 0 0 10px rgba(20, 130, 255, 0.05);
+}
+
+/* Glowing bar */
+.header-bar {
+  box-shadow: inset 0 0 20px rgba(118, 185, 0, 0.15);
+}
+
+/* Tab button glow */
+.tab-btn.active {
+  box-shadow: 0 0 20px rgba(118, 185, 0, 0.5), inset 0 0 15px rgba(118, 185, 0, 0.2);
+  text-shadow: 0 0 10px rgba(118, 185, 0, 0.5);
+}
+
+/* Input area glow */
+.chat-input-area {
+  box-shadow: 0 -5px 30px rgba(118, 185, 0, 0.2);
+}
+
+/* Clear button danger glow */
+#clearMemoryBtn {
+  box-shadow: 0 0 15px rgba(255, 69, 58, 0.3);
+}
+
+#clearMemoryBtn:hover {
+  box-shadow: 0 0 25px rgba(255, 69, 58, 0.5);
+}
+
+/* All border-radius to max rounded */
+* {
+  border-radius: 16px !important;
+}
+
+/* Remove default browser styling */
+input, textarea, select, button {
+  border-radius: 12px !important;
+}
+
+/* Message container rounded */
+#messagesContainer {
+  border-radius: 16px;
+}
+
+/* Smooth glow animation */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(118, 185, 0, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(118, 185, 0, 0.5); }
+}
+
+button:active {
+  animation: glowPulse 0.5s ease;
+}
