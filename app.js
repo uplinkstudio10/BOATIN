@@ -68,81 +68,47 @@
   // OK = returned chat content · TO = slow/timeout under load · XX = 404/410/EOL
   const NVIDIA_MODEL_GROUPS = [
     {
+      category: "🔍 Search Engines",
+      models: [
+        {id: "tavily/search", label: "🔍 Tavily Search (1000/mo free)", category: "🔍 Search"},
+        {id: "exa/search", label: "🔎 Exa Search (100/mo free)", category: "🔍 Search"},
+        {id: "bytez/search", label: "🌐 Bytez Search (100/mo free)", category: "🔍 Search"}
+      ]
+    },
+    {
       category: "🏆 Recommended",
       models: [
-        { value: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "(DEFAULT) Nemotron Super 49B v1.5", tags: "verified, strong" },
-        { value: "nvidia/llama-3.3-nemotron-super-49b-v1", label: "Nemotron Super 49B v1", tags: "verified" },
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B Instruct", tags: "verified, fast" },
-        { value: "meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B Instruct", tags: "verified, quality" },
-        { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", tags: "verified" },
-        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "quality, may be slow" }
+        {id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super (best overall)", category: "🏆 Recommended"},
+        {id: "nvidia/nemotron-3-70b", label: "Nemotron 70B (fast)", category: "🏆 Recommended"}
       ]
     },
     {
-      category: "⚡ Groq (Fast)",
+      category: "🧠 Advanced Reasoning",
       models: [
-        { value: "groq/llama-3.1-8b-instant", label: "Groq • Llama 3.1 8B Instant", tags: "groq, free, very fast" },
-        { value: "groq/llama-3.3-70b-versatile", label: "Groq • Llama 3.3 70B", tags: "groq, free, quality+fast" },
-        { value: "groq/gemma2-9b-it", label: "Groq • Gemma 2 9B", tags: "groq, free, fast" },
-        { value: "groq/mixtral-8x7b-32768", label: "Groq • Mixtral 8x7B", tags: "groq, free" }
-      ]
-    },
-    {
-      category: "🌐 Web Pulse",
-      models: [
-        { value: "webpulse/nemotron-super", label: "Research • Nemotron Super 49B", tags: "live search" },
-        { value: "webpulse/llama8b", label: "Research • Llama 3.1 8B", tags: "live search, fast" },
-        { value: "webpulse/llama70", label: "Research • Llama 3.1 70B", tags: "live search, deep" },
-        { value: "webpulse/gptoss", label: "Research • GPT-OSS 20B", tags: "live search" }
-      ]
-    },
-    {
-      category: "🚀 Power House",
-      models: [
-        { value: "power/agent", label: "Power House Agent", tags: "autonomous coding, plan+build+review+fix" }
-      ]
-    },
-    {
-      category: "🧠 Reasoning",
-      models: [
-        { value: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "Nemotron Super 49B v1.5", tags: "reasoning" },
-        { value: "meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B", tags: "reasoning" },
-        { value: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron 3 Super 120B", tags: "deep" }
+        {id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super (reasoning)", category: "🧠 Reasoning"},
+        {id: "meta/llama-3.1-405b", label: "Llama 405B (massive)", category: "🧠 Reasoning"}
       ]
     },
     {
       category: "💻 Coding",
       models: [
-        { value: "nvidia/llama-3.3-nemotron-super-49b-v1.5", label: "Nemotron Super 49B v1.5", tags: "coding" },
-        { value: "meta/llama-3.1-70b-instruct", label: "Llama 3.1 70B", tags: "coding" },
-        { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", tags: "coding" },
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "coding, fast" }
+        {id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super (code)", category: "💻 Coding"},
+        {id: "meta/llama-3.1-70b", label: "Llama 3.1 70B (code)", category: "💻 Coding"},
+        {id: "mistralai/mistral-large", label: "Mistral Large (code)", category: "💻 Coding"}
       ]
     },
     {
-      category: "👁️ Vision",
+      category: "🎨 Creative",
       models: [
-        { value: "nvidia/nemotron-nano-12b-v2-vl", label: "Nemotron Nano 12B VL", tags: "verified vision" },
-        { value: "meta/llama-3.2-11b-vision-instruct", label: "Llama 3.2 11B Vision", tags: "verified vision" }
+        {id: "nvidia/nemotron-3-super-120b-a12b", label: "Nemotron Super (creative)", category: "🎨 Creative"},
+        {id: "meta/llama-3.1-405b", label: "Llama 405B (creative)", category: "🎨 Creative"}
       ]
     },
     {
-      category: "🎨 Image",
+      category: "⚡ Fast & Lite",
       models: [
-        { value: "black-forest-labs/flux.1-schnell", label: "FLUX.1 Schnell", tags: "image, fast" },
-        { value: "black-forest-labs/flux.1-dev", label: "FLUX.1 Dev", tags: "image, quality" },
-        { value: "stabilityai/stable-diffusion-3.5-large", label: "SD 3.5 Large", tags: "image" },
-        { value: "qwen/qwen-image", label: "Qwen Image", tags: "image" },
-        { value: "qwen/qwen-image-2512", label: "Qwen Image 2512", tags: "image" },
-        { value: "qwen/qwen-image-edit", label: "Qwen Image Edit", tags: "image edit" }
-      ]
-    },
-    {
-      category: "⚡ Fast",
-      models: [
-        { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B", tags: "verified, fast" },
-        { value: "openai/gpt-oss-20b", label: "GPT-OSS 20B", tags: "verified" },
-        { value: "nvidia/llama-3.3-nemotron-super-49b-v1", label: "Nemotron Super 49B", tags: "verified" }
+        {id: "meta/llama-3.1-8b", label: "Llama 8B (super fast)", category: "⚡ Fast"},
+        {id: "nvidia/nemotron-3-70b", label: "Nemotron 70B", category: "⚡ Fast"}
       ]
     }
   ];
@@ -1116,6 +1082,10 @@
             dom.messageTextInput.dispatchEvent(new Event("input"));
             dom.messageTextInput.focus();
           }
+        },
+        {
+          label: "🩺 Verify Models",
+          run: () => { if (typeof verifyAllModels === "function") verifyAllModels(); }
         },
         {
           label: "🔁 Regen",
@@ -2740,6 +2710,60 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     return { ok: true, reply, data };
   }
 
+  async function verifyAllModels() {
+    // Chat-capable, unique, real model IDs only — skip image models and internal
+    // aliases (webpulse/*, power/agent) which don't hit the model endpoint directly.
+    const seen = new Set();
+    const toTest = [];
+    NVIDIA_MODELS.forEach(m => {
+      const id = m.value;
+      if (!id || seen.has(id)) return;
+      if (isImageModel(id) || isLiveSearchModel(id) || /^webpulse\//i.test(id) || id === "power/agent") return;
+      seen.add(id);
+      toTest.push({ id, label: m.label || id });
+    });
+
+    const pid = "verify_" + Date.now();
+    const pdiv = document.createElement("div");
+    pdiv.id = pid;
+    setThinking(pdiv, "Verifying models", `0 / ${toTest.length}`);
+    dom.messagesContainer.appendChild(pdiv);
+    dom.messagesContainer.scrollTop = dom.messagesContainer.scrollHeight;
+
+    const results = [];
+    for (let i = 0; i < toTest.length; i++) {
+      const { id, label } = toTest[i];
+      setThinking(pdiv, "Verifying models", `${i + 1} / ${toTest.length} — ${label}`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      try {
+        const attempt = await callModel(id, [{ role: "user", content: "Reply with exactly: OK" }], controller.signal);
+        results.push({ id, label, ok: !!attempt.ok, error: attempt.ok ? "" : String(attempt.error || "unknown error").slice(0, 140) });
+      } catch (e) {
+        const aborted = e?.name === "AbortError";
+        results.push({ id, label, ok: false, error: aborted ? "timed out (20s)" : String(e.message || e).slice(0, 140) });
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    document.getElementById(pid)?.remove();
+
+    const passed = results.filter(r => r.ok);
+    const failed = results.filter(r => !r.ok);
+    const lines = [
+      `### 🩺 Model Verify — ${passed.length}/${results.length} working`,
+      "",
+      ...passed.map(r => `✅ **${r.label}** — \`${r.id}\``),
+      ...(failed.length ? ["", "**Failed:**", ...failed.map(r => `❌ **${r.label}** — \`${r.id}\`\n   ${r.error}`)] : [])
+    ];
+    const content = lines.join("\n");
+    appState.messages.push({ role: "assistant", content, ui: safeMarkdown(content), ts: Date.now() });
+    persistMessages();
+    render();
+  }
+
+
   const IMAGE_MODEL_IDS = new Set([
     "qwen/qwen-image",
     "qwen/qwen-image-2512",
@@ -2890,9 +2914,12 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data && (data.text || (data.sources && data.sources.length))) {
+        const cleanSources = (Array.isArray(data.sources) ? data.sources : [])
+          .filter(s => !isJunkSource(s?.title, s?.url))
+          .slice(0, 10);
         return {
           text: String(data.text || "").slice(0, 22000),
-          sources: Array.isArray(data.sources) ? data.sources.slice(0, 10) : [],
+          sources: cleanSources,
           providerCount: data.providerCount || 0
         };
       }
@@ -2910,6 +2937,7 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     const pushSource = (title, url, snippet = "") => {
       try {
         const u = new URL(String(url));
+        if (isJunkSource(title, u.href)) return;
         const key = u.hostname + u.pathname;
         if (seen.has(key)) return;
         seen.add(key);
@@ -3441,6 +3469,67 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
     return dom.modelSelect.value || appState.selectedModelId;
   }
 
+  async function tavilySearch(query) {
+    try {
+      const res = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({api_key: API_KEYS.TAVILY, query, max_results: 15, include_answer: true})
+      });
+      const data = await res.json();
+      const sources = (data.results || []).map(r => ({
+        title: r.title || "",
+        url: r.url || "",
+        domain: new URL(r.url || "http://x.com").hostname,
+        snippet: r.content || r.snippet || ""
+      }));
+      const text = sources.map(s => `**${s.title}** (${s.domain})\n${s.snippet}`).join("\n\n");
+      return {text, sources: sources.slice(0,20), provider: "Tavily"};
+    } catch(e) {
+      return {text: "", sources: [], error: e.message};
+    }
+  }
+
+  async function exaSearch(query) {
+    try {
+      const res = await fetch("https://api.exa.ai/search", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "x-api-key": API_KEYS.EXA},
+        body: JSON.stringify({query, numResults: 15, useAutoprompt: true, type: "neural"})
+      });
+      const data = await res.json();
+      const sources = (data.results || []).map(r => ({
+        title: r.title || "",
+        url: r.url || "",
+        domain: new URL(r.url || "http://x.com").hostname,
+        snippet: r.text || r.summary || ""
+      }));
+      const text = sources.map(s => `**${s.title}** (${s.domain})\n${s.snippet}`).join("\n\n");
+      return {text, sources: sources.slice(0,20), provider: "Exa"};
+    } catch(e) {
+      return {text: "", sources: [], error: e.message};
+    }
+  }
+
+  async function bytezSearch(query) {
+    try {
+      const res = await fetch(`https://api.bytez.com/search?q=${encodeURIComponent(query)}&count=15`, {
+        headers: {"Authorization": `Bearer ${API_KEYS.BYTEZ}`, "Accept": "application/json"}
+      });
+      const data = await res.json();
+      const sources = (data.results || []).map(r => ({
+        title: r.title || r.name || "",
+        url: r.url || r.link || "",
+        domain: new URL(r.url || r.link || "http://x.com").hostname,
+        snippet: r.snippet || r.description || ""
+      })).filter(s => s.url && s.title);
+      const text = sources.map(s => `**${s.title}** (${s.domain})\n${s.snippet}`).join("\n\n");
+      return {text, sources: sources.slice(0,20), provider: "Bytez"};
+    } catch(e) {
+      return {text: "", sources: [], error: e.message};
+    }
+  }
+
   function thinkingHTML(title, sub = "") {
     return `<div class="thinking-row bixby-think">
       <div class="bixby-orb" aria-hidden="true">
@@ -3865,6 +3954,35 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
   }
 
   async function runChatCompletion(text, hadFile = false, forcedModelId = null) {
+    // Handle search models
+    if (selectedModelForRequest.includes("search")) {
+      setGenerating(true);
+      let result = {text: "", sources: [], error: ""};
+      
+      if (selectedModelForRequest === "tavily/search") {
+        result = await tavilySearch(text);
+      } else if (selectedModelForRequest === "exa/search") {
+        result = await exaSearch(text);
+      } else if (selectedModelForRequest === "bytez/search") {
+        result = await bytezSearch(text);
+      }
+      
+      setGenerating(false);
+      const content = result.error 
+        ? `**Search Error:** ${result.error}`
+        : (result.text || "No results found");
+      
+      appState.messages.push({
+        role: "assistant",
+        content: content + (result.sources?.length ? `\n\n**Sources:** ${result.sources.length} results` : ""),
+        sources: result.sources || [],
+        provider: result.provider || "Search"
+      });
+      persistMessages();
+      render();
+      return;
+    }
+
     // Auto-mode may request live search — honor it (skipped when a model is forced, e.g. Live Voice)
     const autoOn = !forcedModelId && dom.autoMode && dom.autoMode.value === "on";
     if (autoOn && text && !hadFile) {
@@ -3946,8 +4064,12 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         primary = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
       }
       const autoCallback = dom.autoCallback.value === "on";
+      // Cap same/other-category fallbacks tried before falling back to the proven stable set —
+      // trying the full ~20-model catalog one-by-one (each a full network round trip) made a
+      // single failed primary model turn into a multi-minute wait (seen as "Fallback 8/21").
+      const MAX_CATEGORY_FALLBACKS = 3;
       const candidates = (autoCallback
-        ? [primary, ...getFallbackModels(primary).map(m => m.value)]
+        ? [primary, ...getFallbackModels(primary).slice(0, MAX_CATEGORY_FALLBACKS).map(m => m.value)]
         : [primary]
       )
         .map(resolveChatModelId)
@@ -3966,6 +4088,11 @@ async function callModelStreaming(modelId, messages, onChunk, signal) {
         if (!candidates.includes(s)) candidates.push(s);
       }
       if (!candidates.length) candidates.push("nvidia/llama-3.3-nemotron-super-49b-v1.5");
+      // Hard cap so a bad connection never means waiting through 20+ sequential model attempts
+      const MAX_TOTAL_CANDIDATES = 6;
+      if (autoCallback && candidates.length > MAX_TOTAL_CANDIDATES) {
+        candidates.length = MAX_TOTAL_CANDIDATES;
+      }
 
       let result = null;
       let usedModel = primary;

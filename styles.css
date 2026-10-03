@@ -2373,3 +2373,154 @@ html, body {
 }
 .studio-foot { color: var(--ios-label-tertiary) !important; font-family: var(--font-family-sans) !important; }
 .input-container::after { color: var(--ios-label-tertiary) !important; font-family: var(--font-family-sans) !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   UP▪︎COMPLETE — Liquid Glass pass (Apple's iOS 26-era material: floating
+   detached panels, refractive specular highlights, deeper blur+
+   saturation, bright edge-lit borders, continuous "superellipse"
+   corners). Appended last so it wins over the UP-32 flat-frosted
+   iOS pass above.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --lg-blur: 34px;
+  --lg-sat: 200%;
+  --lg-surface: rgba(30,30,34,0.46);
+  --lg-surface-strong: rgba(36,36,40,0.62);
+  --lg-edge-top: rgba(255,255,255,0.55);
+  --lg-edge-bottom: rgba(255,255,255,0.06);
+  --lg-radius: 26px;
+  --lg-radius-lg: 32px;
+}
+
+/* Shared glass-panel treatment */
+.app-header,
+.chat-input-bar,
+.effort-dropdown,
+.modal-sheet,
+.scroll-bottom-btn,
+.live-btn,
+.send-message-btn,
+.attach-btn,
+.cat-tabs,
+.cat-tab.active,
+.tb-btn,
+.header-action-btn,
+.clear-memory-btn {
+  position: relative !important;
+  background: var(--lg-surface) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(1.08) !important;
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(1.08) !important;
+}
+
+/* Header floats as a detached glass bar, not flush with the screen edge */
+.app-header {
+  margin: 8px 6px 0 !important;
+  border-radius: var(--lg-radius) !important;
+  border: 1px solid transparent !important;
+  border-top-color: var(--lg-edge-top) !important;
+  border-bottom-color: var(--lg-edge-bottom) !important;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.28),
+    inset 0 -1px 0 rgba(255,255,255,0.03) !important;
+  overflow: hidden !important;
+}
+.app-header .brand-name {
+  font-size: 15px !important;
+}
+/* Specular sheen sweeping across the top of the glass */
+.app-header::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(115deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 22%, transparent 45%) !important;
+  pointer-events: none !important;
+}
+
+/* Composer — floating glass pill, detached from the bottom edge */
+.chat-input-bar {
+  margin: 0 6px 8px !important;
+  border-radius: var(--lg-radius-lg) !important;
+  border: 1px solid transparent !important;
+  border-top-color: var(--lg-edge-top) !important;
+  border-bottom-color: var(--lg-edge-bottom) !important;
+  box-shadow:
+    0 12px 34px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -1px 0 rgba(255,255,255,0.04) !important;
+  overflow: hidden !important;
+}
+.chat-input-bar::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(120deg, rgba(255,255,255,0.14) 0%, transparent 40%) !important;
+  pointer-events: none !important;
+}
+
+/* Segmented control — its own floating glass capsule */
+.cat-tabs {
+  margin: 10px 6px 0 !important;
+  border-radius: 18px !important;
+  border: 1px solid transparent !important;
+  border-top-color: rgba(255,255,255,0.22) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+}
+.cat-tab.active {
+  border-radius: 13px !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.35) !important;
+}
+
+/* Round glass buttons — convex highlight in the upper-left */
+.attach-btn, .send-message-btn, .scroll-bottom-btn, .tb-btn, .effort-trigger {
+  border-radius: 50% !important;
+  border: 1px solid transparent !important;
+  border-top-color: rgba(255,255,255,0.5) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+}
+.effort-trigger { border-radius: 16px !important; }
+.send-message-btn {
+  background: linear-gradient(155deg, rgba(10,132,255,0.9), rgba(10,132,255,0.55)) !important;
+}
+
+/* Live — deeper glass-refracted Apple Intelligence gradient */
+.live-btn {
+  border: 1px solid transparent !important;
+  border-top-color: rgba(255,255,255,0.55) !important;
+  box-shadow: 0 6px 20px rgba(191,90,242,0.4), inset 0 1px 0 rgba(255,255,255,0.35) !important;
+  background: linear-gradient(135deg, rgba(10,132,255,0.85), rgba(191,90,242,0.85) 55%, rgba(255,55,95,0.85)) !important;
+}
+
+/* Modal sheets — large continuous-corner glass sheet floating above content */
+.modal-sheet {
+  margin: 0 8px 8px !important;
+  border-radius: var(--lg-radius-lg) var(--lg-radius-lg) 22px 22px !important;
+  border: 1px solid transparent !important;
+  border-top-color: var(--lg-edge-top) !important;
+  box-shadow: 0 -16px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+  background: var(--lg-surface-strong) !important;
+}
+
+/* Message bubbles pick up a subtle glass edge too, without losing legibility */
+.message-bubble.user {
+  border: 1px solid transparent !important;
+  border-top-color: rgba(255,255,255,0.35) !important;
+  box-shadow: 0 6px 16px rgba(10,132,255,0.28), inset 0 1px 0 rgba(255,255,255,0.25) !important;
+}
+.message-bubble.assistant:not(.pending):not(.streaming) {
+  background: var(--lg-surface-strong) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  border: 1px solid transparent !important;
+  border-top-color: rgba(255,255,255,0.14) !important;
+}
+
+/* Give the page body a touch of depth so the glass has something to refract */
+html, body {
+  background:
+    radial-gradient(60% 40% at 15% 0%, rgba(10,132,255,0.10), transparent 60%),
+    radial-gradient(50% 35% at 100% 15%, rgba(191,90,242,0.08), transparent 60%),
+    #000 !important;
+}
