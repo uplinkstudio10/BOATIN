@@ -2,12 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="description" content="BOATIN — AI Chat + Real-Time Search Engine" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="description" content="BOATIN — AI Chat + Real-Time Search Engine powered by NVIDIA Nemotron, Llama, Tavily, Exa & Bytez" />
   <meta name="theme-color" content="#080908" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <title>BOATIN</title>
+
+  <!-- Critical inline CSS so page is never pure white if external CSS fails -->
+  <style>
+    html,body{height:100%;margin:0;background:#080908;color:#e8ede8;font-family:system-ui,-apple-system,sans-serif}
+    #app-root{display:flex;flex-direction:column;height:100dvh;max-width:820px;margin:0 auto;overflow:hidden}
+    .app-header{background:rgba(28,30,28,.85);padding:10px 14px 0;border-bottom:1px solid rgba(255,255,255,.09)}
+    .brand-title{font-size:20px;font-weight:700;background:linear-gradient(135deg,#76b900,#a8e040);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .tab-content{display:none}.tab-content.active{display:block}
+    .messages-container{flex:1;overflow-y:auto;padding:14px 12px;min-height:0}
+    .chat-input-area{padding:10px 12px;border-top:1px solid rgba(255,255,255,.09);background:rgba(28,30,28,.85)}
+    .message-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);color:#e8ede8;border-radius:10px;padding:10px 12px;font-size:16px;resize:none}
+    .send-btn{background:#1482ff;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer}
+  </style>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,24 +44,24 @@
     <div class="header-top">
       <h1 class="brand-title">BOATIN</h1>
       <div class="header-actions">
-        <button class="header-btn danger" id="clearMemoryBtn" title="Clear chat" type="button">
+        <button class="header-btn danger" id="clearMemoryBtn" title="Clear chat history" type="button">
           🗑️ Clear
         </button>
       </div>
     </div>
 
     <!-- Tabs -->
-    <nav class="tab-bar" role="tablist">
-      <button class="tab-btn active" data-tab="model" role="tab" type="button">🎯 Model</button>
-      <button class="tab-btn" data-tab="auto" role="tab" type="button">⚙️ Auto</button>
-      <button class="tab-btn" data-tab="fallback" role="tab" type="button">🔄 Fallback</button>
-      <button class="tab-btn" data-tab="actions" role="tab" type="button">🚀 Actions</button>
+    <nav class="tab-bar" role="tablist" aria-label="Main tabs">
+      <button class="tab-btn active" data-tab="model" role="tab" type="button" aria-selected="true">🎯 Model</button>
+      <button class="tab-btn" data-tab="auto" role="tab" type="button" aria-selected="false">⚙️ Auto</button>
+      <button class="tab-btn" data-tab="fallback" role="tab" type="button" aria-selected="false">🔄 Fallback</button>
+      <button class="tab-btn" data-tab="actions" role="tab" type="button" aria-selected="false">🚀 Actions</button>
     </nav>
 
     <!-- Model Tab -->
     <div class="tab-content active" id="tab-model" role="tabpanel">
       <label class="section-label" for="modelSelect">MODELS</label>
-      <select id="modelSelect" class="model-select">
+      <select id="modelSelect" class="model-select" aria-label="Select AI model or search engine">
         <optgroup label="🔍 Search Engines">
           <option value="tavily">🔍 Tavily Search (1000/mo free)</option>
           <option value="exa">🔎 Exa Search (100/mo free)</option>
@@ -83,7 +97,7 @@
       <div class="auto-info">
         <div class="auto-row">
           <span class="auto-icon">🔍</span>
-          <span>Search query → Tavily / Exa / Bytez (fallback)</span>
+          <span>Search query → Tavily / Exa / Bytez (fallback chain)</span>
         </div>
         <div class="auto-row">
           <span class="auto-icon">💻</span>
@@ -111,8 +125,8 @@
         <div class="fallback-item">1. Tavily Search</div>
         <div class="fallback-item">2. Exa Search</div>
         <div class="fallback-item">3. Bytez Search</div>
-        <div class="fallback-item">4. Nemotron Super</div>
-        <div class="fallback-item">5. Llama 70B</div>
+        <div class="fallback-item">4. Nemotron Super 120B</div>
+        <div class="fallback-item">5. Llama 3.3 70B</div>
       </div>
     </div>
 
@@ -129,7 +143,7 @@
   </header>
 
   <!-- ═══ MESSAGES ══════════════════════════════════════════════ -->
-  <main id="messagesContainer" class="messages-container" aria-live="polite">
+  <main id="messagesContainer" class="messages-container" aria-live="polite" aria-label="Chat messages">
     <!-- Messages rendered by JS -->
   </main>
 
@@ -140,7 +154,7 @@
   <footer class="chat-input-area">
     <div class="input-row">
       <button class="icon-btn" id="attachBtn" title="Attach file" type="button" aria-label="Attach file">📎</button>
-      <select id="effortMode" class="effort-select" title="Effort level">
+      <select id="effortMode" class="effort-select" title="Token / effort level" aria-label="Effort level">
         <option value="low">⚡ Low (4K)</option>
         <option value="mid" selected>🔥 Mid (16K)</option>
         <option value="high">💪 High (32K)</option>
@@ -162,8 +176,9 @@
       autocorrect="off"
       spellcheck="true"
       enterkeyhint="send"
+      aria-label="Message input"
     ></textarea>
-    <input type="file" id="fileInput" style="display:none;" accept=".txt,.md,.json,.csv,.js,.py,.html,.css" />
+    <input type="file" id="fileInput" style="display:none;" accept=".txt,.md,.json,.csv,.js,.py,.html,.css,.ts,.tsx,.jsx" />
     <p class="disclaimer">AI can make mistakes. Verify important information.</p>
   </footer>
 
