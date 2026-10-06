@@ -1,1 +1,163 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>BOATIN</title><meta name="description" content="AI Chat + Real-Time Search"><link rel="manifest" id="pwaManifestLink" /><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" /><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script><link rel="stylesheet" href="styles.css?v=final" /></head><body><div id="app-root"><header class="app-header"><div class="header-top"><div class="header-top-left"><h1>BOATIN</h1></div><div class="header-actions"><button class="header-btn" id="clearMemoryBtn" title="Clear chat">Clear 🗑️</button></div></div><div class="header-bar"><button class="tab-btn active" data-tab="model">🎯 Model</button><button class="tab-btn" data-tab="auto">⚙️ Auto</button><button class="tab-btn" data-tab="fallback">🔄 Fallback</button><button class="tab-btn" data-tab="actions">🚀 Actions</button></div></header><div id="messagesContainer" class="messages-container"></div><div class="chat-input-area"><div class="input-controls"><button id="attachBtn" class="icon-btn" title="Attach file">📎</button><select id="effortMode" class="effort-select"><option value="low">Low (4K)</option><option value="mid" selected>Mid (16K)</option><option value="high">High (32K)</option><option value="max">Max (65K)</option></select><button id="liveSearchBtn" class="action-btn" title="Toggle Live Search" style="display:none;">⚡ Live</button><button id="sendMessageBtn" class="send-btn">Send ➜</button></div><div id="attachmentPreviewBar" style="display:none;"><span id="attachmentNameText"></span><button id="removeFileBtn">✕</button></div><textarea id="messageTextInput" class="message-input" placeholder="Type message..." rows="3"></textarea><input id="fileInput" type="file" style="display:none;" /></div><div id="modelSelect" style="display:none;"></div><div id="autoMode" style="display:none;"></div><div id="autoCallback" style="display:none;"></div><button id="stopMessageBtn" style="display:none;"></button><div id="effortChips" style="display:none;"></div><div id="modeChips" style="display:none;"></div><div id="sessionsModal" style="display:none;"></div><div id="sessionsList" style="display:none;"></div><button id="sessionCloseBtn" style="display:none;"></button><button id="sessionNewBtn" style="display:none;"></button></div><script src="app.js?v=final" defer></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="BOATIN — AI Chat + Real-Time Search Engine" />
+  <meta name="theme-color" content="#000000" />
+  <title>BOATIN</title>
+
+  <!-- Fonts -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Markdown + Syntax Highlight -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <link rel="stylesheet" href="styles-ultimate.css" />
+</head>
+<body>
+
+<div id="app-root">
+
+  <!-- ═══ HEADER ════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-top">
+      <h1 class="brand-title">BOATIN</h1>
+      <div class="header-actions">
+        <button class="header-btn danger" id="clearMemoryBtn" title="Clear chat">
+          🗑️ Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="model">🎯 Model</button>
+      <button class="tab-btn" data-tab="auto">⚙️ Auto</button>
+      <button class="tab-btn" data-tab="fallback">🔄 Fallback</button>
+      <button class="tab-btn" data-tab="actions">🚀 Actions</button>
+    </nav>
+
+    <!-- Model Tab -->
+    <div class="tab-content active" id="tab-model">
+      <label class="section-label">MODELS</label>
+      <select id="modelSelect" class="model-select">
+        <optgroup label="🔍 Search Engines">
+          <option value="tavily">🔍 Tavily Search (1000/mo free)</option>
+          <option value="exa">🔎 Exa Search (100/mo free)</option>
+          <option value="bytez">🌐 Bytez Search (100/mo free)</option>
+        </optgroup>
+        <optgroup label="🏆 Recommended">
+          <option value="nvidia/nemotron-3-super-120b-a12b" selected>⚡ Nemotron Super 120B (Best)</option>
+          <option value="meta/llama-3.3-70b">🦙 Llama 3.3 70B (Fast)</option>
+        </optgroup>
+        <optgroup label="🧠 Advanced">
+          <option value="meta/llama-3.1-405b">🦙 Llama 405B (Powerful)</option>
+          <option value="mistralai/mistral-large">🌊 Mistral Large</option>
+        </optgroup>
+        <optgroup label="⚡ Fast">
+          <option value="meta/llama-3.1-8b">🦙 Llama 8B (Ultra Fast)</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Auto Tab -->
+    <div class="tab-content" id="tab-auto">
+      <label class="section-label">AUTO DETECTION</label>
+      <div class="auto-info">
+        <div class="auto-row">
+          <span class="auto-icon">🔍</span>
+          <span>Search query → Tavily/Exa/Bytez (auto-rotate)</span>
+        </div>
+        <div class="auto-row">
+          <span class="auto-icon">💻</span>
+          <span>Code query → Nemotron Super</span>
+        </div>
+        <div class="auto-row">
+          <span class="auto-icon">🧠</span>
+          <span>Analysis → Nemotron Super</span>
+        </div>
+        <div class="auto-row">
+          <span class="auto-icon">🎨</span>
+          <span>Creative → Llama 405B</span>
+        </div>
+      </div>
+      <label class="toggle-row">
+        <input type="checkbox" id="autoModeToggle" checked />
+        <span>Auto-detect mode</span>
+      </label>
+    </div>
+
+    <!-- Fallback Tab -->
+    <div class="tab-content" id="tab-fallback">
+      <label class="section-label">FALLBACK ORDER</label>
+      <div class="fallback-list">
+        <div class="fallback-item">1. Tavily Search</div>
+        <div class="fallback-item">2. Exa Search</div>
+        <div class="fallback-item">3. Bytez Search</div>
+        <div class="fallback-item">4. Nemotron Super</div>
+        <div class="fallback-item">5. Llama 70B</div>
+      </div>
+    </div>
+
+    <!-- Actions Tab -->
+    <div class="tab-content" id="tab-actions">
+      <label class="section-label">ACTIONS</label>
+      <div class="actions-grid">
+        <button class="action-btn" id="liveSearchBtn">⚡ Live Search</button>
+        <button class="action-btn" id="exportChatBtn">📤 Export Chat</button>
+        <button class="action-btn" id="copyLastBtn">📋 Copy Last</button>
+        <button class="action-btn" id="retryBtn">🔄 Retry</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ MESSAGES ══════════════════════════════════════════════ -->
+  <main id="messagesContainer" class="messages-container">
+    <!-- Messages rendered by JS -->
+  </main>
+
+  <!-- Scroll to bottom -->
+  <button id="scrollToBottomBtn" title="Scroll to bottom">↓</button>
+
+  <!-- ═══ INPUT BAR ═════════════════════════════════════════════ -->
+  <footer class="chat-input-area">
+    <div class="input-row">
+      <button class="icon-btn" id="attachBtn" title="Attach file">📎</button>
+      <select id="effortMode" class="effort-select" title="Effort level">
+        <option value="low">⚡ Low (4K)</option>
+        <option value="mid" selected>🔥 Mid (16K)</option>
+        <option value="high">💪 High (32K)</option>
+        <option value="max">🚀 Max (65K)</option>
+      </select>
+      <button class="icon-btn" id="micBtn" title="Voice input">🎙️</button>
+      <button class="send-btn" id="sendMessageBtn" title="Send message">Send ➜</button>
+    </div>
+    <div class="attachment-preview" id="attachmentPreview" style="display:none;">
+      <span id="attachmentName">file.txt</span>
+      <button id="removeAttachBtn">✕</button>
+    </div>
+    <textarea
+      id="messageTextInput"
+      class="message-input"
+      placeholder="Type message or search query..."
+      rows="2"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="true"
+    ></textarea>
+    <input type="file" id="fileInput" style="display:none;" />
+    <p class="disclaimer">AI can make mistakes. Verify important information.</p>
+  </footer>
+
+</div>
+
+<script src="app-ultimate.js" defer></script>
+</body>
+</html>
