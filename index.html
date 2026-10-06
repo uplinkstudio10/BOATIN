@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <meta name="description" content="BOATIN — AI Chat + Real-Time Search Engine" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#080908" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>BOATIN</title>
 
   <!-- Fonts -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
@@ -30,23 +30,23 @@
     <div class="header-top">
       <h1 class="brand-title">BOATIN</h1>
       <div class="header-actions">
-        <button class="header-btn danger" id="clearMemoryBtn" title="Clear chat">
+        <button class="header-btn danger" id="clearMemoryBtn" title="Clear chat" type="button">
           🗑️ Clear
         </button>
       </div>
     </div>
 
     <!-- Tabs -->
-    <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="model">🎯 Model</button>
-      <button class="tab-btn" data-tab="auto">⚙️ Auto</button>
-      <button class="tab-btn" data-tab="fallback">🔄 Fallback</button>
-      <button class="tab-btn" data-tab="actions">🚀 Actions</button>
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn active" data-tab="model" role="tab" type="button">🎯 Model</button>
+      <button class="tab-btn" data-tab="auto" role="tab" type="button">⚙️ Auto</button>
+      <button class="tab-btn" data-tab="fallback" role="tab" type="button">🔄 Fallback</button>
+      <button class="tab-btn" data-tab="actions" role="tab" type="button">🚀 Actions</button>
     </nav>
 
     <!-- Model Tab -->
-    <div class="tab-content active" id="tab-model">
-      <label class="section-label">MODELS</label>
+    <div class="tab-content active" id="tab-model" role="tabpanel">
+      <label class="section-label" for="modelSelect">MODELS</label>
       <select id="modelSelect" class="model-select">
         <optgroup label="🔍 Search Engines">
           <option value="tavily">🔍 Tavily Search (1000/mo free)</option>
@@ -55,37 +55,47 @@
         </optgroup>
         <optgroup label="🏆 Recommended">
           <option value="nvidia/nemotron-3-super-120b-a12b" selected>⚡ Nemotron Super 120B (Best)</option>
+          <option value="nvidia/llama-3.3-nemotron-super-49b-v1.5">🧠 Nemotron Super 49B v1.5</option>
           <option value="meta/llama-3.3-70b">🦙 Llama 3.3 70B (Fast)</option>
+        </optgroup>
+        <optgroup label="🚀 Nemotron Family">
+          <option value="nvidia/nemotron-3-nano-30b-a3b">⚡ Nemotron Nano 30B (Fast+Smart)</option>
+          <option value="nvidia/nemotron-3.5-lightning-30b-a3b">⚡ Nemotron Lightning 30B</option>
+          <option value="nvidia/llama-3.1-nemotron-ultra-253b-v1">🔥 Nemotron Ultra 253B</option>
+          <option value="nvidia/nemotron-3-ultra-550b-a55b">👑 Nemotron Ultra 550B (Max)</option>
         </optgroup>
         <optgroup label="🧠 Advanced">
           <option value="meta/llama-3.1-405b">🦙 Llama 405B (Powerful)</option>
           <option value="mistralai/mistral-large">🌊 Mistral Large</option>
+          <option value="google/gemma-7b">💎 Gemma 7B</option>
+          <option value="google/codegemma-7b">💻 CodeGemma 7B</option>
         </optgroup>
-        <optgroup label="⚡ Fast">
+        <optgroup label="⚡ Fast / Small">
           <option value="meta/llama-3.1-8b">🦙 Llama 8B (Ultra Fast)</option>
+          <option value="nvidia/nvidia-nemotron-nano-9b-v2">⚡ Nemotron Nano 9B</option>
         </optgroup>
       </select>
     </div>
 
     <!-- Auto Tab -->
-    <div class="tab-content" id="tab-auto">
+    <div class="tab-content" id="tab-auto" role="tabpanel">
       <label class="section-label">AUTO DETECTION</label>
       <div class="auto-info">
         <div class="auto-row">
           <span class="auto-icon">🔍</span>
-          <span>Search query → Tavily/Exa/Bytez (auto-rotate)</span>
+          <span>Search query → Tavily / Exa / Bytez (fallback)</span>
         </div>
         <div class="auto-row">
           <span class="auto-icon">💻</span>
-          <span>Code query → Nemotron Super</span>
+          <span>Code query → Nemotron Super / CodeGemma</span>
         </div>
         <div class="auto-row">
           <span class="auto-icon">🧠</span>
-          <span>Analysis → Nemotron Super</span>
+          <span>Analysis → Nemotron Super / Ultra</span>
         </div>
         <div class="auto-row">
           <span class="auto-icon">🎨</span>
-          <span>Creative → Llama 405B</span>
+          <span>Creative → Llama 405B / Mistral</span>
         </div>
       </div>
       <label class="toggle-row">
@@ -95,7 +105,7 @@
     </div>
 
     <!-- Fallback Tab -->
-    <div class="tab-content" id="tab-fallback">
+    <div class="tab-content" id="tab-fallback" role="tabpanel">
       <label class="section-label">FALLBACK ORDER</label>
       <div class="fallback-list">
         <div class="fallback-item">1. Tavily Search</div>
@@ -107,41 +117,41 @@
     </div>
 
     <!-- Actions Tab -->
-    <div class="tab-content" id="tab-actions">
+    <div class="tab-content" id="tab-actions" role="tabpanel">
       <label class="section-label">ACTIONS</label>
       <div class="actions-grid">
-        <button class="action-btn" id="liveSearchBtn">⚡ Live Search</button>
-        <button class="action-btn" id="exportChatBtn">📤 Export Chat</button>
-        <button class="action-btn" id="copyLastBtn">📋 Copy Last</button>
-        <button class="action-btn" id="retryBtn">🔄 Retry</button>
+        <button class="action-btn" id="liveSearchBtn" type="button">⚡ Live Search</button>
+        <button class="action-btn" id="exportChatBtn" type="button">📤 Export Chat</button>
+        <button class="action-btn" id="copyLastBtn" type="button">📋 Copy Last</button>
+        <button class="action-btn" id="retryBtn" type="button">🔄 Retry</button>
       </div>
     </div>
   </header>
 
   <!-- ═══ MESSAGES ══════════════════════════════════════════════ -->
-  <main id="messagesContainer" class="messages-container">
+  <main id="messagesContainer" class="messages-container" aria-live="polite">
     <!-- Messages rendered by JS -->
   </main>
 
   <!-- Scroll to bottom -->
-  <button id="scrollToBottomBtn" title="Scroll to bottom">↓</button>
+  <button id="scrollToBottomBtn" title="Scroll to bottom" type="button" aria-label="Scroll to bottom">↓</button>
 
   <!-- ═══ INPUT BAR ═════════════════════════════════════════════ -->
   <footer class="chat-input-area">
     <div class="input-row">
-      <button class="icon-btn" id="attachBtn" title="Attach file">📎</button>
+      <button class="icon-btn" id="attachBtn" title="Attach file" type="button" aria-label="Attach file">📎</button>
       <select id="effortMode" class="effort-select" title="Effort level">
         <option value="low">⚡ Low (4K)</option>
         <option value="mid" selected>🔥 Mid (16K)</option>
         <option value="high">💪 High (32K)</option>
         <option value="max">🚀 Max (65K)</option>
       </select>
-      <button class="icon-btn" id="micBtn" title="Voice input">🎙️</button>
-      <button class="send-btn" id="sendMessageBtn" title="Send message">Send ➜</button>
+      <button class="icon-btn" id="micBtn" title="Voice input" type="button" aria-label="Voice input">🎙️</button>
+      <button class="send-btn" id="sendMessageBtn" title="Send message" type="button">Send ➜</button>
     </div>
     <div class="attachment-preview" id="attachmentPreview" style="display:none;">
       <span id="attachmentName">file.txt</span>
-      <button id="removeAttachBtn">✕</button>
+      <button id="removeAttachBtn" type="button" aria-label="Remove attachment">✕</button>
     </div>
     <textarea
       id="messageTextInput"
@@ -151,8 +161,9 @@
       autocomplete="off"
       autocorrect="off"
       spellcheck="true"
+      enterkeyhint="send"
     ></textarea>
-    <input type="file" id="fileInput" style="display:none;" />
+    <input type="file" id="fileInput" style="display:none;" accept=".txt,.md,.json,.csv,.js,.py,.html,.css" />
     <p class="disclaimer">AI can make mistakes. Verify important information.</p>
   </footer>
 

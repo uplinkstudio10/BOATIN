@@ -1,16 +1,17 @@
 /**
  * BOATIN - AI Chat + Real-Time Search Engine
- * Liquid Theme Edition
- * 
+ * Liquid Theme Edition (Ultimate - cleaned)
+ *
  * Features:
  * - Real-time web search (Tavily, Exa, Bytez)
- * - AI chat models (NVIDIA, Llama, Mistral)
+ * - AI chat models (NVIDIA Nemotron, Llama, Mistral)
  * - Auto-detection (search vs chat)
  * - Liquid glassmorphism theme
  * - Voice input with auto-send
- * - Message history
+ * - Message history + localStorage
  * - Mobile responsive
- * 
+ * - Fallback chain for search engines
+ *
  * API Keys (embedded):
  * - NVIDIA: nemotron-3-super-120b
  * - TAVILY: Real-time search synthesis
@@ -30,10 +31,20 @@ const API_KEYS = {
 };
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
+
 const MODELS = {
   DEFAULT: "nvidia/nemotron-3-super-120b-a12b",
   FAST: "meta/llama-3.1-8b",
-  ADVANCED: "meta/llama-3.1-405b"
+  ADVANCED: "meta/llama-3.1-405b",
+  LLAMA70: "meta/llama-3.3-70b",
+  NEMOTRON49: "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+  NANO30: "nvidia/nemotron-3-nano-30b-a3b",
+  LIGHTNING: "nvidia/nemotron-3.5-lightning-30b-a3b",
+  ULTRA253: "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+  ULTRA550: "nvidia/nemotron-3-ultra-550b-a55b",
+  NANO9: "nvidia/nvidia-nemotron-nano-9b-v2",
+  GEMMA: "google/gemma-7b",
+  CODEGEMMA: "google/codegemma-7b"
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -44,7 +55,7 @@ const appState = {
   messages: [
     {
       role: "assistant",
-      content: "🚀 BOATIN is ready.\n\n**Features:**\n• Search: Type to find info (auto-routes to Tavily/Exa/Bytez)\n• Chat: Talk to AI (Nemotron Super, Llama, Mistral)\n• Auto-detect: Detects search vs chat automatically\n• Voice: Click mic to speak\n• Effort: Low/Mid/High/Max token limits\n\nTry: 'search latest AI news' or 'write Python code'",
+      content: "🚀 BOATIN is ready.\n\n**Features:**\n• Search: Type to find info (auto-routes to Tavily/Exa/Bytez)\n• Chat: Nemotron Super/Ultra, Llama 405B/70B/8B, Mistral, Gemma & more\n• Auto-detect: Detects search vs chat automatically\n• Voice: Click mic to speak\n• Effort: Low/Mid/High/Max token limits\n\nTry: 'search latest AI news' or 'write Python code'",
       ts: Date.now()
     }
   ],
@@ -62,10 +73,7 @@ const dom = {
   messageTextInput: null,
   sendMessageBtn: null,
   clearMemoryBtn: null,
-  effortMode: null,
-  liveSearchBtn: null,
-  attachBtn: null,
-  fileInput: null
+  effortMode: null
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -80,23 +88,31 @@ async function tavilySearch(query) {
   try {
     const res = await fetch("https://api.tavily.com/search", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: API_KEYS.TAVILY,
         query: query,
         max_results: 15,
-        include_answer: true
+        include_answer: true,
+        search_depth: "advanced"
       })
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    
+
     const results = data.results || [];
-    const text = results
-      .map(r => `**${r.title}**\n${r.content}`)
+    let text = "";
+
+    // Prefer synthesized answer if available
+    if (data.answer) {
+      text += `**Answer:** ${data.answer}\n\n---\n\n`;
+    }
+
+    text += results
+      .map(r => `**${r.title}**\n${r.content || r.snippet || ""}${r.url ? `\n🔗 ${r.url}` : ""}`)
       .join("\n\n---\n\n");
-    
+
     return {
       ok: true,
       text: text || "No results found",
@@ -109,7 +125,7 @@ async function tavilySearch(query) {
 }
 
 /**
- * Exa Search - Semantic search
+ * Exa Search - Semantic / neural search
  * Free: 100/month
  */
 async function exaSearch(query) {
@@ -124,18 +140,19 @@ async function exaSearch(query) {
         query: query,
         numResults: 15,
         useAutoprompt: true,
-        type: "neural"
+        type: "neural",
+        contents: { text: true }
       })
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    
+
     const results = data.results || [];
     const text = results
-      .map(r => `**${r.title}**\n${r.text || ""}`)
+      .map(r => `**${r.title}**\n${r.text || r.snippet || ""}${r.url ? `\n🔗 ${r.url}` : ""}`)
       .join("\n\n---\n\n");
-    
+
     return {
       ok: true,
       text: text || "No results found",
@@ -157,20 +174,20 @@ async function bytezSearch(query) {
       `https://api.bytez.com/search?q=${encodeURIComponent(query)}&count=15`,
       {
         headers: {
-          "Authorization": `Bearer ${API_KEYS.BYTEZ}`,
-          "Accept": "application/json"
+          Authorization: `Bearer ${API_KEYS.BYTEZ}`,
+          Accept: "application/json"
         }
       }
     );
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    
-    const results = data.results || [];
+
+    const results = data.results || data.data || [];
     const text = results
-      .map(r => `**${r.title || r.name}**\n${r.snippet || r.description || ""}`)
+      .map(r => `**${r.title || r.name || "Result"}**\n${r.snippet || r.description || r.text || ""}${r.url ? `\n🔗 ${r.url}` : ""}`)
       .join("\n\n---\n\n");
-    
+
     return {
       ok: true,
       text: text || "No results found",
@@ -183,13 +200,24 @@ async function bytezSearch(query) {
 }
 
 /**
- * Smart search engine selector
- * Rotates between Tavily, Exa, Bytez for diversity
+ * Run search with automatic fallback order:
+ * 1. Preferred engine → 2. Exa → 3. Bytez → 4. Tavily
  */
-async function smartSearch(query) {
-  const engines = [tavilySearch, exaSearch, bytezSearch];
-  const engine = engines[Math.floor(Math.random() * engines.length)];
-  return await engine(query);
+async function searchWithFallback(query, preferred = "tavily") {
+  const order = [];
+  if (preferred === "tavily") order.push(tavilySearch, exaSearch, bytezSearch);
+  else if (preferred === "exa") order.push(exaSearch, tavilySearch, bytezSearch);
+  else if (preferred === "bytez") order.push(bytezSearch, tavilySearch, exaSearch);
+  else order.push(tavilySearch, exaSearch, bytezSearch);
+
+  let lastError = "Unknown";
+  for (const engine of order) {
+    const result = await engine(query);
+    if (result.ok) return result;
+    lastError = result.error;
+    showToast(`⚠️ ${result.provider} failed, trying next...`);
+  }
+  return { ok: false, error: lastError, provider: "All" };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -204,7 +232,7 @@ async function callNvidiaChat(messages, model = MODELS.DEFAULT) {
     const res = await fetch(NVIDIA_CHAT_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${API_KEYS.NVIDIA}`,
+        Authorization: `Bearer ${API_KEYS.NVIDIA}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -212,13 +240,18 @@ async function callNvidiaChat(messages, model = MODELS.DEFAULT) {
         messages: messages,
         max_tokens: getTokenLimit(appState.currentEffort),
         temperature: 0.7,
-        top_p: 0.9
+        top_p: 0.9,
+        stream: false
       })
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error?.message || `HTTP ${res.status}`);
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const error = await res.json();
+        errMsg = error.error?.message || error.message || errMsg;
+      } catch (_) {}
+      throw new Error(errMsg);
     }
 
     const data = await res.json();
@@ -254,136 +287,168 @@ function getTokenLimit(effort) {
  * Detect if query is a search or chat
  */
 function detectQueryType(query) {
-  const q = query.toLowerCase();
-  
-  const searchKeywords = /search|find|research|latest|news|trends|current|what|how|when|where|who|define|explain|tell me about|information|data/i;
-  const chatKeywords = /write|create|generate|code|story|poem|song|dialogue|script|help|assist|explain how|teach|learn|guide|tutorial/i;
-  
+  const q = query.toLowerCase().trim();
+
+  // Strong search signals
+  const searchKeywords =
+    /^(search|find|research|look up|lookup|google|what is|what's|who is|when did|where is|how many|latest|news|current|today|recent|trends|define|tell me about|information about|data on)\b/i;
+
+  // Strong chat / generation signals
+  const chatKeywords =
+    /\b(write|create|generate|code|story|poem|song|dialogue|script|help me|assist|explain how|teach me|tutorial|make a|draw|design|fix|function|class|python|javascript|html)\b/i;
+
   if (searchKeywords.test(q)) return "search";
   if (chatKeywords.test(q)) return "chat";
-  
-  return "chat"; // Default to chat
+
+  // Question-like → prefer search
+  if (q.endsWith("?") || /^(what|who|when|where|why|how|is|are|can|does|did)\b/i.test(q)) {
+    return "search";
+  }
+
+  return "chat"; // default
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MESSAGE HANDLING
+// MESSAGE HANDLING (single clean implementation)
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Main message handler
- */
 async function handleMessage(text) {
-  if (!text.trim()) return;
+  if (!text.trim() || appState.isGenerating) return;
+
+  const modelSelect = document.getElementById("modelSelect");
+  const selectedModel = modelSelect?.value || MODELS.DEFAULT;
+  const autoModeEnabled = document.getElementById("autoModeToggle")?.checked ?? true;
 
   // Add user message
+  appState.messages.push({ role: "user", content: text, ts: Date.now() });
+
+  // Thinking indicator
+  const thinkingId = Date.now() + "_think";
   appState.messages.push({
-    role: "user",
-    content: text,
+    role: "assistant",
+    content: "...",
+    isThinking: true,
+    id: thinkingId,
     ts: Date.now()
   });
-
-  render();
-
-  // Detect query type
-  const queryType = detectQueryType(text);
   appState.isGenerating = true;
+  if (dom.sendMessageBtn) dom.sendMessageBtn.disabled = true;
   render();
 
   try {
-    if (queryType === "search") {
-      // Use smart search
-      const result = await smartSearch(text);
-      
+    const isSearchModel = ["tavily", "exa", "bytez"].includes(selectedModel);
+    const autoDetectedSearch = autoModeEnabled && detectQueryType(text) === "search";
+
+    if (isSearchModel || autoDetectedSearch) {
+      // Search path with fallback
+      const preferred = isSearchModel ? selectedModel : "tavily";
+      const result = await searchWithFallback(text, preferred);
+
       const content = result.ok
-        ? `**${result.provider} Search Results** (${result.resultCount} found)\n\n${result.text}`
-        : `❌ Search Error: ${result.error}`;
+        ? `**${result.provider} Results** (${result.resultCount} found)\n\n${result.text}`
+        : `❌ All search engines failed: ${result.error}`;
 
-      appState.messages.push({
-        role: "assistant",
-        content: content,
-        provider: result.provider,
-        ts: Date.now()
-      });
-    } else {
-      // Use chat
-      const response = await callNvidiaChat(
-        appState.messages.map(m => ({
-          role: m.role,
-          content: m.content
-        }))
-      );
-
-      if (response.ok) {
-        appState.messages.push({
+      const idx = appState.messages.findIndex(m => m.id === thinkingId);
+      if (idx !== -1) {
+        appState.messages[idx] = {
           role: "assistant",
-          content: response.reply,
-          model: response.model,
+          content,
+          provider: result.provider,
+          ts: Date.now()
+        };
+      }
+    } else {
+      // Chat path
+      const chatMessages = appState.messages
+        .filter(m => !m.isThinking)
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const response = await callNvidiaChat(chatMessages, selectedModel);
+
+      const idx = appState.messages.findIndex(m => m.id === thinkingId);
+      if (idx !== -1) {
+        appState.messages[idx] = {
+          role: "assistant",
+          content: response.ok ? response.reply : `❌ Error: ${response.error}`,
+          model: selectedModel,
           tokens: response.usage?.completion_tokens,
           ts: Date.now()
-        });
-      } else {
-        appState.messages.push({
-          role: "assistant",
-          content: `❌ Chat Error: ${response.error}`,
-          ts: Date.now()
-        });
+        };
       }
     }
   } catch (e) {
-    appState.messages.push({
-      role: "assistant",
-      content: `❌ Error: ${e.message}`,
-      ts: Date.now()
-    });
+    const idx = appState.messages.findIndex(m => m.id === thinkingId);
+    if (idx !== -1) {
+      appState.messages[idx] = {
+        role: "assistant",
+        content: `❌ Unexpected error: ${e.message}`,
+        ts: Date.now()
+      };
+    }
   }
 
   appState.isGenerating = false;
+  if (dom.sendMessageBtn) dom.sendMessageBtn.disabled = false;
   persistMessages();
   render();
 }
 
 // ═══════════════════════════════════════════════════════════════
-// UI RENDERING
+// UI RENDERING (Markdown + syntax highlight)
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Render all messages to the DOM
- */
 function render() {
   if (!dom.messagesContainer) return;
 
   dom.messagesContainer.innerHTML = appState.messages
-    .map((msg, i) => {
+    .map(msg => {
       const role = msg.role === "user" ? "You" : "BOATIN";
       const roleClass = msg.role === "user" ? "user" : "assistant";
-      const timestamp = new Date(msg.ts).toLocaleTimeString();
-      const provider = msg.provider ? ` (${msg.provider})` : "";
-      const model = msg.model ? ` (${msg.model.split('/')[1]})` : "";
-      const tokens = msg.tokens ? ` • ${msg.tokens} tokens` : "";
+      const time = new Date(msg.ts).toLocaleTimeString();
+      const meta = [
+        msg.provider ? `via ${msg.provider}` : "",
+        msg.model ? (msg.model.split("/")[1] || msg.model) : "",
+        msg.tokens ? `${msg.tokens} tok` : ""
+      ]
+        .filter(Boolean)
+        .join(" • ");
+
+      let content;
+      if (msg.isThinking) {
+        content = `<div class="thinking-dots"><span></span><span></span><span></span></div>`;
+      } else if (typeof marked !== "undefined") {
+        content = marked.parse(msg.content || "");
+      } else {
+        content = `<p>${(msg.content || "").replace(/\n/g, "<br>")}</p>`;
+      }
 
       return `
-        <div class="message-bubble ${roleClass}">
-          <strong>${role}${provider}${model}</strong>
-          <p>${msg.content}</p>
-          <small>${timestamp}${tokens}</small>
+        <div class="message-bubble ${roleClass}${msg.isThinking ? " thinking" : ""}">
+          <strong>${role}${meta ? ` · ${meta}` : ""}</strong>
+          ${content}
+          <small>${time}</small>
         </div>
       `;
     })
     .join("");
 
-  // Auto-scroll to bottom
+  // Syntax highlight
+  if (typeof hljs !== "undefined") {
+    dom.messagesContainer.querySelectorAll("pre code").forEach(block => {
+      hljs.highlightElement(block);
+    });
+  }
+
+  // Scroll to bottom
   setTimeout(() => {
     dom.messagesContainer.scrollTop = dom.messagesContainer.scrollHeight;
-  }, 0);
+  }, 50);
 }
 
 // ═══════════════════════════════════════════════════════════════
 // PERSISTENCE
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Save messages to localStorage
- */
 function persistMessages() {
   try {
     localStorage.setItem("boatin-messages", JSON.stringify(appState.messages));
@@ -392,97 +457,19 @@ function persistMessages() {
   }
 }
 
-/**
- * Load messages from localStorage
- */
 function loadMessages() {
   try {
     const saved = localStorage.getItem("boatin-messages");
     if (saved) {
-      appState.messages = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) {
+        appState.messages = parsed;
+      }
     }
   } catch (e) {
     console.warn("Could not load from localStorage:", e);
   }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// INITIALIZATION
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Initialize the application
- */
-function init() {
-  // Cache DOM elements
-  dom.messagesContainer = document.getElementById("messagesContainer");
-  dom.messageTextInput = document.getElementById("messageTextInput");
-  dom.sendMessageBtn = document.getElementById("sendMessageBtn");
-  dom.clearMemoryBtn = document.getElementById("clearMemoryBtn");
-  dom.effortMode = document.getElementById("effortMode");
-  dom.liveSearchBtn = document.getElementById("liveSearchBtn");
-
-  if (!dom.messagesContainer || !dom.messageTextInput) return;
-
-  // Load previous messages
-  loadMessages();
-
-  // Wire send button
-  if (dom.sendMessageBtn) {
-    dom.sendMessageBtn.addEventListener("click", () => {
-      const text = (dom.messageTextInput?.value || "").trim();
-      if (text && !appState.isGenerating) {
-        dom.messageTextInput.value = "";
-        handleMessage(text);
-      }
-    });
-  }
-
-  // Wire enter key
-  if (dom.messageTextInput) {
-    dom.messageTextInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter" && !e.shiftKey && !appState.isGenerating) {
-        e.preventDefault();
-        dom.sendMessageBtn?.click();
-      }
-    });
-  }
-
-  // Wire clear button
-  if (dom.clearMemoryBtn) {
-    dom.clearMemoryBtn.addEventListener("click", () => {
-      if (confirm("Clear chat history?")) {
-        appState.messages = [{
-          role: "assistant",
-          content: "Chat cleared. Ready to start fresh.",
-          ts: Date.now()
-        }];
-        persistMessages();
-        render();
-      }
-    });
-  }
-
-  // Wire effort selector
-  if (dom.effortMode) {
-    dom.effortMode.addEventListener("change", (e) => {
-      appState.currentEffort = e.target.value;
-    });
-  }
-
-  // Wire live search toggle
-  if (dom.liveSearchBtn) {
-    dom.liveSearchBtn.addEventListener("click", () => {
-      alert("Live Search: Currently using auto-detection (searches when query matches search keywords)");
-    });
-  }
-
-  // Initial render
-  render();
-}
-
-// Start when DOM is ready
-document.addEventListener("DOMContentLoaded", init);
 
 // ═══════════════════════════════════════════════════════════════
 // TAB NAVIGATION
@@ -495,10 +482,8 @@ function initTabs() {
   tabBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.tab;
-
       tabBtns.forEach(b => b.classList.remove("active"));
       tabContents.forEach(c => c.classList.remove("active"));
-
       btn.classList.add("active");
       const content = document.getElementById(`tab-${target}`);
       if (content) content.classList.add("active");
@@ -543,40 +528,46 @@ function initActions() {
     a.download = `boatin-chat-${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    showToast("📤 Chat exported");
   });
 
   // Copy last message
   document.getElementById("copyLastBtn")?.addEventListener("click", () => {
-    const last = [...appState.messages].reverse().find(m => m.role === "assistant");
+    const last = [...appState.messages].reverse().find(m => m.role === "assistant" && !m.isThinking);
     if (last) {
-      navigator.clipboard.writeText(last.content)
+      navigator.clipboard
+        .writeText(last.content)
         .then(() => showToast("✅ Copied!"))
         .catch(() => showToast("❌ Copy failed"));
+    } else {
+      showToast("No message to copy");
     }
   });
 
-  // Retry last message
+  // Retry last user message
   document.getElementById("retryBtn")?.addEventListener("click", () => {
     const lastUser = [...appState.messages].reverse().find(m => m.role === "user");
-    if (lastUser) {
-      // Remove last assistant message and retry
+    if (lastUser && !appState.isGenerating) {
+      // Remove last assistant response
       const lastIdx = appState.messages.map(m => m.role).lastIndexOf("assistant");
-      if (lastIdx !== -1) appState.messages.splice(lastIdx, 1);
+      if (lastIdx !== -1 && !appState.messages[lastIdx].isThinking) {
+        appState.messages.splice(lastIdx, 1);
+      }
       handleMessage(lastUser.content);
     }
   });
 
-  // Live search toggle
+  // Live Search toggle (switches model between search & chat)
   document.getElementById("liveSearchBtn")?.addEventListener("click", () => {
     const sel = document.getElementById("modelSelect");
     if (!sel) return;
     const isSearch = ["tavily", "exa", "bytez"].includes(sel.value);
     if (isSearch) {
-      sel.value = "nvidia/nemotron-3-super-120b-a12b";
-      showToast("💬 Chat mode");
+      sel.value = MODELS.DEFAULT;
+      showToast("💬 Chat mode (Nemotron Super)");
     } else {
       sel.value = "tavily";
-      showToast("⚡ Live Search on");
+      showToast("⚡ Live Search on (Tavily)");
     }
   });
 }
@@ -607,7 +598,11 @@ function initVoice() {
     if (isListening) {
       recognition.stop();
     } else {
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (e) {
+        showToast("❌ Mic start failed");
+      }
     }
   });
 
@@ -618,11 +613,12 @@ function initVoice() {
     showToast("🎙️ Listening...");
   };
 
-  recognition.onresult = (event) => {
+  recognition.onresult = event => {
     const transcript = event.results[0][0].transcript.trim();
     if (transcript) {
-      document.getElementById("messageTextInput").value = transcript;
-      // Auto-send after voice input
+      const input = document.getElementById("messageTextInput");
+      if (input) input.value = transcript;
+      // Auto-send
       setTimeout(() => document.getElementById("sendMessageBtn")?.click(), 300);
     }
   };
@@ -653,7 +649,7 @@ function initFileAttach() {
 
   attachBtn?.addEventListener("click", () => fileInput?.click());
 
-  fileInput?.addEventListener("change", (e) => {
+  fileInput?.addEventListener("change", e => {
     const file = e.target.files?.[0];
     if (!file) return;
     attachedFile = file;
@@ -684,167 +680,20 @@ function showToast(msg, duration = 2500) {
       border: 1px solid rgba(255,255,255,0.1); color: #e8ede8;
       padding: 10px 20px; border-radius: 999px; font-size: 14px;
       z-index: 9999; pointer-events: none; transition: opacity 0.3s ease;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5); opacity: 0;
     `;
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
   toast.style.opacity = "1";
   clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(() => { toast.style.opacity = "0"; }, duration);
+  toast._timeout = setTimeout(() => {
+    toast.style.opacity = "0";
+  }, duration);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MODEL SELECTION AWARE HANDLER
-// ═══════════════════════════════════════════════════════════════
-
-async function handleMessage(text) {
-  if (!text.trim() || appState.isGenerating) return;
-
-  const modelSelect = document.getElementById("modelSelect");
-  const selectedModel = modelSelect?.value || MODELS.DEFAULT;
-  const autoModeEnabled = document.getElementById("autoModeToggle")?.checked;
-
-  // Add user message
-  appState.messages.push({ role: "user", content: text, ts: Date.now() });
-
-  // Add thinking indicator
-  const thinkingId = Date.now() + "_think";
-  appState.messages.push({
-    role: "assistant",
-    content: "...",
-    isThinking: true,
-    id: thinkingId,
-    ts: Date.now()
-  });
-  appState.isGenerating = true;
-  document.getElementById("sendMessageBtn").disabled = true;
-  render();
-
-  let result = { ok: false, error: "Unknown error" };
-
-  try {
-    const isSearchModel = ["tavily", "exa", "bytez"].includes(selectedModel);
-    const autoDetectedSearch = autoModeEnabled && detectQueryType(text) === "search";
-
-    if (isSearchModel || autoDetectedSearch) {
-      // Use search engine
-      const engine = isSearchModel ? selectedModel : "tavily";
-
-      if (engine === "tavily") result = await tavilySearch(text);
-      else if (engine === "exa") result = await exaSearch(text);
-      else if (engine === "bytez") result = await bytezSearch(text);
-
-      if (!result.ok) {
-        // Fallback chain
-        showToast("⚠️ Primary search failed, trying Exa...");
-        result = await exaSearch(text);
-        if (!result.ok) {
-          showToast("⚠️ Exa failed, trying Bytez...");
-          result = await bytezSearch(text);
-        }
-      }
-
-      const content = result.ok
-        ? `**${result.provider} Results** (${result.resultCount} found)\n\n${result.text}`
-        : `❌ All search engines failed: ${result.error}`;
-
-      // Replace thinking
-      const idx = appState.messages.findIndex(m => m.id === thinkingId);
-      if (idx !== -1) {
-        appState.messages[idx] = {
-          role: "assistant",
-          content: content,
-          provider: result.provider,
-          ts: Date.now()
-        };
-      }
-    } else {
-      // Use chat model
-      const chatMessages = appState.messages
-        .filter(m => !m.isThinking)
-        .map(m => ({ role: m.role, content: m.content }));
-
-      const response = await callNvidiaChat(chatMessages, selectedModel);
-
-      const idx = appState.messages.findIndex(m => m.id === thinkingId);
-      if (idx !== -1) {
-        appState.messages[idx] = {
-          role: "assistant",
-          content: response.ok ? response.reply : `❌ Error: ${response.error}`,
-          model: selectedModel,
-          tokens: response.usage?.completion_tokens,
-          ts: Date.now()
-        };
-      }
-    }
-  } catch (e) {
-    const idx = appState.messages.findIndex(m => m.id === thinkingId);
-    if (idx !== -1) {
-      appState.messages[idx] = {
-        role: "assistant",
-        content: `❌ Unexpected error: ${e.message}`,
-        ts: Date.now()
-      };
-    }
-  }
-
-  appState.isGenerating = false;
-  document.getElementById("sendMessageBtn").disabled = false;
-  persistMessages();
-  render();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER WITH MARKDOWN
-// ═══════════════════════════════════════════════════════════════
-
-function render() {
-  if (!dom.messagesContainer) return;
-
-  dom.messagesContainer.innerHTML = appState.messages.map(msg => {
-    const role = msg.role === "user" ? "You" : "BOATIN";
-    const roleClass = msg.role === "user" ? "user" : "assistant";
-    const time = new Date(msg.ts).toLocaleTimeString();
-    const meta = [
-      msg.provider ? `via ${msg.provider}` : "",
-      msg.model ? msg.model.split("/")[1] : "",
-      msg.tokens ? `${msg.tokens} tok` : ""
-    ].filter(Boolean).join(" • ");
-
-    let content;
-    if (msg.isThinking) {
-      content = `<div class="thinking-dots"><span></span><span></span><span></span></div>`;
-    } else if (typeof marked !== "undefined") {
-      content = marked.parse(msg.content || "");
-    } else {
-      content = `<p>${(msg.content || "").replace(/\n/g, "<br>")}</p>`;
-    }
-
-    return `
-      <div class="message-bubble ${roleClass}${msg.isThinking ? " thinking" : ""}">
-        <strong>${role}${meta ? ` · ${meta}` : ""}</strong>
-        ${content}
-        <small>${time}</small>
-      </div>
-    `;
-  }).join("");
-
-  // Syntax highlight code blocks
-  if (typeof hljs !== "undefined") {
-    dom.messagesContainer.querySelectorAll("pre code").forEach(block => {
-      hljs.highlightElement(block);
-    });
-  }
-
-  // Scroll to bottom
-  setTimeout(() => {
-    dom.messagesContainer.scrollTop = dom.messagesContainer.scrollHeight;
-  }, 50);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// UPDATED INIT
+// INITIALIZATION
 // ═══════════════════════════════════════════════════════════════
 
 function init() {
@@ -855,41 +704,43 @@ function init() {
   dom.clearMemoryBtn = document.getElementById("clearMemoryBtn");
   dom.effortMode = document.getElementById("effortMode");
 
-  // Load messages
+  // Load previous messages
   loadMessages();
 
   // Send button
   dom.sendMessageBtn?.addEventListener("click", () => {
     const text = (dom.messageTextInput?.value || "").trim();
-    if (text) {
+    if (text && !appState.isGenerating) {
       dom.messageTextInput.value = "";
       handleMessage(text);
     }
   });
 
   // Enter key (Shift+Enter = new line)
-  dom.messageTextInput?.addEventListener("keypress", (e) => {
+  dom.messageTextInput?.addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      dom.sendMessageBtn?.click();
+      if (!appState.isGenerating) dom.sendMessageBtn?.click();
     }
   });
 
   // Clear button
   dom.clearMemoryBtn?.addEventListener("click", () => {
     if (confirm("Clear all chat history?")) {
-      appState.messages = [{
-        role: "assistant",
-        content: "Chat cleared. Ready!",
-        ts: Date.now()
-      }];
+      appState.messages = [
+        {
+          role: "assistant",
+          content: "Chat cleared. Ready!",
+          ts: Date.now()
+        }
+      ];
       persistMessages();
       render();
     }
   });
 
-  // Effort
-  dom.effortMode?.addEventListener("change", (e) => {
+  // Effort selector
+  dom.effortMode?.addEventListener("change", e => {
     appState.currentEffort = e.target.value;
   });
 
@@ -899,6 +750,17 @@ function init() {
   initActions();
   initVoice();
   initFileAttach();
+
+  // Auto-resize textarea
+  if (dom.messageTextInput) {
+    const ta = dom.messageTextInput;
+    const autoResize = () => {
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
+    };
+    ta.addEventListener("input", autoResize);
+    autoResize();
+  }
 
   // Initial render
   render();
