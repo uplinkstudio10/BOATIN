@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="CRAXTEN - NVIDIA Serverless API" />
+  <meta name="theme-color" content="#080908" />
+  <title>CRAXTEN - Unlimited</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #080908; color: #e8ede8; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+    #app-root { display: flex; flex-direction: column; height: 100dvh; max-width: 1200px; margin: 0 auto; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); }
+
+    .app-header { background: rgba(20, 20, 20, 0.95); padding: 12px 16px; border-bottom: 2px solid rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); overflow-y: auto; max-height: 280px; transition: max-height 0.3s ease; }
+    .app-header.collapsed { max-height: 80px; }
+
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .brand-title { font-size: 28px; font-weight: 900; background: linear-gradient(135deg, #00ff88, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 3px; }
+
+    .header-actions { display: flex; gap: 8px; }
+    .header-btn { padding: 8px 12px; border: 2px solid rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.1); color: #00ff88; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s; }
+    .header-btn:hover { background: rgba(0, 255, 136, 0.2); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+    .toggle-btn { background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000; padding: 8px 10px; font-size: 18px; transition: transform 0.3s; }
+    .toggle-btn.collapsed { transform: rotate(180deg); }
+
+    .mode-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .mode-btn { padding: 8px 14px; border: 2px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.05); color: #e8ede8; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; text-transform: uppercase; transition: all 0.3s; }
+    .mode-btn.active { background: linear-gradient(135deg, #00ff88, #00d4ff); border-color: #00ff88; color: #000; box-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+
+    .tab-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; }
+    .tab-btn { padding: 8px 14px; border: none; background: rgba(255, 255, 255, 0.08); color: #a0a8a0; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+    .tab-btn.active { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+
+    .tab-content { display: none; padding: 10px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; margin-top: 8px; }
+    .tab-content.active { display: block; }
+
+    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .config-item { display: flex; flex-direction: column; gap: 4px; }
+    .config-label { font-size: 11px; font-weight: 700; color: #00ff88; text-transform: uppercase; }
+
+    .model-select { padding: 8px 12px; background: rgba(255, 255, 255, 0.06); border: 2px solid rgba(0, 255, 136, 0.2); color: #e8ede8; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .model-select:focus { outline: none; border-color: #00ff88; background: rgba(0, 255, 136, 0.08); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+
+    .slider-container { display: flex; gap: 8px; align-items: center; }
+    .slider-container input { flex: 1; }
+    .slider-container span { font-weight: 700; color: #00ff88; min-width: 30px; font-size: 12px; }
+
+    .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .status-item { display: flex; flex-direction: column; gap: 4px; }
+    .status-label { font-size: 11px; font-weight: 700; color: #00ff88; text-transform: uppercase; }
+    .status-value { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .status-indicator { width: 8px; height: 8px; border-radius: 50%; background: #00ff88; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .messages-container { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 12px; }
+    .message { display: flex; gap: 10px; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .message.user { justify-content: flex-end; }
+
+    .message-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: linear-gradient(135deg, #00ff88, #00d4ff); }
+    .message-content { max-width: 82%; padding: 12px 14px; border-radius: 12px; word-wrap: break-word; line-height: 1.5; animation: contentFade 0.5s ease; }
+    @keyframes contentFade { from { opacity: 0; } to { opacity: 1; } }
+    .message.ai .message-content { background: rgba(0, 255, 136, 0.1); border-left: 3px solid #00ff88; }
+    .message.user .message-content { background: linear-gradient(135deg, rgba(0, 153, 255, 0.3), rgba(0, 255, 136, 0.2)); border-right: 3px solid #00ff88; }
+
+    .message-meta { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+    .message-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .message-action-btn { padding: 4px 8px; background: rgba(0, 255, 136, 0.15); border: 1px solid rgba(0, 255, 136, 0.3); color: #00ff88; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s; }
+
+    .thinking { display: flex; gap: 4px; align-items: center; height: 20px; }
+    .thinking span { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; animation: thinking 1.4s infinite; }
+    .thinking span:nth-child(2) { animation-delay: 0.2s; }
+    .thinking span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes thinking { 0%, 60%, 100% { transform: translateY(0); opacity: 0.7; } 30% { transform: translateY(-8px); opacity: 1; } }
+
+    .chat-input-area { padding: 12px 16px; background: rgba(20, 20, 20, 0.95); border-top: 2px solid rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); }
+    .input-row { display: flex; gap: 8px; }
+    .message-input { flex: 1; padding: 12px 14px; background: rgba(255, 255, 255, 0.06); border: 2px solid rgba(0, 255, 136, 0.2); color: #e8ede8; border-radius: 8px; font-size: 14px; resize: none; max-height: 100px; transition: all 0.2s; font-family: inherit; }
+    .message-input:focus { outline: none; border-color: #00ff88; background: rgba(0, 255, 136, 0.08); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+
+    .send-btn { padding: 10px 16px; border: none; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; text-transform: uppercase; transition: all 0.2s; }
+    .send-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 255, 136, 0.5); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .scroll-btn { position: absolute; bottom: 90px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00ff88, #00d4ff); border: none; color: #000; font-size: 20px; cursor: pointer; display: none; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3); }
+    .scroll-btn.show { display: flex; align-items: center; justify-content: center; }
+
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+    .modal-content { background: rgba(20, 20, 20, 0.95); border: 2px solid rgba(0, 255, 136, 0.3); border-radius: 12px; padding: 20px; max-width: 90%; max-height: 80vh; overflow-y: auto; width: 600px; animation: modalSlideIn 0.3s ease; }
+    @keyframes modalSlideIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid rgba(0, 255, 136, 0.2); }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #00ff88; }
+    .modal-close { background: rgba(0, 255, 136, 0.15); border: 1px solid rgba(0, 255, 136, 0.3); color: #00ff88; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+
+    .history-list { max-height: 400px; overflow-y: auto; margin-bottom: 16px; }
+    .history-item { padding: 10px; background: rgba(0, 255, 136, 0.08); border-left: 3px solid #00d4ff; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+    .history-item:hover { background: rgba(0, 255, 136, 0.15); }
+    .history-date { font-size: 11px; opacity: 0.7; margin-top: 4px; color: #00d4ff; }
+
+    .btn { flex: 1; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000; transition: all 0.2s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3); }
+
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+    .unlimited-badge { display: inline-block; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-top: 4px; }
+
+    .search-result-item { margin-bottom: 12px; padding: 8px; background: rgba(0, 212, 255, 0.08); border-radius: 6px; border-left: 3px solid #00d4ff; }
+    .search-result-title { font-weight: 700; color: #00ff88; margin-bottom: 4px; }
+    .search-result-url { font-size: 11px; color: #00d4ff; word-break: break-all; margin-bottom: 4px; }
+    .search-result-content { font-size: 13px; opacity: 0.9; }
+
+    @media (max-width: 768px) { .config-grid { grid-template-columns: 1fr; } .message-content { max-width: 95%; } .modal-content { width: 95%; } }
+  </style>
+</head>
+<body>
+
+<div id="app-root">
+  <header class="app-header" id="appHeader">
+    <div class="header-top">
+      <h1 class="brand-title">⚡ CRAXTEN ∞</h1>
+      <div class="header-actions">
+        <button id="newChatBtn" class="header-btn" title="New Chat">➕</button>
+        <button id="historyBtn" class="header-btn" title="Chat History">📋</button>
+        <button id="clearBtn" class="header-btn" title="Clear">🗑️</button>
+        <button id="toggleConfigBtn" class="toggle-btn header-btn" title="Toggle">✕</button>
+      </div>
+    </div>
+
+    <div class="mode-selector" id="modeSelector">
+      <button class="mode-btn active" data-mode="chat">💬 Chat</button>
+      <button class="mode-btn" data-mode="search">🔍 Search</button>
+      <button class="mode-btn" data-mode="hybrid">🚀 Hybrid</button>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="config">⚙️ Config</button>
+      <button class="tab-btn" data-tab="status">📊 Status</button>
+    </div>
+
+    <div class="tab-content active" id="tab-config">
+      <div class="config-grid">
+        <div class="config-item" id="modelConfigItem">
+          <label class="config-label">🚀 AI Model</label>
+          <select id="modelSelect" class="model-select"></select>
+          <span class="unlimited-badge">✓ UNLIMITED · 1M Tokens</span>
+        </div>
+        <div class="config-item" id="searchConfigItem" style="display:none;">
+          <label class="config-label">🔍 Search Engine</label>
+          <select id="searchSelect" class="model-select">
+            <option value="tavily">🔍 Tavily</option>
+            <option value="exa">🔎 Exa</option>
+            <option value="bytez">🌐 Bytez</option>
+            <option value="bazaarlink">🛒 BazaarLink</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <label class="config-label">🌡️ Temperature</label>
+          <div class="slider-container">
+            <input type="range" id="tempSlider" min="0" max="2" step="0.1" value="0.7" />
+            <span id="tempValue">0.7</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-status">
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-label">⚡ API Status</div>
+          <div class="status-value"><span class="status-indicator"></span>NVIDIA Serverless</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">♾️ Limit</div>
+          <div class="status-value">UNLIMITED · 1M Tokens</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">💬 Messages</div>
+          <div id="messageCount" class="status-value">0</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">⏱️ Response</div>
+          <div id="responseTime" class="status-value">--ms</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="messagesContainer" class="messages-container"></main>
+  <button id="scrollToBottom" class="scroll-btn">↓</button>
+
+  <footer class="chat-input-area">
+    <div class="input-row">
+      <textarea id="messageInput" class="message-input" placeholder="Ask unlimited... No token limits! 🚀" rows="1"></textarea>
+      <button id="sendBtn" class="send-btn">SEND ➜</button>
+    </div>
+  </footer>
+</div>
+
+<div id="historyModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📋 Chat History</h2>
+      <button class="modal-close" id="closeHistoryBtn">✕</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+    <div class="modal-actions">
+      <button id="exportHistoryBtn" class="btn">📥 Export</button>
+      <button id="clearHistoryBtn" class="btn">🗑️ Clear</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const NVIDIA_API_KEY = "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";
+  const TAVILY_API_KEY = "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";
+  const EXA_API_KEY = "c6f6fe81-f6d6-4a46-a7ee-1887216305ee";
+  const BYTEZ_API_KEY = "e22f52c699b71b327d3a22d50be7064e";
+  const BAZAARLINK_API_KEY = "sk-bl-JKU6cMm-M25_VBlUCQbBbxvL4aflYSAB0o6d2NuwiTn7a54I";
+
+  const NVIDIA_MODELS = [
+    { value: 'nvidia/nemotron-3-super-120b-a12b', label: '🚀 Nemotron Super 120B' },
+    { value: 'nvidia/nemotron-3-ultra-550b', label: '👑 Nemotron Ultra 550B' },
+    { value: 'nvidia/nemotron-3-nano-30b-a3b', label: '⚡ Nemotron Nano 30B' },
+    { value: 'meta/llama-3.3-405b-instruct-ov', label: '🦙 Llama 405B' },
+    { value: 'meta/llama-3.3-70b-instruct', label: '🦙 Llama 70B' },
+    { value: 'mistralai/mistral-large', label: '🌊 Mistral Large' },
+    { value: 'google/gemma-7b-it', label: '💎 Gemma 7B' }
+  ];
+
+  const state = {
+    mode: 'chat',
+    messages: [],
+    history: [],
+    loading: false,
+    model: 'nvidia/nemotron-3-super-120b-a12b',
+    searchEngine: 'tavily',
+    temperature: 0.7,
+    maxTokens: 1000000,
+    headerCollapsed: false
+  };
+
+  const messagesContainer = document.getElementById('messagesContainer');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const historyBtn = document.getElementById('historyBtn');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const toggleConfigBtn = document.getElementById('toggleConfigBtn');
+  const appHeader = document.getElementById('appHeader');
+  const modeSelector = document.getElementById('modeSelector');
+  const modelSelect = document.getElementById('modelSelect');
+  const searchSelect = document.getElementById('searchSelect');
+  const tempSlider = document.getElementById('tempSlider');
+  const tempValue = document.getElementById('tempValue');
+  const messageCount = document.getElementById('messageCount');
+  const responseTime = document.getElementById('responseTime');
+  const scrollBtn = document.getElementById('scrollToBottom');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const historyModal = document.getElementById('historyModal');
+  const modelConfigItem = document.getElementById('modelConfigItem');
+  const searchConfigItem = document.getElementById('searchConfigItem');
+
+  window.addEventListener('load', () => {
+    initModelSelect();
+    updateConfigVisibility();
+    messageInput.focus();
+    addMessage('ai', '🎉 Welcome to CRAXTEN ∞\n\n✨ NVIDIA Serverless API\n✨ Unlimited Tokens (1M)\n✨ No Rate Limits\n✨ No Budget Restrictions\n✨ Search: Tavily · Exa · Bytez · BazaarLink\n\nAsk anything! 🚀', { icon: '⚡', source: 'System' });
+  });
+
+  function initModelSelect() {
+    NVIDIA_MODELS.forEach(model => {
+      const option = document.createElement('option');
+      option.value = model.value;
+      option.textContent = model.label;
+      modelSelect.appendChild(option);
+    });
+  }
+
+  function updateConfigVisibility() {
+    if (state.mode === 'chat') {
+      modelConfigItem.style.display = '';
+      searchConfigItem.style.display = 'none';
+    } else if (state.mode === 'search') {
+      modelConfigItem.style.display = 'none';
+      searchConfigItem.style.display = '';
+    } else {
+      modelConfigItem.style.display = '';
+      searchConfigItem.style.display = '';
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (confirm('Clear all?')) {
+      state.messages = [];
+      messagesContainer.innerHTML = '';
+      messageCount.textContent = '0';
+      addMessage('ai', 'Chat cleared ✓', { icon: '✓' });
+    }
+  });
+
+  newChatBtn.addEventListener('click', () => {
+    state.messages = [];
+    messagesContainer.innerHTML = '';
+    messageCount.textContent = '0';
+    responseTime.textContent = '--ms';
+    addMessage('ai', '🆕 New chat started\n\nAsk anything! 🚀', { icon: '⚡', source: 'System' });
+    messageInput.focus();
+  });
+
+  toggleConfigBtn.addEventListener('click', () => {
+    state.headerCollapsed = !state.headerCollapsed;
+    appHeader.classList.toggle('collapsed');
+    toggleConfigBtn.classList.toggle('collapsed');
+  });
+
+  historyBtn.addEventListener('click', () => {
+    const historyList = document.getElementById('historyList');
+    if (state.history.length === 0) {
+      historyList.innerHTML = '<div style="opacity:0.6;text-align:center;padding:20px;">No history yet</div>';
+    } else {
+      historyList.innerHTML = state.history.map((item, idx) => {
+        const d = new Date(item.timestamp);
+        const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+        return '<div class="history-item" data-idx="' + idx + '">' +
+          '<div><strong>Q:</strong> ' + escapeHtml(item.text.substring(0, 80)) + (item.text.length > 80 ? '...' : '') + '</div>' +
+          '<div class="history-date">📅 ' + dateStr + '</div>' +
+          '</div>';
+      }).join('');
+      historyList.querySelectorAll('.history-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.dataset.idx);
+          const item = state.history[idx];
+          messageInput.value = item.text;
+          historyModal.style.display = 'none';
+          messageInput.focus();
+        });
+      });
+    }
+
+    document.getElementById('exportHistoryBtn').onclick = () => {
+      const blob = new Blob([JSON.stringify(state.history, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'craxten-history.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('clearHistoryBtn').onclick = () => {
+      if (confirm('Clear history?')) {
+        state.history = [];
+        historyList.innerHTML = '<div style="opacity:0.6;text-align:center;padding:20px;">No history yet</div>';
+      }
+    };
+
+    historyModal.style.display = 'flex';
+  });
+
+  document.getElementById('closeHistoryBtn').addEventListener('click', () => {
+    historyModal.style.display = 'none';
+  });
+
+  modeSelector.addEventListener('click', (e) => {
+    if (e.target.classList.contains('mode-btn')) {
+      modeSelector.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+      e.target.classList.add('active');
+      state.mode = e.target.dataset.mode;
+      updateConfigVisibility();
+    }
+  });
+
+  tempSlider.addEventListener('input', (e) => {
+    state.temperature = parseFloat(e.target.value);
+    tempValue.textContent = state.temperature.toFixed(1);
+  });
+
+  modelSelect.addEventListener('change', (e) => {
+    state.model = e.target.value;
+  });
+
+  searchSelect.addEventListener('change', (e) => {
+    state.searchEngine = e.target.value;
+  });
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      document.getElementById('tab-' + e.target.dataset.tab).classList.add('active');
+    });
+  });
+
+  messagesContainer.addEventListener('scroll', () => {
+    const isBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 100;
+    scrollBtn.classList.toggle('show', !isBottom);
+  });
+
+  scrollBtn.addEventListener('click', () => {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  });
+
+  messageInput.addEventListener('input', () => {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+  });
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function addMessage(role, content, metadata) {
+    metadata = metadata || {};
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message ' + role;
+
+    if (role === 'ai') {
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.innerHTML = metadata.icon || '🤖';
+      msgDiv.appendChild(avatar);
+    }
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    if (metadata.isHtml) {
+      contentDiv.innerHTML = content;
+    } else {
+      contentDiv.innerHTML = escapeHtml(content).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong style="color:#00ff88;">$1</strong>');
+    }
+
+    if (role === 'ai') {
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'message-meta';
+      metaDiv.innerHTML = '📍 ' + (metadata.source || 'AI');
+      contentDiv.appendChild(metaDiv);
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'message-actions';
+      const listenBtn = document.createElement('button');
+      listenBtn.className = 'message-action-btn';
+      listenBtn.innerHTML = '🔊 Listen';
+      listenBtn.onclick = function() {
+        if ('speechSynthesis' in window) {
+          speechSynthesis.cancel();
+          const plain = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          const utter = new SpeechSynthesisUtterance(plain);
+          speechSynthesis.speak(utter);
+        }
+      };
+      actionsDiv.appendChild(listenBtn);
+      contentDiv.appendChild(actionsDiv);
+    }
+
+    msgDiv.appendChild(contentDiv);
+    messagesContainer.appendChild(msgDiv);
+    setTimeout(function() { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 50);
+  }
+
+  async function searchTavily(query) {
+    const res = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: query,
+        search_depth: 'basic',
+        max_results: 5,
+        include_answer: true
+      })
+    });
+    if (!res.ok) throw new Error('Tavily API error: ' + res.status);
+    return await res.json();
+  }
+
+  async function searchExa(query) {
+    const res = await fetch('https://api.exa.ai/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': EXA_API_KEY
+      },
+      body: JSON.stringify({
+        query: query,
+        type: 'auto',
+        numResults: 5,
+        contents: { highlights: true }
+      })
+    });
+    if (!res.ok) throw new Error('Exa API error: ' + res.status);
+    return await res.json();
+  }
+
+  async function searchBazaarlink(query) {
+    const res = await fetch('https://api.bazaarlink.ai/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + BAZAARLINK_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: query,
+        search_depth: 'basic',
+        max_results: 5
+      })
+    });
+    if (!res.ok) throw new Error('BazaarLink API error: ' + res.status);
+    return await res.json();
+  }
+
+  async function searchBytez(query) {
+    try {
+      const res = await fetch('https://api.bytez.com/models/v2/run/google/flan-t5-large', {
+        method: 'POST',
+        headers: {
+          'Authorization': BYTEZ_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          input: 'Search the web and summarize results for: ' + query
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { answer: data.output || data.result || JSON.stringify(data), results: [] };
+      }
+    } catch (e) {}
+    return { answer: 'Bytez is primarily a model inference API. For web search try Tavily, Exa, or BazaarLink.', results: [] };
+  }
+
+  function formatSearchResults(engine, data) {
+    let html = '';
+    if (engine === 'tavily' || engine === 'bazaarlink') {
+      if (data.answer) {
+        html += '<div style="margin-bottom:12px;"><strong style="color:#00ff88;">Answer:</strong> ' + escapeHtml(data.answer) + '</div>';
+      }
+      const results = data.results || [];
+      results.forEach(function(r) {
+        html += '<div class="search-result-item">' +
+          '<div class="search-result-title">' + escapeHtml(r.title || 'Result') + '</div>' +
+          '<div class="search-result-url"><a href="' + escapeHtml(r.url || '#') + '" target="_blank" style="color:#00d4ff;">' + escapeHtml(r.url || '') + '</a></div>' +
+          '<div class="search-result-content">' + escapeHtml(r.content || r.snippet || '') + '</div>' +
+          '</div>';
+      });
+    } else if (engine === 'exa') {
+      const results = data.results || [];
+      results.forEach(function(r) {
+        const highlights = (r.highlights || []).join(' ... ');
+        html += '<div class="search-result-item">' +
+          '<div class="search-result-title">' + escapeHtml(r.title || 'Result') + '</div>' +
+          '<div class="search-result-url"><a href="' + escapeHtml(r.url || '#') + '" target="_blank" style="color:#00d4ff;">' + escapeHtml(r.url || '') + '</a></div>' +
+          '<div class="search-result-content">' + escapeHtml(highlights || r.text || '') + '</div>' +
+          '</div>';
+      });
+    } else {
+      html += '<div>' + escapeHtml(data.answer || JSON.stringify(data)) + '</div>';
+    }
+    if (!html) html = '<div>No results found.</div>';
+    return html;
+  }
+
+  async function doSearch(query) {
+    const engine = state.searchEngine;
+    let data;
+    if (engine === 'tavily') data = await searchTavily(query);
+    else if (engine === 'exa') data = await searchExa(query);
+    else if (engine === 'bazaarlink') data = await searchBazaarlink(query);
+    else data = await searchBytez(query);
+    return { engine: engine, data: data, formatted: formatSearchResults(engine, data) };
+  }
+
+  async function chatNVIDIA(messages) {
+    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + NVIDIA_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: state.model,
+        messages: messages,
+        temperature: state.temperature,
+        max_tokens: state.maxTokens
+      })
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error('NVIDIA API error: ' + res.status + ' ' + errText.substring(0, 100));
+    }
+    const data = await res.json();
+    return data.choices[0] && data.choices[0].message ? data.choices[0].message.content : 'No response';
+  }
+
+  async function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text || state.loading) return;
+
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    addMessage('user', text);
+    state.messages.push({ role: 'user', content: text });
+    state.loading = true;
+    sendBtn.disabled = true;
+
+    const thinkingDiv = document.createElement('div');
+    thinkingDiv.className = 'message ai';
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.innerHTML = '🤔';
+    thinkingDiv.appendChild(avatar);
+    const thinking = document.createElement('div');
+    thinking.className = 'thinking';
+    thinking.innerHTML = '<span></span><span></span><span></span>';
+    thinkingDiv.appendChild(thinking);
+    messagesContainer.appendChild(thinkingDiv);
+
+    const startTime = Date.now();
+
+    try {
+      let content = '';
+      let source = 'NVIDIA Serverless';
+      let isHtml = false;
+      let icon = '⚡';
+
+      if (state.mode === 'search') {
+        const result = await doSearch(text);
+        content = result.formatted;
+        source = result.engine.charAt(0).toUpperCase() + result.engine.slice(1) + ' Search';
+        isHtml = true;
+        icon = '🔍';
+      } else if (state.mode === 'hybrid') {
+        const result = await doSearch(text);
+        let searchContext = '';
+        if (result.data.answer) searchContext += 'Answer: ' + result.data.answer + '\n\n';
+        const results = result.data.results || [];
+        results.slice(0, 5).forEach(function(r, i) {
+          searchContext += '[' + (i + 1) + '] ' + (r.title || '') + '\nURL: ' + (r.url || '') + '\n' + (r.content || r.snippet || (r.highlights || []).join(' ') || '') + '\n\n';
+        });
+        if (!searchContext) searchContext = result.formatted.replace(/<[^>]+>/g, ' ');
+
+        const hybridMessages = [
+          { role: 'system', content: 'You are a helpful AI assistant. Use the following search results to answer the user accurately. Cite sources when relevant.\n\nSearch Results:\n' + searchContext }
+        ].concat(state.messages);
+        content = await chatNVIDIA(hybridMessages);
+        source = 'Hybrid (' + result.engine + ' + NVIDIA)';
+        icon = '🚀';
+      } else {
+        content = await chatNVIDIA(state.messages);
+        source = 'NVIDIA Serverless';
+        icon = '⚡';
+      }
+
+      const elapsed = Date.now() - startTime;
+      thinkingDiv.remove();
+      responseTime.textContent = elapsed + 'ms';
+      addMessage('ai', content, { source: source, icon: icon, isHtml: isHtml });
+      state.messages.push({ role: 'assistant', content: isHtml ? content.replace(/<[^>]+>/g, ' ') : content });
+      state.history.push({ text: text, response: isHtml ? content.replace(/<[^>]+>/g, ' ') : content, timestamp: new Date() });
+      messageCount.textContent = state.messages.length;
+    } catch (err) {
+      thinkingDiv.remove();
+      addMessage('ai', '❌ Error: ' + err.message, { icon: '⚠️' });
+    } finally {
+      state.loading = false;
+      sendBtn.disabled = false;
+      messageInput.focus();
+    }
+  }
+
+  window.addEventListener('click', function(e) {
+    if (e.target === historyModal) historyModal.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>
